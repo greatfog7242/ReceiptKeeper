@@ -117,42 +117,42 @@
       "id": "phase-2",
       "phase": 2,
       "feature": "Basic UI Framework",
-      "status": "Incomplete",
+      "status": "Complete",
       "subtasks": [
         {
           "id": "2.1",
           "task": "Create Navigation Routes sealed class",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "2.2",
           "task": "Set up NavHost in MainActivity",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "2.3",
           "task": "Create bottom navigation bar with 5 tabs",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "2.4",
           "task": "Implement Material 3 theme",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "2.5",
           "task": "Create empty scaffold screens",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "2.6",
           "task": "Wire up navigation between screens",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "2.7",
           "task": "Add top app bars",
-          "status": "Incomplete"
+          "status": "Complete"
         }
       ]
     },

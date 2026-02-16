@@ -4,17 +4,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.rememberNavController
+import com.receiptkeeper.app.navigation.BottomNavigationBar
+import com.receiptkeeper.app.navigation.NavGraph
 import com.receiptkeeper.ui.theme.ReceiptKeeperTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -29,40 +26,28 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ReceiptKeeperTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    AppContent()
-                }
+                MainApp()
             }
         }
     }
 }
 
+/**
+ * Main app composable with navigation
+ */
 @Composable
-fun AppContent() {
-    Scaffold(
-        modifier = Modifier.fillMaxSize()
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "ReceiptKeeper",
-                style = MaterialTheme.typography.headlineLarge
-            )
-        }
-    }
-}
+fun MainApp() {
+    val navController = rememberNavController()
 
-@Preview(showBackground = true)
-@Composable
-fun AppContentPreview() {
-    ReceiptKeeperTheme {
-        AppContent()
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        bottomBar = {
+            BottomNavigationBar(navController = navController)
+        }
+    ) { innerPadding ->
+        NavGraph(
+            navController = navController,
+            modifier = Modifier.padding(innerPadding)
+        )
     }
 }
