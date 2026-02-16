@@ -34,6 +34,7 @@ fun ReceiptListItem(
     onItemClick: (Receipt) -> Unit,
     onEditClick: (Receipt) -> Unit,
     onDeleteClick: (Receipt) -> Unit,
+    onImageClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -56,7 +57,8 @@ fun ReceiptListItem(
                     contentDescription = "Receipt image",
                     modifier = Modifier
                         .size(64.dp)
-                        .clip(RoundedCornerShape(8.dp)),
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { onImageClick(receipt.imageUri) },
                     contentScale = ContentScale.Crop
                 )
             } else {

@@ -1,8 +1,15 @@
 package com.receiptkeeper.features.receipts
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -10,10 +17,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
 import com.receiptkeeper.domain.model.Receipt
 import com.receiptkeeper.features.receipts.components.ReceiptListItem
 import java.text.NumberFormat
@@ -30,6 +41,7 @@ fun ReceiptsScreen(
     val uiState by viewModel.uiState.collectAsState()
     var receiptToDelete by remember { mutableStateOf<Receipt?>(null) }
     var showFilterMenu by remember { mutableStateOf(false) }
+    var fullScreenImageUri by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -195,7 +207,8 @@ fun ReceiptsScreen(
                                     bookName = book?.name ?: "Unknown",
                                     onItemClick = { onNavigateToReceiptDetail(it.id) },
                                     onEditClick = { viewModel.showEditDialog(it) },
-                                    onDeleteClick = { receiptToDelete = it }
+                                    onDeleteClick = { receiptToDelete = it },
+                                    onImageClick = { imageUri -> fullScreenImageUri = imageUri }
                                 )
                             }
                         }
@@ -228,11 +241,12 @@ fun ReceiptsScreen(
             vendors = uiState.vendors,
             categories = uiState.categories,
             paymentMethods = uiState.paymentMethods,
+            onImageClick = { imageUri -> fullScreenImageUri = imageUri },
             onDismiss = {
                 if (uiState.editingReceipt != null) viewModel.hideEditDialog()
                 else viewModel.hideAddDialog()
             },
-            onConfirm = { bookId, vendorName, categoryId, paymentMethodId, amount, date, notes ->
+            onConfirm = { bookId, vendorName, categoryId, paymentMethodId, amount, date, notes, imageUri ->
                 if (uiState.editingReceipt != null) {
                     viewModel.updateReceiptFromDialog(
                         receiptId = uiState.editingReceipt!!.id,
@@ -243,7 +257,8 @@ fun ReceiptsScreen(
                         totalAmount = amount,
                         transactionDate = date,
                         notes = notes,
-                        imageUri = uiState.editingReceipt!!.imageUri // Preserve existing image
+                        oldImageUri = uiState.editingReceipt!!.imageUri,
+                        newImageUri = imageUri
                     )
                 } else {
                     viewModel.createReceipt(
@@ -254,7 +269,7 @@ fun ReceiptsScreen(
                         totalAmount = amount,
                         transactionDate = date,
                         notes = notes,
-                        imageUri = null // Will add image picker in next step
+                        imageUri = imageUri
                     )
                 }
             }
@@ -297,6 +312,14 @@ fun ReceiptsScreen(
             }
         )
     }
+
+    // Full-screen image viewer
+    fullScreenImageUri?.let { imageUri ->
+        FullScreenImageDialog(
+            imageUri = imageUri,
+            onDismiss = { fullScreenImageUri = null }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -307,8 +330,9 @@ private fun ReceiptDialog(
     vendors: List<com.receiptkeeper.domain.model.Vendor>,
     categories: List<com.receiptkeeper.domain.model.Category>,
     paymentMethods: List<com.receiptkeeper.domain.model.PaymentMethod>,
+    onImageClick: (String) -> Unit,
     onDismiss: () -> Unit,
-    onConfirm: (Long, String, Long, Long?, Double, LocalDate, String?) -> Unit
+    onConfirm: (Long, String, Long, Long?, Double, LocalDate, String?, Uri?) -> Unit
 ) {
     // Initialize vendor name - if editing, look up the vendor name by ID
     val initialVendorName = receipt?.vendorId?.let { vendorId ->
@@ -316,6 +340,14 @@ private fun ReceiptDialog(
     } ?: ""
 
     var vendorName by remember { mutableStateOf(initialVendorName) }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    // Photo picker launcher
+    val photoPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        selectedImageUri = uri
+    }
     var selectedBookId by remember { mutableStateOf(receipt?.bookId ?: books.firstOrNull()?.id ?: 0L) }
     var selectedCategoryId by remember { mutableStateOf(receipt?.categoryId ?: categories.firstOrNull()?.id ?: 0L) }
     var selectedPaymentMethodId by remember { mutableStateOf<Long?>(receipt?.paymentMethodId) }
@@ -350,6 +382,73 @@ private fun ReceiptDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                // Image picker
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                photoPicker.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.Image, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                if (selectedImageUri != null || receipt?.imageUri != null) {
+                                    "Change Image"
+                                } else {
+                                    "Add Image"
+                                }
+                            )
+                        }
+
+                        // Remove image button (only show if image exists)
+                        if (selectedImageUri != null || receipt?.imageUri != null) {
+                            OutlinedButton(
+                                onClick = { selectedImageUri = Uri.EMPTY },
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.error
+                                )
+                            ) {
+                                Icon(Icons.Default.Delete, contentDescription = "Remove image")
+                            }
+                        }
+                    }
+
+                    // Image preview
+                    val displayImageUri = if (selectedImageUri == Uri.EMPTY) {
+                        null // User clicked remove
+                    } else {
+                        selectedImageUri ?: receipt?.imageUri?.let { Uri.parse("file://$it") }
+                    }
+
+                    if (displayImageUri != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable {
+                                    // Show full-screen if it's an existing image (file path)
+                                    receipt?.imageUri?.let { onImageClick(it) }
+                                }
+                        ) {
+                            AsyncImage(
+                                model = displayImageUri,
+                                contentDescription = "Receipt image",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                    }
+                }
 
                 // Book dropdown
                 ExposedDropdownMenuBox(
@@ -511,7 +610,8 @@ private fun ReceiptDialog(
                             selectedPaymentMethodId,
                             amountValue,
                             dateValue,
-                            notes.takeIf { it.isNotBlank() }
+                            notes.takeIf { it.isNotBlank() },
+                            selectedImageUri
                         )
                     } else {
                         vendorError = vendorName.isBlank()
@@ -533,4 +633,43 @@ private fun ReceiptDialog(
 private fun formatCurrency(amount: Double): String {
     val formatter = NumberFormat.getCurrencyInstance(Locale.US)
     return formatter.format(amount)
+}
+
+@Composable
+private fun FullScreenImageDialog(
+    imageUri: String,
+    onDismiss: () -> Unit
+) {
+    androidx.compose.ui.window.Dialog(
+        onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(
+            usePlatformDefaultWidth = false
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+                .clickable { onDismiss() }
+        ) {
+            AsyncImage(
+                model = imageUri,
+                contentDescription = "Receipt image",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Fit
+            )
+
+            // Close button
+            IconButton(
+                onClick = onDismiss,
+                modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
+            ) {
+                Icon(
+                    Icons.Default.Close,
+                    contentDescription = "Close",
+                    tint = Color.White
+                )
+            }
+        }
+    }
 }

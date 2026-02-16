@@ -1,7 +1,9 @@
 package com.receiptkeeper.features.receipts
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.receiptkeeper.core.util.ImageHandler
 import com.receiptkeeper.data.repository.BookRepository
 import com.receiptkeeper.data.repository.CategoryRepository
 import com.receiptkeeper.data.repository.PaymentMethodRepository
@@ -30,7 +32,8 @@ class ReceiptsViewModel @Inject constructor(
     private val bookRepository: BookRepository,
     private val vendorRepository: VendorRepository,
     private val categoryRepository: CategoryRepository,
-    private val paymentMethodRepository: PaymentMethodRepository
+    private val paymentMethodRepository: PaymentMethodRepository,
+    private val imageHandler: ImageHandler
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ReceiptsUiState())
@@ -96,12 +99,19 @@ class ReceiptsViewModel @Inject constructor(
         totalAmount: Double,
         transactionDate: LocalDate,
         notes: String?,
-        imageUri: String?
+        imageUri: Uri?
     ) {
         viewModelScope.launch {
             try {
                 // Get or create vendor (returns vendor ID)
                 val vendorId = vendorRepository.getOrCreateVendor(vendorName)
+
+                // Save image to app storage if provided (Uri.EMPTY means no image)
+                val savedImagePath = if (imageUri != null && imageUri != Uri.EMPTY) {
+                    imageHandler.saveImage(imageUri)
+                } else {
+                    null
+                }
 
                 val receipt = Receipt(
                     bookId = bookId,
@@ -111,7 +121,7 @@ class ReceiptsViewModel @Inject constructor(
                     totalAmount = totalAmount,
                     transactionDate = transactionDate,
                     notes = notes,
-                    imageUri = imageUri,
+                    imageUri = savedImagePath,
                     extractedText = null,
                     createdAt = Instant.now(),
                     updatedAt = Instant.now()
@@ -149,12 +159,35 @@ class ReceiptsViewModel @Inject constructor(
         totalAmount: Double,
         transactionDate: LocalDate,
         notes: String?,
-        imageUri: String?
+        oldImageUri: String?,
+        newImageUri: Uri?
     ) {
         viewModelScope.launch {
             try {
                 // Get or create vendor (returns vendor ID)
                 val vendorId = vendorRepository.getOrCreateVendor(vendorName)
+
+                // Handle image update (Uri.EMPTY means user clicked remove)
+                val finalImageUri = when {
+                    newImageUri == Uri.EMPTY -> {
+                        // User wants to remove image
+                        if (oldImageUri != null) {
+                            imageHandler.deleteImage(oldImageUri)
+                        }
+                        null
+                    }
+                    newImageUri != null -> {
+                        // User selected new image
+                        if (oldImageUri != null) {
+                            imageHandler.deleteImage(oldImageUri)
+                        }
+                        imageHandler.saveImage(newImageUri)
+                    }
+                    else -> {
+                        // Keep existing image
+                        oldImageUri
+                    }
+                }
 
                 val updated = Receipt(
                     id = receiptId,
@@ -165,7 +198,7 @@ class ReceiptsViewModel @Inject constructor(
                     totalAmount = totalAmount,
                     transactionDate = transactionDate,
                     notes = notes,
-                    imageUri = imageUri,
+                    imageUri = finalImageUri,
                     extractedText = null,
                     createdAt = Instant.now(), // Will be ignored by update
                     updatedAt = Instant.now()
@@ -183,6 +216,10 @@ class ReceiptsViewModel @Inject constructor(
     fun deleteReceipt(receipt: Receipt) {
         viewModelScope.launch {
             try {
+                // Delete image file if exists
+                if (receipt.imageUri != null) {
+                    imageHandler.deleteImage(receipt.imageUri)
+                }
                 receiptRepository.deleteReceipt(receipt)
             } catch (e: Exception) {
                 _uiState.update {

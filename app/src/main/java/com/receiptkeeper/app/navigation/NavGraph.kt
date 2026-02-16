@@ -87,8 +87,12 @@ fun NavGraph(
         composable(
             route = Routes.ReceiptDetail.route,
             arguments = listOf(navArgument("receiptId") { type = NavType.LongType })
-        ) {
-            // TODO: Phase 4 - ReceiptDetailScreen
+        ) { backStackEntry ->
+            val receiptId = backStackEntry.arguments?.getLong("receiptId") ?: return@composable
+            com.receiptkeeper.features.receipts.ReceiptDetailScreen(
+                receiptId = receiptId,
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
 
         // Settings sub-screens

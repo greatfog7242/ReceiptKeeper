@@ -218,7 +218,7 @@
       "id": "phase-4",
       "phase": 4,
       "feature": "Basic Receipt Management",
-      "status": "In Progress",
+      "status": "Complete",
       "subtasks": [
         {
           "id": "4.1",
@@ -243,12 +243,12 @@
         {
           "id": "4.5",
           "task": "Implement image selection from gallery",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "4.6",
           "task": "Create ReceiptDetailScreen with image viewer",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "4.7",
@@ -273,12 +273,12 @@
         {
           "id": "4.11",
           "task": "Save images to app-specific directory",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "4.12",
           "task": "Load images efficiently with Coil",
-          "status": "Incomplete"
+          "status": "Complete"
         }
       ]
     },
