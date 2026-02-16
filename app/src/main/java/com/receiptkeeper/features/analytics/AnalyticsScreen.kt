@@ -9,13 +9,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.receiptkeeper.core.util.CsvExporter
-import com.receiptkeeper.data.repository.BookRepository
-import com.receiptkeeper.data.repository.PaymentMethodRepository
-import com.receiptkeeper.data.repository.VendorRepository
 import com.receiptkeeper.features.analytics.components.CategoryBreakdownChart
 import com.receiptkeeper.features.analytics.components.DateRangePicker
 import com.receiptkeeper.features.analytics.components.SpendingGoalCard
@@ -38,13 +36,47 @@ fun AnalyticsScreen(
     val categories by viewModel.categories.collectAsState()
     val receipts by viewModel.receipts.collectAsState()
     val spendingGoals by viewModel.spendingGoals.collectAsState()
+    val vendors by viewModel.vendors.collectAsState()
+    val books by viewModel.books.collectAsState()
+    val paymentMethods by viewModel.paymentMethods.collectAsState()
+
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Analytics") },
                 actions = {
-                    IconButton(onClick = { /* TODO: Export CSV */ }) {
+                    IconButton(
+                        onClick = {
+                            coroutineScope.launch {
+                                try {
+                                    // Create maps for CSV export
+                                    val vendorNames = vendors.associate { it.id to it.name }
+                                    val categoryNames = categories.associate { it.id to it.name }
+                                    val bookNames = books.associate { it.id to it.name }
+                                    val paymentMethodNames = paymentMethods.associate { it.id to it.name }
+
+                                    // Export to CSV
+                                    val csvFile = CsvExporter.exportToCSV(
+                                        context = context,
+                                        receipts = receipts,
+                                        vendorNames = vendorNames,
+                                        categoryNames = categoryNames,
+                                        bookNames = bookNames,
+                                        paymentMethodNames = paymentMethodNames
+                                    )
+
+                                    // Share the file
+                                    CsvExporter.shareCSV(context, csvFile)
+                                } catch (e: Exception) {
+                                    // Handle error (could show a toast or snackbar)
+                                }
+                            }
+                        },
+                        enabled = receipts.isNotEmpty()
+                    ) {
                         Icon(Icons.Default.IosShare, contentDescription = "Export CSV")
                     }
                 },

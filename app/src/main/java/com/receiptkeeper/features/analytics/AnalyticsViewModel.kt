@@ -3,11 +3,8 @@ package com.receiptkeeper.features.analytics
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.receiptkeeper.data.local.entity.CategorySpending
-import com.receiptkeeper.data.repository.AnalyticsRepository
-import com.receiptkeeper.data.repository.SpendingGoalRepository
-import com.receiptkeeper.domain.model.Category
-import com.receiptkeeper.domain.model.Receipt
-import com.receiptkeeper.domain.model.SpendingGoal
+import com.receiptkeeper.data.repository.*
+import com.receiptkeeper.domain.model.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import java.time.LocalDate
@@ -20,7 +17,10 @@ import javax.inject.Inject
 @HiltViewModel
 class AnalyticsViewModel @Inject constructor(
     private val analyticsRepository: AnalyticsRepository,
-    private val spendingGoalRepository: SpendingGoalRepository
+    private val spendingGoalRepository: SpendingGoalRepository,
+    private val vendorRepository: VendorRepository,
+    private val bookRepository: BookRepository,
+    private val paymentMethodRepository: PaymentMethodRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AnalyticsUiState())
@@ -69,6 +69,16 @@ class AnalyticsViewModel @Inject constructor(
 
     // All spending goals
     val spendingGoals: StateFlow<List<SpendingGoal>> = spendingGoalRepository.getAllSpendingGoals()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // Data for CSV export
+    val vendors: StateFlow<List<Vendor>> = vendorRepository.getAllVendors()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val books: StateFlow<List<Book>> = bookRepository.getAllBooks()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val paymentMethods: StateFlow<List<PaymentMethod>> = paymentMethodRepository.getAllPaymentMethods()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     /**
