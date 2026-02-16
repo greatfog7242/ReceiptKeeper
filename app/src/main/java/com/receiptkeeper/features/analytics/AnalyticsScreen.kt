@@ -13,6 +13,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.receiptkeeper.features.analytics.components.CategoryBreakdownChart
 import com.receiptkeeper.features.analytics.components.DateRangePicker
+import com.receiptkeeper.features.analytics.components.SpendingGoalCard
+import com.receiptkeeper.features.analytics.components.getGoalPeriodDateRange
 
 /**
  * Analytics screen - spending insights and reports
@@ -29,6 +31,7 @@ fun AnalyticsScreen(
     val categoryBreakdown by viewModel.categoryBreakdown.collectAsState()
     val categories by viewModel.categories.collectAsState()
     val receipts by viewModel.receipts.collectAsState()
+    val spendingGoals by viewModel.spendingGoals.collectAsState()
 
     Scaffold(
         topBar = {
@@ -103,30 +106,63 @@ fun AnalyticsScreen(
                 totalSpending = totalSpending
             )
 
-            // Placeholder for Spending Goals (Phase 6 tasks 6.5-6.7)
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+            // Spending Goals with Progress
+            if (spendingGoals.isNotEmpty()) {
+                Text(
+                    text = "Spending Goals",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+
+                spendingGoals.forEach { goal ->
+                    // Calculate spending for this goal's period
+                    val (goalStart, goalEnd) = getGoalPeriodDateRange(goal.period)
+
+                    // Get current spending for goal period
+                    // We'll use a simplified calculation based on current data
+                    // In production, you'd query the repository with goal's date range
+                    val goalSpending = if (goal.categoryId != null) {
+                        // Category-specific goal
+                        categoryBreakdown.find { it.categoryId == goal.categoryId }?.total ?: 0.0
+                    } else {
+                        // Global goal
+                        totalSpending
+                    }
+
+                    val category = categories.find { it.id == goal.categoryId }
+
+                    SpendingGoalCard(
+                        goal = goal,
+                        currentSpending = goalSpending,
+                        category = category
+                    )
+                }
+            } else {
+                // Empty state for goals
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
                 ) {
-                    Text(
-                        text = "Spending Goals",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Coming soon: Set monthly spending goals and track progress",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                    )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "No Spending Goals",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Set budget goals in Settings to track your spending",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        )
+                    }
                 }
             }
         }

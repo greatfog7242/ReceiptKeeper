@@ -115,8 +115,9 @@ fun NavGraph(
         }
 
         composable(route = Routes.SpendingGoals.route) {
-            // TODO: Phase 6
-            androidx.compose.material3.Text("Spending Goals Screen - Phase 6")
+            com.receiptkeeper.features.settings.SpendingGoalsScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
     }
 }
