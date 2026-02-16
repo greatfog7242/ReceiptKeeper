@@ -349,67 +349,67 @@
       "id": "phase-6",
       "phase": 6,
       "feature": "Analytics & Reporting",
-      "status": "Incomplete",
+      "status": "Complete",
       "subtasks": [
         {
           "id": "6.1",
           "task": "Create AnalyticsViewModel",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "6.2",
           "task": "Implement date range picker component",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "6.3",
           "task": "Add DAO queries for spending in date range",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "6.4",
           "task": "Calculate total spending for period",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "6.5",
           "task": "Create SpendingGoal CRUD in settings",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "6.6",
           "task": "Implement goal progress calculation",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "6.7",
           "task": "Design SpendingGoalCard with progress bar",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "6.8",
           "task": "Add DAO query for category breakdown",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "6.9",
           "task": "Create CategoryBreakdownChart",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "6.10",
           "task": "Implement CSV export logic",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "6.11",
           "task": "Add file sharing intent for CSV",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "6.12",
           "task": "Create AnalyticsRepository",
-          "status": "Incomplete"
+          "status": "Complete"
         }
       ]
     },
