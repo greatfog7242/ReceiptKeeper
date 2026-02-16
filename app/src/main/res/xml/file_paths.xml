@@ -2,4 +2,7 @@
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Internal storage receipts directory -->
     <files-path name="receipts" path="receipts/" />
+
+    <!-- Cache directory for temporary camera captures -->
+    <cache-path name="camera_images" path="." />
 </paths>

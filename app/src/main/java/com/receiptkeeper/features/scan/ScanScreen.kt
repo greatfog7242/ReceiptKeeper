@@ -24,6 +24,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.receiptkeeper.domain.model.Book
 import com.receiptkeeper.domain.model.Category
 import com.receiptkeeper.domain.model.PaymentMethod
+import com.receiptkeeper.domain.model.Vendor
 import com.receiptkeeper.features.scan.camera.CameraPreview
 import com.receiptkeeper.features.scan.ocr.ExtractedReceiptData
 import java.time.LocalDate
@@ -44,6 +45,7 @@ fun ScanScreen(
     val books by viewModel.books.collectAsState()
     val categories by viewModel.categories.collectAsState()
     val paymentMethods by viewModel.paymentMethods.collectAsState()
+    val vendors by viewModel.vendors.collectAsState()
 
     Scaffold(
         topBar = {
@@ -93,6 +95,7 @@ fun ScanScreen(
                         books = books,
                         categories = categories,
                         paymentMethods = paymentMethods,
+                        vendors = vendors,
                         onVendorChange = { viewModel.updateVendor(it) },
                         onAmountChange = { viewModel.updateAmount(it) },
                         onDateChange = { viewModel.updateDate(it) },
@@ -236,6 +239,7 @@ private fun ExtractedDataForm(
     books: List<Book>,
     categories: List<Category>,
     paymentMethods: List<PaymentMethod>,
+    vendors: List<Vendor>,
     onVendorChange: (String) -> Unit,
     onAmountChange: (String) -> Unit,
     onDateChange: (LocalDate?) -> Unit,
@@ -279,15 +283,71 @@ private fun ExtractedDataForm(
             color = MaterialTheme.colorScheme.primary
         )
 
-        // Vendor field
-        OutlinedTextField(
-            value = extractedData.vendor ?: "",
-            onValueChange = onVendorChange,
-            label = { Text("Vendor Name") },
-            placeholder = { Text("e.g., Walmart, Target") },
-            modifier = Modifier.fillMaxWidth(),
-            leadingIcon = { Icon(Icons.Default.Store, contentDescription = null) }
-        )
+        // Vendor dropdown with free-text option
+        var vendorExpanded by remember { mutableStateOf(false) }
+        var vendorSearchText by remember(extractedData.vendor) {
+            mutableStateOf(extractedData.vendor ?: "")
+        }
+
+        ExposedDropdownMenuBox(
+            expanded = vendorExpanded,
+            onExpandedChange = { vendorExpanded = it }
+        ) {
+            OutlinedTextField(
+                value = vendorSearchText,
+                onValueChange = { newValue ->
+                    vendorSearchText = newValue
+                    onVendorChange(newValue)
+                },
+                label = { Text("Vendor Name") },
+                placeholder = { Text("e.g., Walmart, Target") },
+                leadingIcon = { Icon(Icons.Default.Store, contentDescription = null) },
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = vendorExpanded)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(),
+                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+            )
+
+            ExposedDropdownMenu(
+                expanded = vendorExpanded,
+                onDismissRequest = { vendorExpanded = false }
+            ) {
+                // Filter vendors based on search text
+                val filteredVendors = if (vendorSearchText.isBlank()) {
+                    vendors
+                } else {
+                    vendors.filter {
+                        it.name.contains(vendorSearchText, ignoreCase = true)
+                    }
+                }
+
+                if (filteredVendors.isEmpty() && vendorSearchText.isNotBlank()) {
+                    // Show "Add new" option when no matches
+                    DropdownMenuItem(
+                        text = { Text("Add \"$vendorSearchText\" as new vendor") },
+                        onClick = {
+                            onVendorChange(vendorSearchText)
+                            vendorExpanded = false
+                        },
+                        leadingIcon = { Icon(Icons.Default.Add, contentDescription = null) }
+                    )
+                } else {
+                    filteredVendors.forEach { vendor ->
+                        DropdownMenuItem(
+                            text = { Text(vendor.name) },
+                            onClick = {
+                                vendorSearchText = vendor.name
+                                onVendorChange(vendor.name)
+                                vendorExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
 
         // Amount field
         OutlinedTextField(

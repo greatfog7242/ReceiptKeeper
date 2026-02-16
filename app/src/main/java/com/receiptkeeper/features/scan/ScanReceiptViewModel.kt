@@ -51,6 +51,9 @@ class ScanReceiptViewModel @Inject constructor(
     val paymentMethods: StateFlow<List<PaymentMethod>> = paymentMethodRepository.getAllPaymentMethods()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val vendors: StateFlow<List<com.receiptkeeper.domain.model.Vendor>> = vendorRepository.getAllVendors()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     /**
      * Called when image is captured from camera
      */

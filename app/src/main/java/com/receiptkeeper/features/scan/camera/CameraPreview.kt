@@ -121,7 +121,13 @@ fun CameraPreview(
                                 ContextCompat.getMainExecutor(context),
                                 object : ImageCapture.OnImageSavedCallback {
                                     override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                                        onImageCaptured(Uri.fromFile(photoFile))
+                                        // Use FileProvider to create content:// URI for Android 7.0+
+                                        val contentUri = androidx.core.content.FileProvider.getUriForFile(
+                                            context,
+                                            "${context.packageName}.fileprovider",
+                                            photoFile
+                                        )
+                                        onImageCaptured(contentUri)
                                     }
 
                                     override fun onError(exception: ImageCaptureException) {

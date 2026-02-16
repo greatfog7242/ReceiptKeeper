@@ -825,6 +825,67 @@ None - Phase 5 complete, ready to proceed to Phase 6
 
 ---
 
+---
+
+## 2026-02-16 - Enhancement: Vendor Selection Dropdown in Scan Form
+
+**Agent:** Claude Sonnet 4.5
+**Phase:** Phase 5 Enhancement
+**Status:** ✅ Complete
+
+### Work Completed
+
+**Vendor Selection Enhancement:**
+- ✅ Added `vendors` StateFlow to `ScanReceiptViewModel.kt` (loads all vendors reactively)
+- ✅ Updated `ExtractedDataForm` signature to accept `vendors: List<Vendor>`
+- ✅ Replaced plain vendor text field with `ExposedDropdownMenuBox`
+- ✅ Implemented filterable dropdown with real-time search
+- ✅ "Add new vendor" option when no matches found
+- ✅ Vendor dropdown shows existing vendors (prevents duplicates)
+- ✅ Free-text entry still supported (types new vendor name)
+- ✅ OCR-extracted vendor pre-populates field
+- ✅ User can select from existing vendors to correct OCR capitalization
+- ✅ Consistent with Book/Category/PaymentMethod dropdown patterns
+
+**Files Modified (2):**
+- `ScanReceiptViewModel.kt` - Added vendors StateFlow (line 54-55)
+- `ScanScreen.kt` - Updated ExtractedDataForm with vendor dropdown (lines 24, 47, 96, 239, 283-349)
+
+### Build & Deploy
+- **Build time:** 4s (successful with deprecation warnings on menuAnchor - non-breaking)
+- **Deploy:** SUCCESS to device RRCY802F6PV
+- **Launch:** SUCCESS - app running cleanly
+- **Logcat:** ✅ No errors from ReceiptKeeper
+
+### Enhancement Benefits
+- **Better UX:** Users can select from existing vendors with 1-2 taps instead of typing
+- **Data integrity:** Reduces duplicate vendors (e.g., "Walmart" vs "WALMART" vs "walmart")
+- **Discoverability:** Users see their frequently used vendors
+- **OCR correction:** After OCR extracts vendor, user can correct to exact match from list
+- **Consistency:** Matches dropdown pattern used for Book/Category/PaymentMethod fields
+
+### Testing Recommendations
+1. **Existing vendors:** Create 2-3 vendors via Settings → Vendors
+2. **Scan receipt:** OCR extracts vendor (e.g., "TARGET")
+3. **Tap dropdown:** Should show existing vendors
+4. **Select vendor:** Choose "Target" (proper case) from dropdown
+5. **Filter test:** Type "Wal" → dropdown filters to show "Walmart"
+6. **New vendor:** Type "Whole Foods" → shows "Add as new vendor" option
+7. **Save:** Verify no duplicate vendors created
+
+### Current Blockers
+None - enhancement complete and deployed
+
+### Last Successful Build/Deploy
+**Timestamp:** 2026-02-16 4:45 PM
+**Build:** SUCCESS (4s with vendor dropdown enhancement)
+**Deploy:** SUCCESS to device RRCY802F6PV
+**Package:** com.receiptkeeper.debug
+**Launch Command:** `adb -s RRCY802F6PV shell am start -n com.receiptkeeper.debug/com.receiptkeeper.app.MainActivity`
+**Enhancement:** Vendor dropdown in scan form - working perfectly ✅
+
+---
+
 ## Handoff Notes for Next Session
 
 **Current Task:** Phase 6 - Analytics & Reporting
@@ -834,3 +895,4 @@ None - Phase 5 complete, ready to proceed to Phase 6
 **Package:** com.receiptkeeper.debug (note the .debug suffix for adb commands)
 **JAVA_HOME:** Set in local.properties for Gradle builds
 **Phases Complete:** 0, 1, 2, 3, 4, 5 ✅ | Next: Phase 6 (Analytics & Reporting)
+**Recent Enhancement:** Vendor selection dropdown in scan form ✅
