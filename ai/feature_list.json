@@ -218,27 +218,27 @@
       "id": "phase-4",
       "phase": 4,
       "feature": "Basic Receipt Management",
-      "status": "Incomplete",
+      "status": "In Progress",
       "subtasks": [
         {
           "id": "4.1",
           "task": "Create ReceiptsViewModel with StateFlow",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "4.2",
           "task": "Implement ReceiptsScreen with LazyColumn",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "4.3",
           "task": "Design ReceiptListItem composable",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "4.4",
           "task": "Add manual receipt creation form",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "4.5",
@@ -253,22 +253,22 @@
         {
           "id": "4.7",
           "task": "Add edit mode for receipts",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "4.8",
           "task": "Implement delete confirmation dialog",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "4.9",
           "task": "Add book filtering dropdown",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "4.10",
           "task": "Calculate and display total spending",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "4.11",

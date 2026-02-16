@@ -108,3 +108,6 @@ Thumbs.db
 
 # Gradle configuration cache
 .gradle/configuration-cache/
+
+# Kotlin compiler cache
+.kotlin/
