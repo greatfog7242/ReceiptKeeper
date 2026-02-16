@@ -9,12 +9,18 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.receiptkeeper.core.util.CsvExporter
+import com.receiptkeeper.data.repository.BookRepository
+import com.receiptkeeper.data.repository.PaymentMethodRepository
+import com.receiptkeeper.data.repository.VendorRepository
 import com.receiptkeeper.features.analytics.components.CategoryBreakdownChart
 import com.receiptkeeper.features.analytics.components.DateRangePicker
 import com.receiptkeeper.features.analytics.components.SpendingGoalCard
 import com.receiptkeeper.features.analytics.components.getGoalPeriodDateRange
+import kotlinx.coroutines.launch
 
 /**
  * Analytics screen - spending insights and reports

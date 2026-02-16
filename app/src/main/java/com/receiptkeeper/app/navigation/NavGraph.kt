@@ -76,12 +76,19 @@ fun NavGraph(
             )
         }
 
-        // Detail screens (to be implemented in later phases)
+        // Detail screens
         composable(
             route = Routes.BookDetail.route,
             arguments = listOf(navArgument("bookId") { type = NavType.LongType })
-        ) {
-            // TODO: Phase 3 - BookDetailScreen
+        ) { backStackEntry ->
+            val bookId = backStackEntry.arguments?.getLong("bookId") ?: return@composable
+            com.receiptkeeper.features.books.BookDetailScreen(
+                bookId = bookId,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToReceiptDetail = { receiptId ->
+                    navController.navigate(Routes.ReceiptDetail.createRoute(receiptId))
+                }
+            )
         }
 
         composable(
