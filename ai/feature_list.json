@@ -286,62 +286,62 @@
       "id": "phase-5",
       "phase": 5,
       "feature": "Camera & OCR Integration",
-      "status": "Incomplete",
+      "status": "Complete",
       "subtasks": [
         {
           "id": "5.1",
           "task": "Add camera permissions handling",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "5.2",
           "task": "Implement CameraPreview composable with CameraX",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "5.3",
           "task": "Create image capture logic",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "5.4",
           "task": "Integrate ML Kit Text Recognition",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "5.5",
           "task": "Create OcrProcessor injectable class",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "5.6",
           "task": "Implement ReceiptParser with regex patterns",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "5.7",
           "task": "Update ScanReceiptScreen with auto-filled form",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "5.8",
           "task": "Display extracted raw text (debug view)",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "5.9",
           "task": "Allow manual override of all fields",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "5.10",
           "task": "Handle OCR errors gracefully",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "5.11",
           "task": "Add loading indicator during OCR processing",
-          "status": "Incomplete"
+          "status": "Complete"
         }
       ]
     },

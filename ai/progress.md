@@ -686,12 +686,151 @@ None - Phase 4 complete, ready to proceed to Phase 5
 
 ---
 
+---
+
+## 2026-02-16 - Phase 5 Complete: Camera & OCR Integration
+
+**Agent:** Claude Sonnet 4.5
+**Phase:** Phase 5 - Camera & OCR Integration
+**Status:** ✅ Complete (11/11 tasks)
+
+### Work Completed
+
+**Data Layer Foundation:**
+- ✅ `OcrModule.kt` - Hilt DI module for ML Kit TextRecognizer (singleton)
+- ✅ `ExtractedReceiptData.kt` - Data classes for OCR results
+- ✅ `ReceiptParser.kt` - Regex-based text parsing (vendor, date, amount, card last 4)
+- ✅ `OcrProcessor.kt` - ML Kit wrapper with suspend functions (uses Tasks.await())
+- ✅ Added `kotlinx-coroutines-play-services` dependency for Tasks.await()
+
+**Camera Integration:**
+- ✅ `CameraPreview.kt` - Full CameraX integration with Accompanist Permissions
+- ✅ Camera permission handling (request, rationale, denial states)
+- ✅ Live camera preview using PreviewView in AndroidView
+- ✅ Image capture with ImageCapture use case
+- ✅ Saves captured images to temp cache directory
+- ✅ Large circular FAB for capture button
+
+**ViewModel & State Management:**
+- ✅ `ScanReceiptViewModel.kt` - Complete state machine for three-mode workflow
+- ✅ State flow: Camera → Preview → Edit → Save
+- ✅ OCR processing with error handling
+- ✅ Field-level updates (vendor, amount, date, card)
+- ✅ Image saving via ImageHandler
+- ✅ Receipt creation with auto-vendor creation
+- ✅ Retry/skip OCR functionality
+
+**UI Implementation:**
+- ✅ `ScanScreen.kt` - Complete three-mode UI workflow:
+  - **Mode 1: Camera** - Live camera preview with capture button
+  - **Mode 2: Preview** - Shows captured image with "Process OCR" / "Skip OCR" / "Retake" buttons
+  - **Mode 3: Edit** - Extracted data form with all editable fields
+- ✅ `CapturedImagePreview` composable - Image preview with action buttons
+- ✅ `ExtractedDataForm` composable - Full receipt entry form with:
+  - Vendor name (editable, auto-extracted)
+  - Amount (decimal input, auto-extracted)
+  - Date (YYYY-MM-DD format, auto-extracted)
+  - Book dropdown (required)
+  - Category dropdown (required)
+  - Payment method dropdown (optional)
+  - Notes field (multi-line)
+  - **Collapsible OCR raw text view** (for debugging)
+  - **Full-screen image dialog** (tap thumbnail to view)
+- ✅ Loading overlay during OCR processing
+- ✅ Error snackbar with dismiss action
+- ✅ Form validation (book and category required)
+
+**OCR Features:**
+- ✅ Vendor extraction (first non-date line)
+- ✅ Date extraction (supports MM/DD/YYYY, DD-MM-YYYY, YYYY-MM-DD)
+- ✅ Amount extraction (finds "total" or dollar amounts)
+- ✅ Card last 4 digits extraction (supports xxxx, ****, "card" patterns)
+- ✅ Full text storage for debugging
+- ✅ Manual override for all fields
+
+### Build & Deploy
+- **Build time:** 3s (final incremental build)
+- **Build warnings:** 3 deprecation warnings (menuAnchor - non-breaking)
+- **Deploy:** SUCCESS to device RRCY802F6PV
+- **Launch:** SUCCESS - app running cleanly
+- **Logcat:** ✅ No errors from ReceiptKeeper
+- **New dependency:** kotlinx-coroutines-play-services:1.9.0
+
+### Files Created (7 files)
+```
+core/di/
+  - OcrModule.kt (ML Kit DI)
+features/scan/
+  - ScanReceiptViewModel.kt (state management)
+features/scan/camera/
+  - CameraPreview.kt (CameraX integration)
+features/scan/ocr/
+  - ExtractedReceiptData.kt (data classes)
+  - OcrProcessor.kt (ML Kit wrapper)
+  - ReceiptParser.kt (regex extraction)
+features/scan/
+  - ScanScreen.kt (REPLACED placeholder with full implementation)
+app/build.gradle.kts (UPDATED - added coroutines-play-services)
+```
+
+### Phase 5 Summary - ALL TASKS COMPLETE ✅
+1. ✅ Camera permissions handling (request, rationale, denial)
+2. ✅ CameraPreview composable with CameraX
+3. ✅ Image capture logic (to cache directory)
+4. ✅ ML Kit Text Recognition integration
+5. ✅ OcrProcessor injectable class (singleton)
+6. ✅ ReceiptParser with regex patterns
+7. ✅ ScanReceiptScreen with auto-filled form
+8. ✅ Display extracted raw text (collapsible debug view)
+9. ✅ Manual override of all fields
+10. ✅ OCR error handling (graceful with snackbar)
+11. ✅ Loading indicator during OCR processing
+
+### User Workflow (Complete E2E)
+1. User taps Scan tab → Camera opens (permission requested on first use)
+2. User points at receipt → Taps capture button
+3. Image captured → Preview shown with 3 options:
+   - **Process with OCR** (recommended)
+   - **Skip OCR - Enter Manually**
+   - **Retake Photo**
+4. If OCR: Processing indicator → Extracted data shown in editable form
+5. User reviews/edits: Vendor, Amount, Date, Book, Category, Payment Method, Notes
+6. User taps "Save Receipt" → Receipt saved to database
+7. App navigates to Receipts tab showing new receipt
+
+### Next Steps
+**Phase 6: Analytics & Reporting**
+1. Create AnalyticsViewModel
+2. Implement date range picker component
+3. Add spending calculations for date ranges
+4. Create SpendingGoal CRUD in settings
+5. Implement goal progress calculation
+6. Design SpendingGoalCard with progress bar
+7. Create CategoryBreakdownChart (visual breakdown)
+8. Implement CSV export logic
+9. Add file sharing intent for CSV
+10. Build, deploy, verify analytics features
+
+### Current Blockers
+None - Phase 5 complete, ready to proceed to Phase 6
+
+### Last Successful Build/Deploy
+**Timestamp:** 2026-02-16 4:07 PM
+**Build:** SUCCESS (3s with Phase 5 completion)
+**Deploy:** SUCCESS to device RRCY802F6PV
+**Package:** com.receiptkeeper.debug
+**Launch Command:** `adb -s RRCY802F6PV shell am start -n com.receiptkeeper.debug/com.receiptkeeper.app.MainActivity`
+**Features Verified:** Camera preview, image capture, OCR processing, extracted data form - complete workflow ✅
+**Phase 5 Status:** ✅ COMPLETE (11/11 tasks)
+
+---
+
 ## Handoff Notes for Next Session
 
-**Current Task:** Phase 5 - Camera & OCR Integration
-**Next Immediate Action:** Add camera permissions and implement CameraPreview with CameraX
-**Environment Status:** ✅ Fully operational - All Phase 4 features working
+**Current Task:** Phase 6 - Analytics & Reporting
+**Next Immediate Action:** Create AnalyticsViewModel and date range picker
+**Environment Status:** ✅ Fully operational - All Phase 5 features working (Camera + OCR)
 **Device:** RRCY802F6PV (physical phone) + emulator-5554 available
 **Package:** com.receiptkeeper.debug (note the .debug suffix for adb commands)
 **JAVA_HOME:** Set in local.properties for Gradle builds
-**Phases Complete:** 0, 1, 2, 3, 4 ✅ | Next: Phase 5 (Camera & OCR)
+**Phases Complete:** 0, 1, 2, 3, 4, 5 ✅ | Next: Phase 6 (Analytics & Reporting)
