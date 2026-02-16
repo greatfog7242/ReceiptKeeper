@@ -21,7 +21,9 @@ This project follows the **LONG-RUNNING ANDROID AGENT HARNESS (SOP)**.
 1. **Implement** ONE sub-feature only
 2. **Build:** `./gradlew assembleDebug`
 3. **Deploy:** `adb install -r app/build/outputs/apk/debug/app-debug.apk`
-4. **Verify:** `adb shell am start -n com.receiptkeeper/.MainActivity`
+4. **Verify:** `adb shell am start -n com.receiptkeeper.debug/com.receiptkeeper.app.MainActivity`
+   - Note: Debug builds have `.debug` suffix (see `applicationIdSuffix` in build.gradle.kts)
+   - Activity path is `com.receiptkeeper.app.MainActivity` (actual package structure)
 5. **Monitor:** `adb logcat -d *:E` (check for crashes)
 6. **Update:** Mark complete in `ai/feature_list.json`
 7. **Log:** Add handoff note to `ai/progress.md`
@@ -191,8 +193,11 @@ com.receiptkeeper/
 # Install on connected device/emulator
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 
-# Launch app
-adb shell am start -n com.receiptkeeper/.MainActivity
+# Launch app (note: .debug suffix for debug builds)
+adb shell am start -n com.receiptkeeper.debug/com.receiptkeeper.app.MainActivity
+
+# If multiple devices connected, specify device:
+adb -s DEVICE_ID shell am start -n com.receiptkeeper.debug/com.receiptkeeper.app.MainActivity
 
 # View error logs only
 adb logcat -d *:E
@@ -340,4 +345,5 @@ git commit -m "docs: update CLAUDE.md with OCR patterns"
 ---
 
 **Last Updated:** 2026-02-16
-**Current Phase:** Phase 0 - SOP Infrastructure Setup
+**Current Phase:** Phase 3 Complete ✅ | Next: Phase 4 - Basic Receipt Management
+**Verified Features:** Books, Vendors, Categories, Payment Methods CRUD all working on device

@@ -99,13 +99,15 @@ fun NavGraph(
         }
 
         composable(route = Routes.Categories.route) {
-            // TODO: Complete in next iteration
-            androidx.compose.material3.Text("Categories Screen - Coming Soon")
+            com.receiptkeeper.features.settings.CategoriesScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
 
         composable(route = Routes.PaymentMethods.route) {
-            // TODO: Complete in next iteration
-            androidx.compose.material3.Text("Payment Methods Screen - Coming Soon")
+            com.receiptkeeper.features.settings.PaymentMethodsScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
 
         composable(route = Routes.SpendingGoals.route) {
