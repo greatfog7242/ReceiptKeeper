@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ReceiptKeeper</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_books">Books</string>
+    <string name="nav_receipts">Receipts</string>
+    <string name="nav_scan">Scan</string>
+    <string name="nav_analytics">Analytics</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Common Actions -->
+    <string name="action_add">Add</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_search">Search</string>
+    <string name="action_filter">Filter</string>
+
+    <!-- Camera Permissions -->
+    <string name="camera_permission_required">Camera permission is required to scan receipts</string>
+    <string name="camera_permission_denied">Camera permission denied. Enable it in settings to scan receipts.</string>
+
+    <!-- Storage Permissions -->
+    <string name="storage_permission_required">Storage permission is required to save receipt images</string>
+
+    <!-- Error Messages -->
+    <string name="error_generic">An error occurred. Please try again.</string>
+    <string name="error_network">Network error. Please check your connection.</string>
+    <string name="error_ocr_failed">Failed to extract text from receipt. Please enter manually.</string>
+
+    <!-- Empty States -->
+    <string name="empty_receipts">No receipts yet. Tap + to add one.</string>
+    <string name="empty_books">No books yet. Create one to organize receipts.</string>
+    <string name="empty_vendors">No vendors found.</string>
+    <string name="empty_categories">No categories found.</string>
+</resources>

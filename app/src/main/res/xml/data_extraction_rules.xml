@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <!-- Include database for cloud backup -->
+        <include domain="database" path="." />
+
+        <!-- Include shared preferences for cloud backup -->
+        <include domain="sharedpref" path="." />
+
+        <!-- Exclude cache -->
+        <exclude domain="file" path="cache" />
+    </cloud-backup>
+</data-extraction-rules>

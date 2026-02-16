@@ -1,0 +1,485 @@
+{
+  "project": "ReceiptKeeper",
+  "package": "com.receiptkeeper",
+  "features": [
+    {
+      "id": "phase-0",
+      "phase": 0,
+      "feature": "SOP Infrastructure Setup",
+      "status": "In Progress",
+      "subtasks": [
+        {
+          "id": "0.1",
+          "task": "Create Android Studio project with Empty Compose Activity",
+          "status": "In Progress"
+        },
+        {
+          "id": "0.2",
+          "task": "Create ai/ directory structure",
+          "status": "Complete"
+        },
+        {
+          "id": "0.3",
+          "task": "Create ai/init.sh with environment validation",
+          "status": "Complete"
+        },
+        {
+          "id": "0.4",
+          "task": "Generate ai/feature_list.json",
+          "status": "Complete"
+        },
+        {
+          "id": "0.5",
+          "task": "Create ai/progress.md",
+          "status": "Incomplete"
+        },
+        {
+          "id": "0.6",
+          "task": "Create CLAUDE.md",
+          "status": "Incomplete"
+        },
+        {
+          "id": "0.7",
+          "task": "Initialize git repository",
+          "status": "Incomplete"
+        },
+        {
+          "id": "0.8",
+          "task": "Create .gitignore for Android",
+          "status": "Incomplete"
+        },
+        {
+          "id": "0.9",
+          "task": "Verify emulator/device is connected",
+          "status": "Incomplete"
+        },
+        {
+          "id": "0.10",
+          "task": "Run initial build and deploy",
+          "status": "Incomplete"
+        }
+      ]
+    },
+    {
+      "id": "phase-1",
+      "phase": 1,
+      "feature": "Foundation & Database",
+      "status": "Incomplete",
+      "subtasks": [
+        {
+          "id": "1.1",
+          "task": "Set up project structure and Gradle configuration",
+          "status": "Incomplete"
+        },
+        {
+          "id": "1.2",
+          "task": "Add dependencies: Compose BOM, Room, Hilt, ML Kit, CameraX, Coil",
+          "status": "Incomplete"
+        },
+        {
+          "id": "1.3",
+          "task": "Create Hilt application class and modules",
+          "status": "Incomplete"
+        },
+        {
+          "id": "1.4",
+          "task": "Define all entity classes with relationships",
+          "status": "Incomplete"
+        },
+        {
+          "id": "1.5",
+          "task": "Create DAOs with Flow-based queries",
+          "status": "Incomplete"
+        },
+        {
+          "id": "1.6",
+          "task": "Implement ReceiptDatabase with seeding callback",
+          "status": "Incomplete"
+        },
+        {
+          "id": "1.7",
+          "task": "Create repository layer",
+          "status": "Incomplete"
+        },
+        {
+          "id": "1.8",
+          "task": "Write data mappers",
+          "status": "Incomplete"
+        },
+        {
+          "id": "1.9",
+          "task": "Unit test repositories and DAOs",
+          "status": "Incomplete"
+        }
+      ]
+    },
+    {
+      "id": "phase-2",
+      "phase": 2,
+      "feature": "Basic UI Framework",
+      "status": "Incomplete",
+      "subtasks": [
+        {
+          "id": "2.1",
+          "task": "Create Navigation Routes sealed class",
+          "status": "Incomplete"
+        },
+        {
+          "id": "2.2",
+          "task": "Set up NavHost in MainActivity",
+          "status": "Incomplete"
+        },
+        {
+          "id": "2.3",
+          "task": "Create bottom navigation bar with 5 tabs",
+          "status": "Incomplete"
+        },
+        {
+          "id": "2.4",
+          "task": "Implement Material 3 theme",
+          "status": "Incomplete"
+        },
+        {
+          "id": "2.5",
+          "task": "Create empty scaffold screens",
+          "status": "Incomplete"
+        },
+        {
+          "id": "2.6",
+          "task": "Wire up navigation between screens",
+          "status": "Incomplete"
+        },
+        {
+          "id": "2.7",
+          "task": "Add top app bars",
+          "status": "Incomplete"
+        }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "phase": 3,
+      "feature": "Books & Settings Management",
+      "status": "Incomplete",
+      "subtasks": [
+        {
+          "id": "3.1",
+          "task": "Implement BooksScreen with LazyVerticalGrid",
+          "status": "Incomplete"
+        },
+        {
+          "id": "3.2",
+          "task": "Create BookCard composable",
+          "status": "Incomplete"
+        },
+        {
+          "id": "3.3",
+          "task": "Add book CRUD functionality",
+          "status": "Incomplete"
+        },
+        {
+          "id": "3.4",
+          "task": "Implement BookDetailScreen",
+          "status": "Incomplete"
+        },
+        {
+          "id": "3.5",
+          "task": "Create SettingsScreen hub",
+          "status": "Incomplete"
+        },
+        {
+          "id": "3.6",
+          "task": "Implement VendorsScreen with CRUD",
+          "status": "Incomplete"
+        },
+        {
+          "id": "3.7",
+          "task": "Create CategoriesScreen with color picker",
+          "status": "Incomplete"
+        },
+        {
+          "id": "3.8",
+          "task": "Implement PaymentMethodsScreen",
+          "status": "Incomplete"
+        },
+        {
+          "id": "3.9",
+          "task": "Add SwipeToDeleteItem component",
+          "status": "Incomplete"
+        },
+        {
+          "id": "3.10",
+          "task": "Implement pull-to-refresh",
+          "status": "Incomplete"
+        }
+      ]
+    },
+    {
+      "id": "phase-4",
+      "phase": 4,
+      "feature": "Basic Receipt Management",
+      "status": "Incomplete",
+      "subtasks": [
+        {
+          "id": "4.1",
+          "task": "Create ReceiptsViewModel with StateFlow",
+          "status": "Incomplete"
+        },
+        {
+          "id": "4.2",
+          "task": "Implement ReceiptsScreen with LazyColumn",
+          "status": "Incomplete"
+        },
+        {
+          "id": "4.3",
+          "task": "Design ReceiptListItem composable",
+          "status": "Incomplete"
+        },
+        {
+          "id": "4.4",
+          "task": "Add manual receipt creation form",
+          "status": "Incomplete"
+        },
+        {
+          "id": "4.5",
+          "task": "Implement image selection from gallery",
+          "status": "Incomplete"
+        },
+        {
+          "id": "4.6",
+          "task": "Create ReceiptDetailScreen with image viewer",
+          "status": "Incomplete"
+        },
+        {
+          "id": "4.7",
+          "task": "Add edit mode for receipts",
+          "status": "Incomplete"
+        },
+        {
+          "id": "4.8",
+          "task": "Implement delete confirmation dialog",
+          "status": "Incomplete"
+        },
+        {
+          "id": "4.9",
+          "task": "Add book filtering dropdown",
+          "status": "Incomplete"
+        },
+        {
+          "id": "4.10",
+          "task": "Calculate and display total spending",
+          "status": "Incomplete"
+        },
+        {
+          "id": "4.11",
+          "task": "Save images to app-specific directory",
+          "status": "Incomplete"
+        },
+        {
+          "id": "4.12",
+          "task": "Load images efficiently with Coil",
+          "status": "Incomplete"
+        }
+      ]
+    },
+    {
+      "id": "phase-5",
+      "phase": 5,
+      "feature": "Camera & OCR Integration",
+      "status": "Incomplete",
+      "subtasks": [
+        {
+          "id": "5.1",
+          "task": "Add camera permissions handling",
+          "status": "Incomplete"
+        },
+        {
+          "id": "5.2",
+          "task": "Implement CameraPreview composable with CameraX",
+          "status": "Incomplete"
+        },
+        {
+          "id": "5.3",
+          "task": "Create image capture logic",
+          "status": "Incomplete"
+        },
+        {
+          "id": "5.4",
+          "task": "Integrate ML Kit Text Recognition",
+          "status": "Incomplete"
+        },
+        {
+          "id": "5.5",
+          "task": "Create OcrProcessor injectable class",
+          "status": "Incomplete"
+        },
+        {
+          "id": "5.6",
+          "task": "Implement ReceiptParser with regex patterns",
+          "status": "Incomplete"
+        },
+        {
+          "id": "5.7",
+          "task": "Update ScanReceiptScreen with auto-filled form",
+          "status": "Incomplete"
+        },
+        {
+          "id": "5.8",
+          "task": "Display extracted raw text (debug view)",
+          "status": "Incomplete"
+        },
+        {
+          "id": "5.9",
+          "task": "Allow manual override of all fields",
+          "status": "Incomplete"
+        },
+        {
+          "id": "5.10",
+          "task": "Handle OCR errors gracefully",
+          "status": "Incomplete"
+        },
+        {
+          "id": "5.11",
+          "task": "Add loading indicator during OCR processing",
+          "status": "Incomplete"
+        }
+      ]
+    },
+    {
+      "id": "phase-6",
+      "phase": 6,
+      "feature": "Analytics & Reporting",
+      "status": "Incomplete",
+      "subtasks": [
+        {
+          "id": "6.1",
+          "task": "Create AnalyticsViewModel",
+          "status": "Incomplete"
+        },
+        {
+          "id": "6.2",
+          "task": "Implement date range picker component",
+          "status": "Incomplete"
+        },
+        {
+          "id": "6.3",
+          "task": "Add DAO queries for spending in date range",
+          "status": "Incomplete"
+        },
+        {
+          "id": "6.4",
+          "task": "Calculate total spending for period",
+          "status": "Incomplete"
+        },
+        {
+          "id": "6.5",
+          "task": "Create SpendingGoal CRUD in settings",
+          "status": "Incomplete"
+        },
+        {
+          "id": "6.6",
+          "task": "Implement goal progress calculation",
+          "status": "Incomplete"
+        },
+        {
+          "id": "6.7",
+          "task": "Design SpendingGoalCard with progress bar",
+          "status": "Incomplete"
+        },
+        {
+          "id": "6.8",
+          "task": "Add DAO query for category breakdown",
+          "status": "Incomplete"
+        },
+        {
+          "id": "6.9",
+          "task": "Create CategoryBreakdownChart",
+          "status": "Incomplete"
+        },
+        {
+          "id": "6.10",
+          "task": "Implement CSV export logic",
+          "status": "Incomplete"
+        },
+        {
+          "id": "6.11",
+          "task": "Add file sharing intent for CSV",
+          "status": "Incomplete"
+        },
+        {
+          "id": "6.12",
+          "task": "Create AnalyticsRepository",
+          "status": "Incomplete"
+        }
+      ]
+    },
+    {
+      "id": "phase-7",
+      "phase": 7,
+      "feature": "Polish & Testing",
+      "status": "Incomplete",
+      "subtasks": [
+        {
+          "id": "7.1",
+          "task": "Add loading states to all ViewModels",
+          "status": "Incomplete"
+        },
+        {
+          "id": "7.2",
+          "task": "Implement comprehensive error handling",
+          "status": "Incomplete"
+        },
+        {
+          "id": "7.3",
+          "task": "Create empty state composables",
+          "status": "Incomplete"
+        },
+        {
+          "id": "7.4",
+          "task": "Add retry logic for failed operations",
+          "status": "Incomplete"
+        },
+        {
+          "id": "7.5",
+          "task": "Implement smooth animations",
+          "status": "Incomplete"
+        },
+        {
+          "id": "7.6",
+          "task": "Add form validation with error messages",
+          "status": "Incomplete"
+        },
+        {
+          "id": "7.7",
+          "task": "Optimize image loading and caching",
+          "status": "Incomplete"
+        },
+        {
+          "id": "7.8",
+          "task": "Write UI tests for critical flows",
+          "status": "Incomplete"
+        },
+        {
+          "id": "7.9",
+          "task": "Add content descriptions for accessibility",
+          "status": "Incomplete"
+        },
+        {
+          "id": "7.10",
+          "task": "Performance profiling and optimization",
+          "status": "Incomplete"
+        },
+        {
+          "id": "7.11",
+          "task": "Bug fixes from testing",
+          "status": "Incomplete"
+        },
+        {
+          "id": "7.12",
+          "task": "Final UX polish",
+          "status": "Incomplete"
+        }
+      ]
+    }
+  ]
+}
