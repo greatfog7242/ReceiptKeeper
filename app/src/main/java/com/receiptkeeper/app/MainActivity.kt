@@ -33,7 +33,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    ReceiptKeeperApp()
+                    AppContent()
                 }
             }
         }
@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun ReceiptKeeperApp() {
+fun AppContent() {
     Scaffold(
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
@@ -61,8 +61,8 @@ fun ReceiptKeeperApp() {
 
 @Preview(showBackground = true)
 @Composable
-fun ReceiptKeeperAppPreview() {
+fun AppContentPreview() {
     ReceiptKeeperTheme {
-        ReceiptKeeperApp()
+        AppContent()
     }
 }

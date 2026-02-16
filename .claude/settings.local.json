@@ -6,7 +6,16 @@
       "Bash(git commit:*)",
       "Bash(gradle wrapper:*)",
       "Bash(chmod:*)",
-      "Bash(sh ai/init.sh)"
+      "Bash(sh ai/init.sh)",
+      "Bash(adb devices:*)",
+      "Bash(./gradlew.bat assembleDebug:*)",
+      "Bash(export JAVA_HOME=\"/c/Program Files/Android/Android Studio/jbr\")",
+      "Bash(export PATH=\"$JAVA_HOME/bin:$PATH\")",
+      "Bash(curl:*)",
+      "Bash(export ANDROID_HOME=\"/c/Users/Xiaozhong Chen/Android-Sdk\")",
+      "Bash(adb -s RRCY802F6PV install -r app/build/outputs/apk/debug/app-debug.apk)",
+      "Bash(adb -s RRCY802F6PV shell am start:*)",
+      "Bash(adb:*)"
     ]
   }
 }

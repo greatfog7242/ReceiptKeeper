@@ -6,7 +6,7 @@
       "id": "phase-0",
       "phase": 0,
       "feature": "SOP Infrastructure Setup",
-      "status": "In Progress",
+      "status": "Complete",
       "subtasks": [
         {
           "id": "0.1",
@@ -51,12 +51,12 @@
         {
           "id": "0.9",
           "task": "Verify emulator/device is connected",
-          "status": "Incomplete"
+          "status": "Complete"
         },
         {
           "id": "0.10",
           "task": "Run initial build and deploy",
-          "status": "Incomplete"
+          "status": "Complete"
         }
       ]
     },
