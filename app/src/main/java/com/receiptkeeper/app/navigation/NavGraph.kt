@@ -91,21 +91,26 @@ fun NavGraph(
             // TODO: Phase 4 - ReceiptDetailScreen
         }
 
-        // Settings sub-screens (to be implemented in Phase 3)
+        // Settings sub-screens
         composable(route = Routes.Vendors.route) {
-            // TODO: Phase 3 - VendorsScreen
+            com.receiptkeeper.features.settings.VendorsScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
 
         composable(route = Routes.Categories.route) {
-            // TODO: Phase 3 - CategoriesScreen
+            // TODO: Complete in next iteration
+            androidx.compose.material3.Text("Categories Screen - Coming Soon")
         }
 
         composable(route = Routes.PaymentMethods.route) {
-            // TODO: Phase 3 - PaymentMethodsScreen
+            // TODO: Complete in next iteration
+            androidx.compose.material3.Text("Payment Methods Screen - Coming Soon")
         }
 
         composable(route = Routes.SpendingGoals.route) {
-            // TODO: Phase 6 - SpendingGoalsScreen
+            // TODO: Phase 6
+            androidx.compose.material3.Text("Spending Goals Screen - Phase 6")
         }
     }
 }

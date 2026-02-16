@@ -15,7 +15,8 @@
       "Bash(export ANDROID_HOME=\"/c/Users/Xiaozhong Chen/Android-Sdk\")",
       "Bash(adb -s RRCY802F6PV install -r app/build/outputs/apk/debug/app-debug.apk)",
       "Bash(adb -s RRCY802F6PV shell am start:*)",
-      "Bash(adb:*)"
+      "Bash(adb:*)",
+      "Bash(wc:*)"
     ]
   }
 }
