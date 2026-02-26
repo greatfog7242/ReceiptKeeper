@@ -1,6 +1,7 @@
 package com.receiptkeeper.features.receipts
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -20,13 +21,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import com.receiptkeeper.core.util.ImageHandler
 import com.receiptkeeper.domain.model.Receipt
 import com.receiptkeeper.features.receipts.components.ReceiptListItem
+import com.receiptkeeper.features.scan.ocr.ReceiptParser
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.text.NumberFormat
 import java.time.LocalDate
 import java.util.Locale
@@ -334,6 +347,8 @@ private fun ReceiptDialog(
     onDismiss: () -> Unit,
     onConfirm: (Long, String, Long, Long?, Double, LocalDate, String?, Uri?) -> Unit
 ) {
+    val context = LocalContext.current
+
     // Initialize vendor name - if editing, look up the vendor name by ID
     val initialVendorName = receipt?.vendorId?.let { vendorId ->
         vendors.find { it.id == vendorId }?.name ?: ""
@@ -341,6 +356,7 @@ private fun ReceiptDialog(
 
     var vendorName by remember { mutableStateOf(initialVendorName) }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var isOcrProcessing by remember { mutableStateOf(false) }
 
     // Photo picker launcher
     val photoPicker = rememberLauncherForActivityResult(
@@ -357,6 +373,7 @@ private fun ReceiptDialog(
     var showBookDropdown by remember { mutableStateOf(false) }
     var showCategoryDropdown by remember { mutableStateOf(false) }
     var showPaymentDropdown by remember { mutableStateOf(false) }
+    var showVendorDropdown by remember { mutableStateOf(false) }
     var vendorError by remember { mutableStateOf(false) }
     var amountError by remember { mutableStateOf(false) }
 
@@ -368,20 +385,60 @@ private fun ReceiptDialog(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Vendor name
-                OutlinedTextField(
-                    value = vendorName,
-                    onValueChange = {
-                        vendorName = it
-                        vendorError = it.isBlank()
-                    },
-                    label = { Text("Vendor *") },
-                    placeholder = { Text("e.g., Walmart") },
-                    isError = vendorError,
-                    supportingText = if (vendorError) {{ Text("Vendor is required") }} else null,
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                // Vendor dropdown
+                ExposedDropdownMenuBox(
+                    expanded = showVendorDropdown,
+                    onExpandedChange = { showVendorDropdown = !showVendorDropdown }
+                ) {
+                    OutlinedTextField(
+                        value = vendorName,
+                        onValueChange = {
+                            vendorName = it
+                            vendorError = it.isBlank()
+                            showVendorDropdown = true
+                        },
+                        label = { Text("Vendor *") },
+                        placeholder = { Text("Select or type vendor") },
+                        isError = vendorError,
+                        supportingText = if (vendorError) {{ Text("Vendor is required") }} else null,
+                        singleLine = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showVendorDropdown) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = showVendorDropdown,
+                        onDismissRequest = { showVendorDropdown = false }
+                    ) {
+                        // Show existing vendors as options
+                        vendors.forEach { vendor ->
+                            DropdownMenuItem(
+                                text = { Text(vendor.name) },
+                                onClick = {
+                                    vendorName = vendor.name
+                                    vendorError = false
+                                    showVendorDropdown = false
+                                }
+                            )
+                        }
+                        // Allow adding a new vendor (option to create)
+                        if (vendorName.isNotBlank() && vendors.none { it.name.equals(vendorName, ignoreCase = true) }) {
+                            HorizontalDivider()
+                            DropdownMenuItem(
+                                text = { Text("Create \"$vendorName\"") },
+                                onClick = {
+                                    vendorError = false
+                                    showVendorDropdown = false
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Default.Add, contentDescription = null)
+                                }
+                            )
+                        }
+                    }
+                }
 
                 // Image picker
                 Column(modifier = Modifier.fillMaxWidth()) {
@@ -446,6 +503,69 @@ private fun ReceiptDialog(
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop
                             )
+                        }
+                    }
+
+                    // OCR Button - appears when image is loaded
+                    if (displayImageUri != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = {
+                                    // Run OCR on the selected image
+                                    isOcrProcessing = true
+                                    val imageUriForOcr = selectedImageUri ?: receipt?.imageUri?.let { Uri.parse("file://$it") }
+                                    if (imageUriForOcr != null) {
+                                        GlobalScope.launch {
+                                            try {
+                                                // Load bitmap from URI
+                                                val inputStream = context.contentResolver.openInputStream(imageUriForOcr)
+                                                val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
+                                                inputStream?.close()
+
+                                                if (bitmap != null) {
+                                                    val inputImage = InputImage.fromBitmap(bitmap, 0)
+                                                    val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+                                                    val result = recognizer.process(inputImage).await()
+                                                    bitmap.recycle()
+
+                                                    if (result.text.isNotBlank()) {
+                                                        val parsedData = ReceiptParser.parseReceipt(result.text)
+                                                        parsedData.vendor?.let { vendorName = it }
+                                                        parsedData.amount?.let { amount = it.toString() }
+                                                        parsedData.date?.let { date = it.toString() }
+                                                        withContext(Dispatchers.Main) {
+                                                            Toast.makeText(context, "OCR: Extracted data", Toast.LENGTH_SHORT).show()
+                                                        }
+                                                    }
+                                                }
+                                            } catch (e: Exception) {
+                                                withContext(Dispatchers.Main) {
+                                                    Toast.makeText(context, "OCR failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                                                }
+                                            } finally {
+                                                isOcrProcessing = false
+                                            }
+                                        }
+                                    }
+                                },
+                                enabled = !isOcrProcessing,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                if (isOcrProcessing) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(16.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                } else {
+                                    Icon(Icons.Default.DocumentScanner, contentDescription = null)
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(if (isOcrProcessing) "Processing..." else "Extract Text (OCR)")
+                            }
                         }
                     }
                 }
@@ -640,6 +760,10 @@ private fun FullScreenImageDialog(
     imageUri: String,
     onDismiss: () -> Unit
 ) {
+    val context = LocalContext.current
+    val imageHandler = remember { ImageHandler(context) }
+    var isDownloading by remember { mutableStateOf(false) }
+
     androidx.compose.ui.window.Dialog(
         onDismissRequest = onDismiss,
         properties = androidx.compose.ui.window.DialogProperties(
@@ -650,7 +774,6 @@ private fun FullScreenImageDialog(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black)
-                .clickable { onDismiss() }
         ) {
             AsyncImage(
                 model = imageUri,
@@ -659,16 +782,53 @@ private fun FullScreenImageDialog(
                 contentScale = ContentScale.Fit
             )
 
-            // Close button
-            IconButton(
-                onClick = onDismiss,
-                modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
+            // Top bar with close and download buttons
+            Row(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(
-                    Icons.Default.Close,
-                    contentDescription = "Close",
-                    tint = Color.White
-                )
+                // Download button
+                IconButton(
+                    onClick = {
+                        isDownloading = true
+                        kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                            val uri = imageHandler.downloadImageToGallery(imageUri)
+                            isDownloading = false
+                            val message = if (uri != null) {
+                                "Image saved to Downloads"
+                            } else {
+                                "Failed to download image"
+                            }
+                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    enabled = !isDownloading
+                ) {
+                    if (isDownloading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Icon(
+                            Icons.Default.Download,
+                            contentDescription = "Download",
+                            tint = Color.White
+                        )
+                    }
+                }
+
+                // Close button
+                IconButton(onClick = onDismiss) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = Color.White
+                    )
+                }
             }
         }
     }

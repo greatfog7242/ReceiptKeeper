@@ -1,5 +1,6 @@
 package com.receiptkeeper.features.receipts
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -9,6 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,10 +19,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.receiptkeeper.core.util.ImageHandler
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -268,6 +274,10 @@ private fun FullScreenImageDialog(
     imageUri: String,
     onDismiss: () -> Unit
 ) {
+    val context = LocalContext.current
+    val imageHandler = remember { ImageHandler(context) }
+    var isDownloading by remember { mutableStateOf(false) }
+
     androidx.compose.ui.window.Dialog(
         onDismissRequest = onDismiss,
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
@@ -276,7 +286,6 @@ private fun FullScreenImageDialog(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black)
-                .clickable { onDismiss() }
         ) {
             AsyncImage(
                 model = imageUri,
@@ -285,18 +294,53 @@ private fun FullScreenImageDialog(
                 contentScale = ContentScale.Fit
             )
 
-            // Close button
-            IconButton(
-                onClick = onDismiss,
+            // Top bar with close and download buttons
+            Row(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(16.dp)
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(
-                    Icons.Default.Close,
-                    contentDescription = "Close",
-                    tint = Color.White
-                )
+                // Download button
+                IconButton(
+                    onClick = {
+                        isDownloading = true
+                        GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                            val uri = imageHandler.downloadImageToGallery(imageUri)
+                            isDownloading = false
+                            val message = if (uri != null) {
+                                "Image saved to Downloads"
+                            } else {
+                                "Failed to download image"
+                            }
+                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    enabled = !isDownloading
+                ) {
+                    if (isDownloading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Icon(
+                            Icons.Default.Download,
+                            contentDescription = "Download",
+                            tint = Color.White
+                        )
+                    }
+                }
+
+                // Close button
+                IconButton(onClick = onDismiss) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = Color.White
+                    )
+                }
             }
         }
     }

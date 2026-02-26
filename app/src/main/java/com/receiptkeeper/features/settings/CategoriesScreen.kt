@@ -22,15 +22,25 @@ import com.receiptkeeper.domain.model.Category
 // Predefined colors for categories
 private val categoryColors = listOf(
     "#FF6B6B" to "Red",
+    "#FF6B6B" to "Coral",
     "#4ECB71" to "Green",
+    "#2ECC71" to "Lime",
     "#FFA500" to "Orange",
+    "#F39C12" to "Yellow",
     "#E91E63" to "Pink",
+    "#E74C3C" to "Crimson",
     "#3498DB" to "Blue",
+    "#3498DB" to "Sky Blue",
     "#9B59B6" to "Purple",
     "#1ABC9C" to "Teal",
+    "#16A085" to "Sea Green",
     "#95A5A6" to "Gray",
-    "#F39C12" to "Yellow",
-    "#2ECC71" to "Lime"
+    "#7F8C8D" to "Slate",
+    "#34495E" to "Navy",
+    "#D35400" to "Pumpkin",
+    "#8E44AD" to "Violet",
+    "#27AE60" to "Nephritis",
+    "#2980B9" to "Belize Hole"
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -106,7 +116,7 @@ fun CategoriesScreen(
                         items(uiState.categories, key = { it.id }) { category ->
                             CategoryListItem(
                                 category = category,
-                                onEditClick = { if (!it.isDefault) viewModel.showEditDialog(it) },
+                                onEditClick = { viewModel.showEditDialog(it) },
                                 onDeleteClick = { if (!it.isDefault) categoryToDelete = it }
                             )
                         }
@@ -215,11 +225,11 @@ private fun CategoryListItem(
                 }
             }
 
-            if (!category.isDefault) {
-                IconButton(onClick = { onEditClick(category) }) {
-                    Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.primary)
-                }
+            IconButton(onClick = { onEditClick(category) }) {
+                Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.primary)
+            }
 
+            if (!category.isDefault) {
                 IconButton(onClick = { onDeleteClick(category) }) {
                     Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
                 }

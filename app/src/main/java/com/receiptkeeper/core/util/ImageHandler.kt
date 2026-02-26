@@ -1,13 +1,19 @@
 package com.receiptkeeper.core.util
 
+import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import androidx.core.content.FileProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -100,4 +106,42 @@ class ImageHandler @Inject constructor(
      * Gets the receipts directory
      */
     fun getReceiptsDirectory(): File = receiptsDir
+
+    /**
+     * Downloads an image to the device's Downloads folder
+     * @param imagePath The file path of the image to download
+     * @return Uri of the saved file, or null on failure
+     */
+    suspend fun downloadImageToGallery(imagePath: String): Uri? = withContext(Dispatchers.IO) {
+        try {
+            val sourceFile = File(imagePath)
+            if (!sourceFile.exists()) return@withContext null
+
+            val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))
+            val displayName = "Receipt_$timestamp.jpg"
+
+            val contentValues = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
+                put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+                }
+            }
+
+            val resolver = context.contentResolver
+            val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+                ?: return@withContext null
+
+            resolver.openOutputStream(uri)?.use { outputStream ->
+                sourceFile.inputStream().use { inputStream ->
+                    inputStream.copyTo(outputStream)
+                }
+            }
+
+            uri
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
 }

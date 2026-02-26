@@ -1,10 +1,14 @@
 package com.receiptkeeper.features.analytics
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.IosShare
+import androidx.compose.material.icons.filled.PieChart
+import androidx.compose.material.icons.filled.StackedBarChart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.receiptkeeper.core.util.CsvExporter
 import com.receiptkeeper.features.analytics.components.CategoryBreakdownChart
+import com.receiptkeeper.features.analytics.components.ChartType
 import com.receiptkeeper.features.analytics.components.DateRangePicker
 import com.receiptkeeper.features.analytics.components.SpendingGoalCard
 import com.receiptkeeper.features.analytics.components.getGoalPeriodDateRange
@@ -42,6 +47,7 @@ fun AnalyticsScreen(
 
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    var selectedChartType by remember { mutableStateOf(ChartType.PIE) }
 
     Scaffold(
         topBar = {
@@ -58,8 +64,8 @@ fun AnalyticsScreen(
                                     val bookNames = books.associate { it.id to it.name }
                                     val paymentMethodNames = paymentMethods.associate { it.id to it.name }
 
-                                    // Export to CSV
-                                    val csvFile = CsvExporter.exportToCSV(
+                                    // Save to Downloads folder
+                                    val uri = CsvExporter.saveToDownloads(
                                         context = context,
                                         receipts = receipts,
                                         vendorNames = vendorNames,
@@ -68,10 +74,15 @@ fun AnalyticsScreen(
                                         paymentMethodNames = paymentMethodNames
                                     )
 
-                                    // Share the file
-                                    CsvExporter.shareCSV(context, csvFile)
+                                    // Show result message
+                                    val message = if (uri != null) {
+                                        "Exported to Downloads folder"
+                                    } else {
+                                        "Failed to export"
+                                    }
+                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                                 } catch (e: Exception) {
-                                    // Handle error (could show a toast or snackbar)
+                                    Toast.makeText(context, "Export failed", Toast.LENGTH_SHORT).show()
                                 }
                             }
                         },
@@ -137,11 +148,67 @@ fun AnalyticsScreen(
                 }
             }
 
-            // Category Breakdown Chart
+            // Category Breakdown Chart with type selector
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Spending by Category",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                // Chart type toggle
+                Row {
+                    IconButton(
+                        onClick = { selectedChartType = ChartType.PIE }
+                    ) {
+                        Icon(
+                            Icons.Default.PieChart,
+                            contentDescription = "Pie Chart",
+                            tint = if (selectedChartType == ChartType.PIE) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            }
+                        )
+                    }
+                    IconButton(
+                        onClick = { selectedChartType = ChartType.STACKED_BAR }
+                    ) {
+                        Icon(
+                            Icons.Default.StackedBarChart,
+                            contentDescription = "Stacked Bar Chart",
+                            tint = if (selectedChartType == ChartType.STACKED_BAR) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            }
+                        )
+                    }
+                    IconButton(
+                        onClick = { selectedChartType = ChartType.TREEMAP }
+                    ) {
+                        Icon(
+                            Icons.Default.Dashboard,
+                            contentDescription = "Treemap",
+                            tint = if (selectedChartType == ChartType.TREEMAP) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            }
+                        )
+                    }
+                }
+            }
+
             CategoryBreakdownChart(
                 categorySpending = categoryBreakdown,
                 categories = categories,
-                totalSpending = totalSpending
+                totalSpending = totalSpending,
+                chartType = selectedChartType
             )
 
             // Spending Goals with Progress
