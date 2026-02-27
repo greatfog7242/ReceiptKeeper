@@ -64,9 +64,9 @@ fun ReceiptsScreen(
         .groupBy { it.transactionDate }
         .toSortedMap(compareByDescending<LocalDate> { it })
 
-    // Initially expand all dates
+    // Initially collapse all dates
     var expandedDates by remember(receiptsByDate.keys) {
-        mutableStateOf(receiptsByDate.keys.toSet())
+        mutableStateOf<Set<LocalDate>>(emptySet())
     }
 
     Scaffold(
