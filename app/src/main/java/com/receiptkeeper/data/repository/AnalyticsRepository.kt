@@ -3,6 +3,7 @@ package com.receiptkeeper.data.repository
 import com.receiptkeeper.data.local.dao.CategoryDao
 import com.receiptkeeper.data.local.dao.ReceiptDao
 import com.receiptkeeper.data.local.entity.CategorySpending
+import com.receiptkeeper.data.local.entity.VendorSpending
 import com.receiptkeeper.data.mapper.toDomain
 import com.receiptkeeper.domain.model.Category
 import com.receiptkeeper.domain.model.Receipt
@@ -42,6 +43,13 @@ class AnalyticsRepository @Inject constructor(
      */
     fun getCategorySpendingBreakdown(startDate: LocalDate, endDate: LocalDate): Flow<List<CategorySpending>> {
         return receiptDao.getCategorySpendingBreakdown(startDate, endDate)
+    }
+
+    /**
+     * Get spending breakdown by vendor for a date range
+     */
+    fun getVendorSpendingBreakdown(startDate: LocalDate, endDate: LocalDate): Flow<List<VendorSpending>> {
+        return receiptDao.getVendorSpendingBreakdown(startDate, endDate)
     }
 
     /**

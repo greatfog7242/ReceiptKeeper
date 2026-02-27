@@ -3,6 +3,7 @@ package com.receiptkeeper.data.local.dao
 import androidx.room.*
 import com.receiptkeeper.data.local.entity.CategorySpending
 import com.receiptkeeper.data.local.entity.ReceiptEntity
+import com.receiptkeeper.data.local.entity.VendorSpending
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
@@ -77,6 +78,15 @@ interface ReceiptDao {
         GROUP BY categoryId
     """)
     fun getCategorySpendingBreakdown(startDate: LocalDate, endDate: LocalDate): Flow<List<CategorySpending>>
+
+    @Query("""
+        SELECT vendorId, SUM(totalAmount) as total
+        FROM receipts
+        WHERE transactionDate BETWEEN :startDate AND :endDate
+        AND vendorId IS NOT NULL
+        GROUP BY vendorId
+    """)
+    fun getVendorSpendingBreakdown(startDate: LocalDate, endDate: LocalDate): Flow<List<VendorSpending>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertReceipt(receipt: ReceiptEntity): Long

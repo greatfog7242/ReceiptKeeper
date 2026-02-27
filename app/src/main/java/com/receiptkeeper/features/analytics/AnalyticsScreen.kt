@@ -22,6 +22,7 @@ import com.receiptkeeper.features.analytics.components.CategoryBreakdownChart
 import com.receiptkeeper.features.analytics.components.ChartType
 import com.receiptkeeper.features.analytics.components.DateRangePicker
 import com.receiptkeeper.features.analytics.components.SpendingGoalCard
+import com.receiptkeeper.features.analytics.components.VendorBreakdownChart
 import com.receiptkeeper.features.analytics.components.getGoalPeriodDateRange
 import kotlinx.coroutines.launch
 
@@ -39,6 +40,7 @@ fun AnalyticsScreen(
     val totalSpending by viewModel.totalSpending.collectAsState()
     val categoryBreakdown by viewModel.categoryBreakdown.collectAsState()
     val categories by viewModel.categories.collectAsState()
+    val vendorBreakdown by viewModel.vendorBreakdown.collectAsState()
     val receipts by viewModel.receipts.collectAsState()
     val spendingGoals by viewModel.spendingGoals.collectAsState()
     val vendors by viewModel.vendors.collectAsState()
@@ -207,6 +209,69 @@ fun AnalyticsScreen(
             CategoryBreakdownChart(
                 categorySpending = categoryBreakdown,
                 categories = categories,
+                totalSpending = totalSpending,
+                chartType = selectedChartType
+            )
+
+            // Vendor Breakdown Chart
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Spending by Vendor",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                // Chart type toggle (reusing selectedChartType)
+                Row {
+                    IconButton(
+                        onClick = { selectedChartType = ChartType.PIE }
+                    ) {
+                        Icon(
+                            Icons.Default.PieChart,
+                            contentDescription = "Pie Chart",
+                            tint = if (selectedChartType == ChartType.PIE) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            }
+                        )
+                    }
+                    IconButton(
+                        onClick = { selectedChartType = ChartType.STACKED_BAR }
+                    ) {
+                        Icon(
+                            Icons.Default.StackedBarChart,
+                            contentDescription = "Stacked Bar Chart",
+                            tint = if (selectedChartType == ChartType.STACKED_BAR) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            }
+                        )
+                    }
+                    IconButton(
+                        onClick = { selectedChartType = ChartType.TREEMAP }
+                    ) {
+                        Icon(
+                            Icons.Default.Dashboard,
+                            contentDescription = "Treemap",
+                            tint = if (selectedChartType == ChartType.TREEMAP) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            }
+                        )
+                    }
+                }
+            }
+
+            VendorBreakdownChart(
+                vendorSpending = vendorBreakdown,
+                vendors = vendors,
                 totalSpending = totalSpending,
                 chartType = selectedChartType
             )

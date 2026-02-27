@@ -3,6 +3,7 @@ package com.receiptkeeper.features.analytics
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.receiptkeeper.data.local.entity.CategorySpending
+import com.receiptkeeper.data.local.entity.VendorSpending
 import com.receiptkeeper.data.repository.*
 import com.receiptkeeper.domain.model.*
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -61,6 +62,16 @@ class AnalyticsViewModel @Inject constructor(
         start to end
     }.flatMapLatest { (start, end) ->
         analyticsRepository.getCategorySpendingBreakdown(start, end)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // Vendor spending breakdown
+    val vendorBreakdown: StateFlow<List<VendorSpending>> = combine(
+        _startDate,
+        _endDate
+    ) { start, end ->
+        start to end
+    }.flatMapLatest { (start, end) ->
+        analyticsRepository.getVendorSpendingBreakdown(start, end)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // All categories for reference
