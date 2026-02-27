@@ -6,10 +6,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.receiptkeeper.BuildConfig
 
 /**
  * Settings screen - app configuration and management screens
@@ -23,6 +28,12 @@ fun SettingsScreen(
     onNavigateToSpendingGoals: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    var showAboutDialog by remember { mutableStateOf(false) }
+
+    if (showAboutDialog) {
+        AboutDialog(onDismiss = { showAboutDialog = false })
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -74,11 +85,20 @@ fun SettingsScreen(
                 onClick = onNavigateToSpendingGoals
             )
 
+            HorizontalDivider()
+
+            SettingsItem(
+                icon = Icons.Default.Info,
+                title = "About",
+                subtitle = "Version and build information",
+                onClick = { showAboutDialog = true }
+            )
+
             Spacer(modifier = Modifier.weight(1f))
 
-            // Version info
+            // Simple version footer
             Text(
-                text = "ReceiptKeeper v1.0.0",
+                text = "v${BuildConfig.VERSION_NAME}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                 modifier = Modifier
@@ -86,6 +106,67 @@ fun SettingsScreen(
                     .padding(16.dp)
             )
         }
+    }
+}
+
+@Composable
+private fun AboutDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                imageVector = Icons.Default.Receipt,
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+        },
+        title = {
+            Text(
+                text = "ReceiptKeeper",
+                style = MaterialTheme.typography.headlineSmall
+            )
+        },
+        text = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                InfoRow(label = "Version", value = BuildConfig.VERSION_NAME)
+                Spacer(modifier = Modifier.height(8.dp))
+                InfoRow(label = "Build", value = BuildConfig.BUILD_NUMBER)
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Receipt scanning and management app",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("OK")
+            }
+        }
+    )
+}
+
+@Composable
+private fun InfoRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }
 

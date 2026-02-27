@@ -6,6 +6,12 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
+// Get git commit hash using Gradle provider (runs at execution time)
+val gitCommitHash = providers.exec {
+    workingDir = rootProject.projectDir
+    commandLine("git", "rev-parse", "--short=7", "HEAD")
+}.standardOutput.asText.get().trim()
+
 android {
     namespace = "com.receiptkeeper"
     compileSdk = 35
@@ -16,6 +22,7 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0.0"
+        buildConfigField("String", "BUILD_NUMBER", "\"$gitCommitHash\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -48,6 +55,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     packaging {
