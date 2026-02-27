@@ -44,6 +44,7 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.text.NumberFormat
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,6 +58,16 @@ fun ReceiptsScreen(
     var receiptToDelete by remember { mutableStateOf<Receipt?>(null) }
     var showFilterMenu by remember { mutableStateOf(false) }
     var fullScreenImageUri by remember { mutableStateOf<String?>(null) }
+
+    // Group receipts by date and track expanded/collapsed state
+    val receiptsByDate = uiState.receipts
+        .groupBy { it.transactionDate }
+        .toSortedMap(compareByDescending<LocalDate> { it })
+
+    // Initially expand all dates
+    var expandedDates by remember(receiptsByDate.keys) {
+        mutableStateOf(receiptsByDate.keys.toSet())
+    }
 
     Scaffold(
         topBar = {
@@ -204,29 +215,83 @@ fun ReceiptsScreen(
                             }
                         }
 
-                        // Receipts list
+                        // Receipts list grouped by date
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = PaddingValues(vertical = 8.dp)
                         ) {
-                            items(uiState.receipts, key = { it.id }) { receipt ->
-                                val vendor = uiState.vendors.find { it.id == receipt.vendorId }
-                                val category = uiState.categories.find { it.id == receipt.categoryId }
-                                val book = uiState.books.find { it.id == receipt.bookId }
+                            receiptsByDate.forEach { (date, receiptsForDate) ->
+                                val isExpanded = expandedDates.contains(date)
+                                val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy")
+                                val dateTotal = receiptsForDate.sumOf { it.totalAmount }
 
-                                ReceiptListItem(
-                                    receipt = receipt,
-                                    vendorName = vendor?.name ?: "Unknown",
-                                    vendorIconName = vendor?.iconName ?: "Store",
-                                    categoryName = category?.name ?: "Unknown",
-                                    categoryColor = category?.colorHex ?: "#95A5A6",
-                                    categoryIconName = category?.iconName ?: "Category",
-                                    bookName = book?.name ?: "Unknown",
-                                    onItemClick = { onNavigateToReceiptDetail(it.id) },
-                                    onEditClick = { viewModel.showEditDialog(it) },
-                                    onDeleteClick = { receiptToDelete = it },
-                                    onImageClick = { imageUri -> fullScreenImageUri = imageUri }
-                                )
+                                // Date header
+                                item(key = "header_$date") {
+                                    Surface(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                expandedDates = if (isExpanded) {
+                                                    expandedDates - date
+                                                } else {
+                                                    expandedDates + date
+                                                }
+                                            },
+                                        color = MaterialTheme.colorScheme.surfaceVariant
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                            ) {
+                                                Icon(
+                                                    imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                                    contentDescription = if (isExpanded) "Collapse" else "Expand",
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                                Text(
+                                                    text = date.format(dateFormatter),
+                                                    style = MaterialTheme.typography.titleMedium,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                            Text(
+                                                text = formatCurrency(dateTotal),
+                                                style = MaterialTheme.typography.titleMedium,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+                                    }
+                                }
+
+                                // Receipts for this date
+                                if (isExpanded) {
+                                    items(receiptsForDate, key = { it.id }) { receipt ->
+                                        val vendor = uiState.vendors.find { it.id == receipt.vendorId }
+                                        val category = uiState.categories.find { it.id == receipt.categoryId }
+                                        val book = uiState.books.find { it.id == receipt.bookId }
+
+                                        ReceiptListItem(
+                                            receipt = receipt,
+                                            vendorName = vendor?.name ?: "Unknown",
+                                            vendorIconName = vendor?.iconName ?: "Store",
+                                            categoryName = category?.name ?: "Unknown",
+                                            categoryColor = category?.colorHex ?: "#95A5A6",
+                                            categoryIconName = category?.iconName ?: "Category",
+                                            bookName = book?.name ?: "Unknown",
+                                            onItemClick = { onNavigateToReceiptDetail(it.id) },
+                                            onEditClick = { viewModel.showEditDialog(it) },
+                                            onDeleteClick = { receiptToDelete = it },
+                                            onImageClick = { imageUri -> fullScreenImageUri = imageUri }
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
