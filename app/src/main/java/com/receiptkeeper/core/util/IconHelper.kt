@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import java.io.File
 
 /**
  * Utility object for mapping icon names to Material Icons
@@ -19,21 +20,113 @@ object IconHelper {
     const val BRAND_PREFIX = "brand_"
 
     /**
+     * Prefix for custom brand logos (stored in internal storage)
+     */
+    const val CUSTOM_BRAND_PREFIX = "custom_"
+
+    /**
+     * Directory name for custom brand icons in internal storage
+     */
+    const val CUSTOM_ICONS_DIR = "custom_brand_logos"
+
+    /**
      * List of available brand icon names (without extension)
      */
     val brandIconNames = listOf(
-        "ALDI_SÜD", "Chick-fil-A", "CITGO", "Costco", "Goodwill_Industries",
-        "H_MART", "Kwik_Trip", "Lowes", "Marshalls", "McDonalds", "Meijercom",
+        "ALDI_SÜD", "AsianMarket", "Chick-fil-A", "Chinese_Restaurant", "CITGO", "Costco", "Goodwill_Industries",
+        "H_MART", "Kwik_Trip", "Kohls", "Lowes", "Marshalls", "McDonalds", "Meijercom",
         "Menards", "Pick_n_Save", "Piggly_Wiggly", "Pizza_Hut", "QDOBA",
         "Ross_Dress_for_Less", "Sams_Club", "Sendiks", "Target", "The_Home_Depot",
         "TJ_Maxx", "Trader_Joes", "Walgreens", "Walmart"
     )
 
     /**
-     * Check if icon name is a brand icon
+     * Check if icon name is a brand icon (either built-in or custom)
      */
     fun isBrandIcon(iconName: String): Boolean {
-        return iconName.startsWith(BRAND_PREFIX) || brandIconNames.contains(iconName)
+        return iconName.startsWith(BRAND_PREFIX) ||
+               iconName.startsWith(CUSTOM_BRAND_PREFIX) ||
+               brandIconNames.contains(iconName) ||
+               isCustomIcon(iconName)
+    }
+
+    /**
+     * Check if icon name is a custom icon
+     */
+    fun isCustomIcon(iconName: String): Boolean {
+        return iconName.startsWith(CUSTOM_BRAND_PREFIX)
+    }
+
+    /**
+     * Get list of custom brand icons from internal storage
+     */
+    fun getCustomBrandIcons(context: Context): List<Pair<String, String>> {
+        val customDir = File(context.filesDir, CUSTOM_ICONS_DIR)
+        if (!customDir.exists()) {
+            return emptyList()
+        }
+        return customDir.listFiles()
+            ?.filter { it.extension.lowercase() in listOf("png", "jpg", "jpeg") }
+            ?.map { file ->
+                val nameWithoutExt = file.nameWithoutExtension
+                CUSTOM_BRAND_PREFIX + nameWithoutExt to nameWithoutExt.replace("_", " ")
+            }
+            ?: emptyList()
+    }
+
+    /**
+     * Get URI for a custom brand icon
+     */
+    fun getCustomBrandIconUri(context: Context, iconName: String): String {
+        val name = if (iconName.startsWith(CUSTOM_BRAND_PREFIX)) {
+            iconName.removePrefix(CUSTOM_BRAND_PREFIX)
+        } else {
+            iconName
+        }
+        val customDir = File(context.filesDir, CUSTOM_ICONS_DIR)
+        val file = File(customDir, "$name.png")
+        return if (file.exists()) {
+            "file://${file.absolutePath}"
+        } else {
+            val jpgFile = File(customDir, "$name.jpg")
+            if (jpgFile.exists()) {
+                "file://${jpgFile.absolutePath}"
+            } else {
+                val jpegFile = File(customDir, "$name.jpeg")
+                "file://${jpegFile.absolutePath}"
+            }
+        }
+    }
+
+    /**
+     * Save a custom brand icon to internal storage
+     */
+    fun saveCustomBrandIcon(context: Context, iconName: String, imageBytes: ByteArray): Boolean {
+        return try {
+            val customDir = File(context.filesDir, CUSTOM_ICONS_DIR)
+            if (!customDir.exists()) {
+                customDir.mkdirs()
+            }
+            // Clean the name - remove prefix if present
+            val cleanName = iconName
+                .replace(CUSTOM_BRAND_PREFIX, "")
+                .replace(" ", "_")
+                .replace(Regex("[^a-zA-Z0-9_]"), "")
+
+            val file = File(customDir, "$cleanName.png")
+            file.writeBytes(imageBytes)
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    /**
+     * Get all brand icons (built-in + custom)
+     */
+    fun getAllBrandIcons(context: Context): List<Pair<String, String>> {
+        return getBrandIcons() + getCustomBrandIcons(context)
     }
 
     /**
