@@ -78,7 +78,7 @@ fun AnalyticsScreen(
 
                                     // Show result message
                                     val message = if (uri != null) {
-                                        "Exported to Downloads folder"
+                                        "Exported to Downloads/ReceiptKeeper_ timestamp folder"
                                     } else {
                                         "Failed to export"
                                     }
