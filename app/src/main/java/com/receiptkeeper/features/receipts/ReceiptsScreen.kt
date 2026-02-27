@@ -327,7 +327,7 @@ fun ReceiptsScreen(
                 if (uiState.editingReceipt != null) viewModel.hideEditDialog()
                 else viewModel.hideAddDialog()
             },
-            onConfirm = { bookId, vendorName, categoryId, paymentMethodId, amount, date, notes, imageUri ->
+            onConfirm = { bookId, vendorName, categoryId, paymentMethodId, amount, date, notes, imageUri, extractedText ->
                 if (uiState.editingReceipt != null) {
                     viewModel.updateReceiptFromDialog(
                         receiptId = uiState.editingReceipt!!.id,
@@ -350,7 +350,8 @@ fun ReceiptsScreen(
                         totalAmount = amount,
                         transactionDate = date,
                         notes = notes,
-                        imageUri = imageUri
+                        imageUri = imageUri,
+                        extractedText = extractedText
                     )
                 }
             }
@@ -413,7 +414,7 @@ private fun ReceiptDialog(
     paymentMethods: List<com.receiptkeeper.domain.model.PaymentMethod>,
     onImageClick: (String) -> Unit,
     onDismiss: () -> Unit,
-    onConfirm: (Long, String, Long, Long?, Double, LocalDate, String?, Uri?) -> Unit
+    onConfirm: (Long, String, Long, Long?, Double, LocalDate, String?, Uri?, String?) -> Unit
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -426,6 +427,17 @@ private fun ReceiptDialog(
     var vendorName by remember { mutableStateOf(initialVendorName) }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var isOcrProcessing by remember { mutableStateOf(false) }
+    var extractedText by remember { mutableStateOf<String?>(null) }
+    var extractedCardLast4 by remember { mutableStateOf<String?>(null) }
+
+    // Auto-select payment method based on extracted card last 4 digits
+    var selectedPaymentMethodId by remember(extractedCardLast4, paymentMethods) {
+        mutableStateOf(
+            extractedCardLast4?.let { cardLast4 ->
+                paymentMethods.find { it.lastFourDigits == cardLast4 }?.id
+            } ?: receipt?.paymentMethodId
+        )
+    }
 
     // Photo picker launcher
     val photoPicker = rememberLauncherForActivityResult(
@@ -435,7 +447,6 @@ private fun ReceiptDialog(
     }
     var selectedBookId by remember { mutableStateOf(receipt?.bookId ?: books.firstOrNull()?.id ?: 0L) }
     var selectedCategoryId by remember { mutableStateOf(receipt?.categoryId ?: categories.firstOrNull()?.id ?: 0L) }
-    var selectedPaymentMethodId by remember { mutableStateOf<Long?>(receipt?.paymentMethodId) }
     var amount by remember { mutableStateOf(receipt?.totalAmount?.toString() ?: "") }
     var date by remember { mutableStateOf(receipt?.transactionDate?.toString() ?: LocalDate.now().toString()) }
     var notes by remember { mutableStateOf(receipt?.notes ?: "") }
@@ -608,6 +619,9 @@ private fun ReceiptDialog(
                                                         parsedData.vendor?.let { vendorName = it }
                                                         parsedData.amount?.let { amount = it.toString() }
                                                         parsedData.date?.let { date = it.toString() }
+                                                        // Store extracted text and card last 4 for payment matching
+                                                        extractedText = parsedData.fullText
+                                                        extractedCardLast4 = parsedData.cardLast4
                                                         withContext(Dispatchers.Main) {
                                                             Toast.makeText(context, "OCR: Extracted data", Toast.LENGTH_SHORT).show()
                                                         }
@@ -744,6 +758,27 @@ private fun ReceiptDialog(
                     }
                 }
 
+                // Card detected indicator
+                if (!extractedCardLast4.isNullOrBlank()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Card Detected: **** $extractedCardLast4",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        if (selectedPaymentMethodId != null) {
+                            AssistChip(
+                                onClick = { },
+                                label = { Text("Auto-matched") }
+                            )
+                        }
+                    }
+                }
+
                 // Amount
                 OutlinedTextField(
                     value = amount,
@@ -849,7 +884,8 @@ private fun ReceiptDialog(
                             amountValue,
                             dateValue,
                             notes.takeIf { it.isNotBlank() },
-                            selectedImageUri
+                            selectedImageUri,
+                            extractedText
                         )
                     } else {
                         vendorError = vendorName.isBlank()
