@@ -8,6 +8,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -384,7 +386,9 @@ private fun ReceiptDialog(
         title = { Text(if (receipt == null) "Add Receipt" else "Edit Receipt") },
         text = {
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // Vendor dropdown
@@ -694,15 +698,62 @@ private fun ReceiptDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Date (simplified for now)
+                // Date with date picker
+                var showDatePicker by remember { mutableStateOf(false) }
+                val datePickerState = rememberDatePickerState(
+                    initialSelectedDateMillis = try {
+                        // Use UTC to avoid timezone shifts
+                        java.time.LocalDate.parse(date).atStartOfDay(java.time.ZoneId.of("UTC")).toInstant().toEpochMilli()
+                    } catch (e: Exception) {
+                        java.time.LocalDate.now().atStartOfDay(java.time.ZoneId.of("UTC")).toInstant().toEpochMilli()
+                    }
+                )
+
                 OutlinedTextField(
                     value = date,
                     onValueChange = { date = it },
-                    label = { Text("Date (YYYY-MM-DD)") },
+                    label = { Text("Date") },
                     placeholder = { Text(LocalDate.now().toString()) },
+                    readOnly = true,
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showDatePicker = true },
+                    trailingIcon = {
+                        IconButton(onClick = { showDatePicker = true }) {
+                            Icon(Icons.Default.CalendarToday, contentDescription = "Select date")
+                        }
+                    }
                 )
+
+                if (showDatePicker) {
+                    DatePickerDialog(
+                        onDismissRequest = { showDatePicker = false },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    datePickerState.selectedDateMillis?.let { millis ->
+                                        // Use UTC to avoid timezone shifts causing off-by-one errors
+                                        val selectedDate = java.time.Instant.ofEpochMilli(millis)
+                                            .atZone(java.time.ZoneId.of("UTC"))
+                                            .toLocalDate()
+                                        date = selectedDate.toString()
+                                    }
+                                    showDatePicker = false
+                                }
+                            ) {
+                                Text("OK")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showDatePicker = false }) {
+                                Text("Cancel")
+                            }
+                        }
+                    ) {
+                        DatePicker(state = datePickerState)
+                    }
+                }
 
                 // Notes
                 OutlinedTextField(

@@ -360,11 +360,20 @@ private fun ExtractedDataForm(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
         )
 
-        // Date field (simple text for now - can be enhanced with date picker)
+        // Date field with date picker
+        var showDatePicker by remember { mutableStateOf(false) }
         val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         var dateText by remember {
             mutableStateOf(extractedData.date?.format(dateFormatter) ?: LocalDate.now().format(dateFormatter))
         }
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = try {
+                // Use UTC to avoid timezone shifts
+                LocalDate.parse(dateText).atStartOfDay(java.time.ZoneId.of("UTC")).toInstant().toEpochMilli()
+            } catch (e: Exception) {
+                LocalDate.now().atStartOfDay(java.time.ZoneId.of("UTC")).toInstant().toEpochMilli()
+            }
+        )
 
         OutlinedTextField(
             value = dateText,
@@ -377,11 +386,48 @@ private fun ExtractedDataForm(
                     // Invalid date format - ignore
                 }
             },
-            label = { Text("Date (YYYY-MM-DD)") },
+            label = { Text("Date") },
             placeholder = { Text("2026-02-16") },
-            modifier = Modifier.fillMaxWidth(),
-            leadingIcon = { Icon(Icons.Default.CalendarToday, contentDescription = null) }
+            readOnly = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { showDatePicker = true },
+            trailingIcon = {
+                IconButton(onClick = { showDatePicker = true }) {
+                    Icon(Icons.Default.CalendarToday, contentDescription = "Select date")
+                }
+            }
         )
+
+        if (showDatePicker) {
+            DatePickerDialog(
+                onDismissRequest = { showDatePicker = false },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            datePickerState.selectedDateMillis?.let { millis ->
+                                // Use UTC to avoid timezone shifts causing off-by-one errors
+                                val selectedDate = java.time.Instant.ofEpochMilli(millis)
+                                    .atZone(java.time.ZoneId.of("UTC"))
+                                    .toLocalDate()
+                                dateText = selectedDate.format(dateFormatter)
+                                onDateChange(selectedDate)
+                            }
+                            showDatePicker = false
+                        }
+                    ) {
+                        Text("OK")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDatePicker = false }) {
+                        Text("Cancel")
+                    }
+                }
+            ) {
+                DatePicker(state = datePickerState)
+            }
+        }
 
         // Book dropdown
         var bookExpanded by remember { mutableStateOf(false) }
