@@ -1,13 +1,51 @@
 package com.receiptkeeper.core.util
 
+import android.content.Context
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 
 /**
  * Utility object for mapping icon names to Material Icons
  */
 object IconHelper {
+
+    /**
+     * Prefix for brand logos
+     */
+    const val BRAND_PREFIX = "brand_"
+
+    /**
+     * List of available brand icon names (without extension)
+     */
+    val brandIconNames = listOf(
+        "ALDI_SÜD", "Chick-fil-A", "CITGO", "Costco", "Goodwill_Industries",
+        "H_MART", "Kwik_Trip", "Lowes", "Marshalls", "McDonalds", "Meijercom",
+        "Menards", "Pick_n_Save", "Piggly_Wiggly", "Pizza_Hut", "QDOBA",
+        "Ross_Dress_for_Less", "Sams_Club", "Sendiks", "Target", "The_Home_Depot",
+        "TJ_Maxx", "Trader_Joes", "Walgreens", "Walmart"
+    )
+
+    /**
+     * Check if icon name is a brand icon
+     */
+    fun isBrandIcon(iconName: String): Boolean {
+        return iconName.startsWith(BRAND_PREFIX) || brandIconNames.contains(iconName)
+    }
+
+    /**
+     * Get brand icon resource name
+     */
+    fun getBrandIconName(iconName: String): String {
+        return if (iconName.startsWith(BRAND_PREFIX)) {
+            iconName.removePrefix(BRAND_PREFIX)
+        } else {
+            iconName
+        }
+    }
 
     /**
      * Map of icon names to ImageVector icons
@@ -179,5 +217,12 @@ object IconHelper {
         other.forEach { addToCategory(it, "Other") }
 
         return categories
+    }
+
+    /**
+     * Get all available brand icons as pairs (name, display name)
+     */
+    fun getBrandIcons(): List<Pair<String, String>> {
+        return brandIconNames.map { it to it.replace("_", " ").replace("'", "'") }
     }
 }

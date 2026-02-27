@@ -22,8 +22,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.receiptkeeper.core.util.IconHelper
 import com.receiptkeeper.domain.model.Vendor
@@ -163,11 +166,25 @@ private fun VendorListItem(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = IconHelper.getIcon(vendor.iconName),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
-            )
+            // Display brand logo or Material icon
+            if (IconHelper.isBrandIcon(vendor.iconName)) {
+                val brandName = IconHelper.getBrandIconName(vendor.iconName)
+                AsyncImage(
+                    model = "file:///android_asset/brand_logos/$brandName.png",
+                    contentDescription = vendor.name,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Icon(
+                    imageVector = IconHelper.getIcon(vendor.iconName),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.width(16.dp))
 
@@ -253,12 +270,24 @@ private fun VendorDialog(
                                 .clickable { showIconPicker = true },
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                imageVector = IconHelper.getIcon(selectedIcon),
-                                contentDescription = "Select icon",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(28.dp)
-                            )
+                            if (IconHelper.isBrandIcon(selectedIcon)) {
+                                val brandName = IconHelper.getBrandIconName(selectedIcon)
+                                AsyncImage(
+                                    model = "file:///android_asset/brand_logos/$brandName.png",
+                                    contentDescription = "Select icon",
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = IconHelper.getIcon(selectedIcon),
+                                    contentDescription = "Select icon",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         TextButton(onClick = { showIconPicker = true }) {
@@ -373,7 +402,12 @@ private fun IconPickerDialog(
     onIconSelected: (String) -> Unit
 ) {
     val iconCategories = remember { IconHelper.getIconCategories() }
-    var selectedCategory by remember { mutableStateOf(iconCategories.keys.firstOrNull() ?: "General") }
+    val brandIcons = remember { IconHelper.getBrandIcons() }
+    val allCategories = remember { listOf("Brands") + iconCategories.keys.toList() }
+    var selectedCategory by remember { mutableStateOf(allCategories.first()) }
+
+    // Check if current icon is a brand icon
+    val isCurrentBrand = IconHelper.isBrandIcon(currentIcon)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -386,10 +420,10 @@ private fun IconPickerDialog(
             ) {
                 // Category tabs
                 ScrollableTabRow(
-                    selectedTabIndex = iconCategories.keys.toList().indexOf(selectedCategory).coerceAtLeast(0),
+                    selectedTabIndex = allCategories.indexOf(selectedCategory).coerceAtLeast(0),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    iconCategories.keys.forEach { category ->
+                    allCategories.forEach { category ->
                         Tab(
                             selected = selectedCategory == category,
                             onClick = { selectedCategory = category },
@@ -401,35 +435,86 @@ private fun IconPickerDialog(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Icons grid
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(5),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    items(iconCategories[selectedCategory] ?: emptyList()) { (iconName, icon) ->
-                        Box(
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .background(
-                                    color = if (currentIcon == iconName)
-                                        MaterialTheme.colorScheme.primaryContainer
-                                    else
-                                        Color.Transparent,
-                                    shape = CircleShape
+                if (selectedCategory == "Brands") {
+                    // Brand logos grid
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(4),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        items(brandIcons) { (iconName, displayName) ->
+                            val fullIconName = IconHelper.BRAND_PREFIX + iconName
+                            val isSelected = currentIcon == fullIconName ||
+                                           (isCurrentBrand && IconHelper.getBrandIconName(currentIcon) == iconName)
+
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier
+                                    .clickable { onIconSelected(fullIconName) }
+                                    .padding(4.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(56.dp)
+                                        .background(
+                                            color = if (isSelected)
+                                                MaterialTheme.colorScheme.primaryContainer
+                                            else
+                                                MaterialTheme.colorScheme.surfaceVariant,
+                                            shape = CircleShape
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    AsyncImage(
+                                        model = "file:///android_asset/brand_logos/$iconName.png",
+                                        contentDescription = displayName,
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(CircleShape)
+                                    )
+                                }
+                                Text(
+                                    text = displayName,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    maxLines = 1,
+                                    modifier = Modifier.padding(top = 2.dp)
                                 )
-                                .clickable { onIconSelected(iconName) },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = icon,
-                                contentDescription = iconName,
-                                tint = if (currentIcon == iconName)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.size(24.dp)
-                            )
+                            }
+                        }
+                    }
+                } else {
+                    // Material icons grid
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(5),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        items(iconCategories[selectedCategory] ?: emptyList()) { (iconName, icon) ->
+                            Box(
+                                modifier = Modifier
+                                    .aspectRatio(1f)
+                                    .background(
+                                        color = if (currentIcon == iconName)
+                                            MaterialTheme.colorScheme.primaryContainer
+                                        else
+                                            Color.Transparent,
+                                        shape = CircleShape
+                                    )
+                                    .clickable { onIconSelected(iconName) },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = iconName,
+                                    tint = if (currentIcon == iconName)
+                                        MaterialTheme.colorScheme.primary
+                                    else
+                                        MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
                         }
                     }
                 }
