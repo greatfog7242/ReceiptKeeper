@@ -51,12 +51,13 @@ class CategoriesViewModel @Inject constructor(
         }
     }
 
-    fun createCategory(name: String, colorHex: String) {
+    fun createCategory(name: String, colorHex: String, iconName: String) {
         viewModelScope.launch {
             try {
                 val category = Category(
                     name = name,
                     colorHex = colorHex,
+                    iconName = iconName,
                     isDefault = false,
                     createdAt = Instant.now()
                 )

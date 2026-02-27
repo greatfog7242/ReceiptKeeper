@@ -29,6 +29,7 @@ fun CategoryEntity.toDomain(): Category = Category(
     id = id,
     name = name,
     colorHex = colorHex,
+    iconName = iconName,
     isDefault = isDefault,
     createdAt = createdAt
 )
@@ -37,6 +38,7 @@ fun Category.toEntity(): CategoryEntity = CategoryEntity(
     id = id,
     name = name,
     colorHex = colorHex,
+    iconName = iconName,
     isDefault = isDefault,
     createdAt = createdAt
 )
@@ -45,12 +47,14 @@ fun Category.toEntity(): CategoryEntity = CategoryEntity(
 fun VendorEntity.toDomain(): Vendor = Vendor(
     id = id,
     name = name,
+    iconName = iconName,
     createdAt = createdAt
 )
 
 fun Vendor.toEntity(): VendorEntity = VendorEntity(
     id = id,
     name = name,
+    iconName = iconName,
     createdAt = createdAt
 )
 

@@ -23,6 +23,8 @@ data class CategoryEntity(
 
     val colorHex: String, // e.g., "#FF6B6B"
 
+    val iconName: String = "Category", // Material icon name
+
     val isDefault: Boolean = false, // true for pre-seeded categories
 
     val createdAt: Instant = Instant.now()

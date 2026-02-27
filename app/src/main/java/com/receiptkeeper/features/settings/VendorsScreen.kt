@@ -1,8 +1,16 @@
 package com.receiptkeeper.features.settings
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
@@ -14,8 +22,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.receiptkeeper.core.util.IconHelper
 import com.receiptkeeper.domain.model.Vendor
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -110,11 +120,11 @@ fun VendorsScreen(
                 if (uiState.editingVendor != null) viewModel.hideEditDialog()
                 else viewModel.hideAddDialog()
             },
-            onConfirm = { name ->
+            onConfirm = { name, iconName ->
                 if (uiState.editingVendor != null) {
-                    viewModel.updateVendor(uiState.editingVendor!!.copy(name = name))
+                    viewModel.updateVendor(uiState.editingVendor!!.copy(name = name, iconName = iconName))
                 } else {
-                    viewModel.createVendor(name)
+                    viewModel.createVendor(name, iconName)
                 }
             }
         )
@@ -154,7 +164,7 @@ private fun VendorListItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Default.Store,
+                imageVector = IconHelper.getIcon(vendor.iconName),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary
             )
@@ -182,33 +192,87 @@ private fun VendorListItem(
 private fun VendorDialog(
     vendor: Vendor?,
     onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
+    onConfirm: (String, String) -> Unit
 ) {
     var name by remember { mutableStateOf(vendor?.name ?: "") }
+    var selectedIcon by remember { mutableStateOf(vendor?.iconName ?: "Store") }
     var error by remember { mutableStateOf(false) }
+    var showIconPicker by remember { mutableStateOf(false) }
+
+    if (showIconPicker) {
+        IconPickerDialog(
+            currentIcon = selectedIcon,
+            onDismiss = { showIconPicker = false },
+            onIconSelected = { iconName ->
+                selectedIcon = iconName
+                showIconPicker = false
+            }
+        )
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (vendor == null) "Add Vendor" else "Edit Vendor") },
         text = {
-            OutlinedTextField(
-                value = name,
-                onValueChange = {
-                    name = it
-                    error = it.isBlank()
-                },
-                label = { Text("Vendor Name *") },
-                isError = error,
-                supportingText = if (error) {{ Text("Name is required") }} else null,
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = {
+                        name = it
+                        error = it.isBlank()
+                    },
+                    label = { Text("Vendor Name *") },
+                    isError = error,
+                    supportingText = if (error) {{ Text("Name is required") }} else null,
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Icon picker
+                Column {
+                    Text(
+                        text = "Icon",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .background(
+                                    color = MaterialTheme.colorScheme.surfaceVariant,
+                                    shape = CircleShape
+                                )
+                                .clickable { showIconPicker = true },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = IconHelper.getIcon(selectedIcon),
+                                contentDescription = "Select icon",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        TextButton(onClick = { showIconPicker = true }) {
+                            Text("Change Icon")
+                        }
+                    }
+                }
+            }
         },
         confirmButton = {
             TextButton(
                 onClick = {
                     if (name.isNotBlank()) {
-                        onConfirm(name.trim())
+                        onConfirm(name.trim(), selectedIcon)
                     } else {
                         error = true
                     }
@@ -297,6 +361,83 @@ private fun DeleteConfirmationDialog(
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+private fun IconPickerDialog(
+    currentIcon: String,
+    onDismiss: () -> Unit,
+    onIconSelected: (String) -> Unit
+) {
+    val iconCategories = remember { IconHelper.getIconCategories() }
+    var selectedCategory by remember { mutableStateOf(iconCategories.keys.firstOrNull() ?: "General") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Select Icon") },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 400.dp)
+            ) {
+                // Category tabs
+                ScrollableTabRow(
+                    selectedTabIndex = iconCategories.keys.toList().indexOf(selectedCategory).coerceAtLeast(0),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    iconCategories.keys.forEach { category ->
+                        Tab(
+                            selected = selectedCategory == category,
+                            onClick = { selectedCategory = category },
+                            text = { Text(category, maxLines = 1) }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Icons grid
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(5),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(iconCategories[selectedCategory] ?: emptyList()) { (iconName, icon) ->
+                        Box(
+                            modifier = Modifier
+                                .aspectRatio(1f)
+                                .background(
+                                    color = if (currentIcon == iconName)
+                                        MaterialTheme.colorScheme.primaryContainer
+                                    else
+                                        Color.Transparent,
+                                    shape = CircleShape
+                                )
+                                .clickable { onIconSelected(iconName) },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = iconName,
+                                tint = if (currentIcon == iconName)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Done")
             }
         }
     )

@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -15,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.unit.dp
+import com.receiptkeeper.core.util.IconHelper
 import com.receiptkeeper.data.local.entity.CategorySpending
 import com.receiptkeeper.domain.model.Category
 
@@ -133,11 +135,11 @@ private fun TreeMapChart(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(10.dp)
-                                    .clip(CircleShape)
-                                    .background(categoryColor)
+                            Icon(
+                                imageVector = IconHelper.getIcon(category.iconName),
+                                contentDescription = null,
+                                tint = categoryColor,
+                                modifier = Modifier.size(16.dp)
                             )
                             Text(
                                 text = category.name,
@@ -270,11 +272,11 @@ private fun PieChart(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(12.dp)
-                                    .clip(CircleShape)
-                                    .background(categoryColor)
+                            Icon(
+                                imageVector = IconHelper.getIcon(category.iconName),
+                                contentDescription = null,
+                                tint = categoryColor,
+                                modifier = Modifier.size(18.dp)
                             )
                             Text(
                                 text = category.name,
@@ -418,11 +420,11 @@ private fun StackedBarChart(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(12.dp)
-                                    .clip(CircleShape)
-                                    .background(categoryColor)
+                            Icon(
+                                imageVector = IconHelper.getIcon(category.iconName),
+                                contentDescription = null,
+                                tint = categoryColor,
+                                modifier = Modifier.size(18.dp)
                             )
                             Text(
                                 text = category.name,
@@ -483,12 +485,12 @@ private fun CategorySpendingItem(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Color indicator
-                Box(
-                    modifier = Modifier
-                        .size(12.dp)
-                        .clip(CircleShape)
-                        .background(categoryColor)
+                // Category icon
+                Icon(
+                    imageVector = IconHelper.getIcon(category.iconName),
+                    contentDescription = null,
+                    tint = categoryColor,
+                    modifier = Modifier.size(18.dp)
                 )
                 Text(
                     text = category.name,

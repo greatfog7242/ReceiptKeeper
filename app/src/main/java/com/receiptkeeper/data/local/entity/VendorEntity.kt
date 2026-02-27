@@ -20,5 +20,7 @@ data class VendorEntity(
 
     val name: String,
 
+    val iconName: String = "Store", // Material icon name
+
     val createdAt: Instant = Instant.now()
 )

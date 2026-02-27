@@ -6,6 +6,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -17,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.receiptkeeper.core.util.IconHelper
 import com.receiptkeeper.domain.model.Category
 
 // Predefined colors for categories
@@ -149,13 +153,13 @@ fun CategoriesScreen(
                 if (uiState.editingCategory != null) viewModel.hideEditDialog()
                 else viewModel.hideAddDialog()
             },
-            onConfirm = { name, colorHex ->
+            onConfirm = { name, colorHex, iconName ->
                 if (uiState.editingCategory != null) {
                     viewModel.updateCategory(
-                        uiState.editingCategory!!.copy(name = name, colorHex = colorHex)
+                        uiState.editingCategory!!.copy(name = name, colorHex = colorHex, iconName = iconName)
                     )
                 } else {
-                    viewModel.createCategory(name, colorHex)
+                    viewModel.createCategory(name, colorHex, iconName)
                 }
             }
         )
@@ -194,19 +198,12 @@ private fun CategoryListItem(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Color indicator
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .background(
-                        color = Color(android.graphics.Color.parseColor(category.colorHex)),
-                        shape = CircleShape
-                    )
-                    .border(
-                        width = 2.dp,
-                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                        shape = CircleShape
-                    )
+            // Icon
+            Icon(
+                imageVector = IconHelper.getIcon(category.iconName),
+                contentDescription = null,
+                tint = Color(android.graphics.Color.parseColor(category.colorHex)),
+                modifier = Modifier.size(32.dp)
             )
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -242,11 +239,24 @@ private fun CategoryListItem(
 private fun CategoryDialog(
     category: Category?,
     onDismiss: () -> Unit,
-    onConfirm: (String, String) -> Unit
+    onConfirm: (String, String, String) -> Unit
 ) {
     var name by remember { mutableStateOf(category?.name ?: "") }
     var selectedColor by remember { mutableStateOf(category?.colorHex ?: categoryColors[0].first) }
+    var selectedIcon by remember { mutableStateOf(category?.iconName ?: "Category") }
     var error by remember { mutableStateOf(false) }
+    var showIconPicker by remember { mutableStateOf(false) }
+
+    if (showIconPicker) {
+        IconPickerDialog(
+            currentIcon = selectedIcon,
+            onDismiss = { showIconPicker = false },
+            onIconSelected = { iconName ->
+                selectedIcon = iconName
+                showIconPicker = false
+            }
+        )
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -268,6 +278,42 @@ private fun CategoryDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                // Icon picker
+                Column {
+                    Text(
+                        text = "Icon",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .background(
+                                    color = MaterialTheme.colorScheme.surfaceVariant,
+                                    shape = CircleShape
+                                )
+                                .clickable { showIconPicker = true },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = IconHelper.getIcon(selectedIcon),
+                                contentDescription = "Select icon",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        TextButton(onClick = { showIconPicker = true }) {
+                            Text("Change Icon")
+                        }
+                    }
+                }
 
                 // Color picker
                 Column {
@@ -295,7 +341,7 @@ private fun CategoryDialog(
             TextButton(
                 onClick = {
                     if (name.isNotBlank()) {
-                        onConfirm(name.trim(), selectedColor)
+                        onConfirm(name.trim(), selectedColor, selectedIcon)
                     } else {
                         error = true
                     }
@@ -377,6 +423,83 @@ private fun DeleteConfirmationDialog(
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+private fun IconPickerDialog(
+    currentIcon: String,
+    onDismiss: () -> Unit,
+    onIconSelected: (String) -> Unit
+) {
+    val iconCategories = remember { IconHelper.getIconCategories() }
+    var selectedCategory by remember { mutableStateOf(iconCategories.keys.firstOrNull() ?: "General") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Select Icon") },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 400.dp)
+            ) {
+                // Category tabs
+                ScrollableTabRow(
+                    selectedTabIndex = iconCategories.keys.toList().indexOf(selectedCategory).coerceAtLeast(0),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    iconCategories.keys.forEach { category ->
+                        Tab(
+                            selected = selectedCategory == category,
+                            onClick = { selectedCategory = category },
+                            text = { Text(category, maxLines = 1) }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Icons grid
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(5),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(iconCategories[selectedCategory] ?: emptyList()) { (iconName, icon) ->
+                        Box(
+                            modifier = Modifier
+                                .aspectRatio(1f)
+                                .background(
+                                    color = if (currentIcon == iconName)
+                                        MaterialTheme.colorScheme.primaryContainer
+                                    else
+                                        Color.Transparent,
+                                    shape = CircleShape
+                                )
+                                .clickable { onIconSelected(iconName) },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = iconName,
+                                tint = if (currentIcon == iconName)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Done")
             }
         }
     )

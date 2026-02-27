@@ -31,6 +31,7 @@ object DatabaseModule {
             ReceiptDatabase.DATABASE_NAME
         )
             .addCallback(ReceiptDatabase.createCallback(categoryDaoProvider))
+            .addMigrations(*ReceiptDatabase.MIGRATIONS)
             .fallbackToDestructiveMigration() // For development only - remove in production
             .build()
     }

@@ -140,6 +140,7 @@ fun BookDetailScreen(
                             vendorName = vendor?.name ?: "Unknown",
                             categoryName = category?.name ?: "Uncategorized",
                             categoryColor = category?.colorHex ?: "#808080",
+                            categoryIconName = category?.iconName ?: "Category",
                             bookName = currentBook?.name ?: "",
                             onItemClick = { onNavigateToReceiptDetail(receipt.id) },
                             onEditClick = { /* Not needed in detail view */ },

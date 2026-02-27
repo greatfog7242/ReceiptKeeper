@@ -8,5 +8,6 @@ import java.time.Instant
 data class Vendor(
     val id: Long = 0,
     val name: String,
+    val iconName: String = "Store",
     val createdAt: Instant = Instant.now()
 )

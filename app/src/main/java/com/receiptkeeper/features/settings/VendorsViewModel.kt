@@ -51,10 +51,10 @@ class VendorsViewModel @Inject constructor(
         }
     }
 
-    fun createVendor(name: String) {
+    fun createVendor(name: String, iconName: String = "Store") {
         viewModelScope.launch {
             try {
-                val vendor = Vendor(name = name, createdAt = Instant.now())
+                val vendor = Vendor(name = name, iconName = iconName, createdAt = Instant.now())
                 vendorRepository.insertVendor(vendor)
                 _uiState.update { it.copy(showAddDialog = false) }
             } catch (e: Exception) {

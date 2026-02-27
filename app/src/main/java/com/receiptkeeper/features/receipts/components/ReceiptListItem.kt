@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.receiptkeeper.core.util.IconHelper
 import com.receiptkeeper.domain.model.Receipt
 import java.text.NumberFormat
 import java.time.format.DateTimeFormatter
@@ -30,6 +31,7 @@ fun ReceiptListItem(
     vendorName: String,
     categoryName: String,
     categoryColor: String,
+    categoryIconName: String,
     bookName: String,
     onItemClick: (Receipt) -> Unit,
     onEditClick: (Receipt) -> Unit,
@@ -108,18 +110,16 @@ fun ReceiptListItem(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Category with color indicator
+                    // Category with icon
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .background(
-                                    color = Color(android.graphics.Color.parseColor(categoryColor)),
-                                    shape = RoundedCornerShape(4.dp)
-                                )
+                        Icon(
+                            imageVector = IconHelper.getIcon(categoryIconName),
+                            contentDescription = null,
+                            tint = Color(android.graphics.Color.parseColor(categoryColor)),
+                            modifier = Modifier.size(14.dp)
                         )
                         Text(
                             text = categoryName,

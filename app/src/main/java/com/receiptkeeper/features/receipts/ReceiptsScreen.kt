@@ -217,6 +217,7 @@ fun ReceiptsScreen(
                                     vendorName = vendor?.name ?: "Unknown",
                                     categoryName = category?.name ?: "Unknown",
                                     categoryColor = category?.colorHex ?: "#95A5A6",
+                                    categoryIconName = category?.iconName ?: "Category",
                                     bookName = book?.name ?: "Unknown",
                                     onItemClick = { onNavigateToReceiptDetail(it.id) },
                                     onEditClick = { viewModel.showEditDialog(it) },

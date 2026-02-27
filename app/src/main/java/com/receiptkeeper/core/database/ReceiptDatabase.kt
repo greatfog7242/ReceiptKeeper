@@ -11,10 +11,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.time.Instant
 import javax.inject.Provider
+import androidx.room.migration.Migration
 
 /**
  * Room Database for ReceiptKeeper
- * Version 1: Initial schema with all entities
+ * Version 2: Added iconName to categories and vendors
  */
 @Database(
     entities = [
@@ -25,7 +26,7 @@ import javax.inject.Provider
         SpendingGoalEntity::class,
         ReceiptEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -40,6 +41,24 @@ abstract class ReceiptDatabase : RoomDatabase() {
 
     companion object {
         const val DATABASE_NAME = "receipt_keeper_db"
+
+        /**
+         * Migration from version 1 to 2: Add iconName column to categories and vendors
+         */
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Add iconName column to categories table
+                db.execSQL("ALTER TABLE categories ADD COLUMN iconName TEXT DEFAULT 'Category' NOT NULL")
+
+                // Add iconName column to vendors table
+                db.execSQL("ALTER TABLE vendors ADD COLUMN iconName TEXT DEFAULT 'Store' NOT NULL")
+            }
+        }
+
+        /**
+         * Get all migrations
+         */
+        val MIGRATIONS = arrayOf(MIGRATION_1_2)
 
         /**
          * Database callback to seed default categories on first creation
@@ -59,55 +78,63 @@ abstract class ReceiptDatabase : RoomDatabase() {
         }
 
         /**
-         * Seeds 8 default categories with predefined colors
+         * Seeds 8 default categories with predefined colors and icons
          */
         private suspend fun seedDefaultCategories(categoryDao: CategoryDao) {
             val defaultCategories = listOf(
                 CategoryEntity(
                     name = "Food",
                     colorHex = "#FF6B6B",
+                    iconName = "Restaurant",
                     isDefault = true,
                     createdAt = Instant.now()
                 ),
                 CategoryEntity(
                     name = "Grocery",
                     colorHex = "#4ECB71",
+                    iconName = "LocalGroceryStore",
                     isDefault = true,
                     createdAt = Instant.now()
                 ),
                 CategoryEntity(
                     name = "Hardware",
                     colorHex = "#FFA500",
+                    iconName = "Build",
                     isDefault = true,
                     createdAt = Instant.now()
                 ),
                 CategoryEntity(
                     name = "Entertainment",
                     colorHex = "#E91E63",
+                    iconName = "Movie",
                     isDefault = true,
                     createdAt = Instant.now()
                 ),
                 CategoryEntity(
                     name = "Transportation",
                     colorHex = "#3498DB",
+                    iconName = "DirectionsCar",
                     isDefault = true,
                     createdAt = Instant.now()
                 ),
                 CategoryEntity(
                     name = "Utilities",
                     colorHex = "#9B59B6",
+                    iconName = "Power",
                     isDefault = true,
                     createdAt = Instant.now()
                 ),
                 CategoryEntity(
                     name = "Healthcare",
                     colorHex = "#1ABC9C",
+                    iconName = "LocalHospital",
                     isDefault = true,
                     createdAt = Instant.now()
                 ),
                 CategoryEntity(
                     name = "Other",
                     colorHex = "#95A5A6",
+                    iconName = "Category",
                     isDefault = true,
                     createdAt = Instant.now()
                 )
