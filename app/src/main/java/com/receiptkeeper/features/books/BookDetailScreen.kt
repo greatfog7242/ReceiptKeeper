@@ -138,6 +138,7 @@ fun BookDetailScreen(
                         ReceiptListItem(
                             receipt = receipt,
                             vendorName = vendor?.name ?: "Unknown",
+                            vendorIconName = vendor?.iconName ?: "Store",
                             categoryName = category?.name ?: "Uncategorized",
                             categoryColor = category?.colorHex ?: "#808080",
                             categoryIconName = category?.iconName ?: "Category",

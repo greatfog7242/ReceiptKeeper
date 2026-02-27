@@ -3,6 +3,7 @@ package com.receiptkeeper.features.receipts.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -29,6 +30,7 @@ import java.util.Locale
 fun ReceiptListItem(
     receipt: Receipt,
     vendorName: String,
+    vendorIconName: String,
     categoryName: String,
     categoryColor: String,
     categoryIconName: String,
@@ -84,14 +86,37 @@ fun ReceiptListItem(
 
             // Receipt details
             Column(modifier = Modifier.weight(1f)) {
-                // Vendor name
-                Text(
-                    text = vendorName,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                // Vendor name with icon
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    if (IconHelper.isBrandIcon(vendorIconName)) {
+                        val brandName = IconHelper.getBrandIconName(vendorIconName)
+                        AsyncImage(
+                            model = "file:///android_asset/brand_logos/$brandName.png",
+                            contentDescription = vendorName,
+                            modifier = Modifier
+                                .size(20.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            imageVector = IconHelper.getIcon(vendorIconName),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Text(
+                        text = vendorName,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(4.dp))
 

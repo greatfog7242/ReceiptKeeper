@@ -215,6 +215,7 @@ fun ReceiptsScreen(
                                 ReceiptListItem(
                                     receipt = receipt,
                                     vendorName = vendor?.name ?: "Unknown",
+                                    vendorIconName = vendor?.iconName ?: "Store",
                                     categoryName = category?.name ?: "Unknown",
                                     categoryColor = category?.colorHex ?: "#95A5A6",
                                     categoryIconName = category?.iconName ?: "Category",
