@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -24,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.receiptkeeper.core.util.IconHelper
 import com.receiptkeeper.core.util.ImageHandler
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -161,8 +163,17 @@ fun ReceiptDetailScreen(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        DetailRow(label = "Vendor", value = vendor?.name ?: "Unknown")
-                        DetailRow(label = "Category", value = category?.name ?: "Unknown")
+                        // Vendor row with icon
+                        VendorDetailRow(
+                            vendorName = vendor?.name ?: "Unknown",
+                            vendorIconName = vendor?.iconName ?: "Store"
+                        )
+                        // Category row with icon
+                        CategoryDetailRow(
+                            categoryName = category?.name ?: "Unknown",
+                            categoryIconName = category?.iconName ?: "Category",
+                            categoryColorHex = category?.colorHex ?: "#808080"
+                        )
                         DetailRow(label = "Book", value = book?.name ?: "Unknown")
                         DetailRow(
                             label = "Payment Method",
@@ -266,6 +277,94 @@ private fun DetailRow(
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium
         )
+    }
+}
+
+@Composable
+private fun VendorDetailRow(
+    vendorName: String,
+    vendorIconName: String,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Vendor",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            if (IconHelper.isBrandIcon(vendorIconName)) {
+                val brandName = IconHelper.getBrandIconName(vendorIconName)
+                AsyncImage(
+                    model = "file:///android_asset/brand_logos/$brandName.png",
+                    contentDescription = vendorName,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Icon(
+                    imageVector = IconHelper.getIcon(vendorIconName),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            Text(
+                text = vendorName,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+}
+
+@Composable
+private fun CategoryDetailRow(
+    categoryName: String,
+    categoryIconName: String,
+    categoryColorHex: String,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Category",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            val categoryColor = try {
+                Color(android.graphics.Color.parseColor(categoryColorHex))
+            } catch (e: Exception) {
+                MaterialTheme.colorScheme.primary
+            }
+            Icon(
+                imageVector = IconHelper.getIcon(categoryIconName),
+                contentDescription = null,
+                tint = categoryColor,
+                modifier = Modifier.size(24.dp)
+            )
+            Text(
+                text = categoryName,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+        }
     }
 }
 
