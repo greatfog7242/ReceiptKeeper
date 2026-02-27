@@ -146,7 +146,7 @@ private fun VendorTreeMapChart(
                             Text(
                                 text = vendor.name,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = vendorColor
                             )
                         }
                         Text(
@@ -276,7 +276,7 @@ private fun VendorPieChart(
                             Text(
                                 text = vendor.name,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = vendorColor
                             )
                         }
 
@@ -415,7 +415,7 @@ private fun VendorStackedBarChart(
                             Text(
                                 text = vendor.name,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = vendorColor
                             )
                         }
 
