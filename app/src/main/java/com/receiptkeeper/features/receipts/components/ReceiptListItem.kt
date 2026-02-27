@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -41,6 +42,8 @@ fun ReceiptListItem(
     onImageClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -92,9 +95,14 @@ fun ReceiptListItem(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     if (IconHelper.isBrandIcon(vendorIconName)) {
-                        val brandName = IconHelper.getBrandIconName(vendorIconName)
+                        val imageModel = if (IconHelper.isCustomIcon(vendorIconName)) {
+                            IconHelper.getCustomBrandIconUri(context, vendorIconName)
+                        } else {
+                            val brandName = IconHelper.getBrandIconName(vendorIconName)
+                            "file:///android_asset/brand_logos/$brandName.png"
+                        }
                         AsyncImage(
-                            model = "file:///android_asset/brand_logos/$brandName.png",
+                            model = imageModel,
                             contentDescription = vendorName,
                             modifier = Modifier
                                 .size(20.dp)

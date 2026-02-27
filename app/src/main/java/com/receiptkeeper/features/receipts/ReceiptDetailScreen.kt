@@ -286,6 +286,8 @@ private fun VendorDetailRow(
     vendorIconName: String,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -301,9 +303,14 @@ private fun VendorDetailRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             if (IconHelper.isBrandIcon(vendorIconName)) {
-                val brandName = IconHelper.getBrandIconName(vendorIconName)
+                val imageModel = if (IconHelper.isCustomIcon(vendorIconName)) {
+                    IconHelper.getCustomBrandIconUri(context, vendorIconName)
+                } else {
+                    val brandName = IconHelper.getBrandIconName(vendorIconName)
+                    "file:///android_asset/brand_logos/$brandName.png"
+                }
                 AsyncImage(
-                    model = "file:///android_asset/brand_logos/$brandName.png",
+                    model = imageModel,
                     contentDescription = vendorName,
                     modifier = Modifier
                         .size(24.dp)

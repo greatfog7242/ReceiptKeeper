@@ -455,9 +455,14 @@ private fun VendorIcon(
 
     if (IconHelper.isBrandIcon(vendor.iconName)) {
         // It's a brand icon - load the image
-        val brandIconName = IconHelper.getBrandIconName(vendor.iconName)
+        val imageModel = if (IconHelper.isCustomIcon(vendor.iconName)) {
+            IconHelper.getCustomBrandIconUri(context, vendor.iconName)
+        } else {
+            val brandIconName = IconHelper.getBrandIconName(vendor.iconName)
+            "file:///android_asset/brand_logos/${brandIconName}.png"
+        }
         val model = ImageRequest.Builder(context)
-            .data("file:///android_asset/brand_logos/${brandIconName}.png")
+            .data(imageModel)
             .crossfade(true)
             .build()
 
