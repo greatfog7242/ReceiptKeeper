@@ -37,7 +37,6 @@ import com.receiptkeeper.domain.model.Receipt
 import com.receiptkeeper.features.receipts.components.ReceiptListItem
 import com.receiptkeeper.features.scan.ocr.ReceiptParser
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -417,6 +416,7 @@ private fun ReceiptDialog(
     onConfirm: (Long, String, Long, Long?, Double, LocalDate, String?, Uri?) -> Unit
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     // Initialize vendor name - if editing, look up the vendor name by ID
     val initialVendorName = receipt?.vendorId?.let { vendorId ->
@@ -590,7 +590,7 @@ private fun ReceiptDialog(
                                     isOcrProcessing = true
                                     val imageUriForOcr = selectedImageUri ?: receipt?.imageUri?.let { Uri.parse("file://$it") }
                                     if (imageUriForOcr != null) {
-                                        GlobalScope.launch {
+                                        coroutineScope.launch {
                                             try {
                                                 // Load bitmap from URI
                                                 val inputStream = context.contentResolver.openInputStream(imageUriForOcr)
@@ -879,6 +879,7 @@ private fun FullScreenImageDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val imageHandler = remember { ImageHandler(context) }
     var isDownloading by remember { mutableStateOf(false) }
 
@@ -911,7 +912,7 @@ private fun FullScreenImageDialog(
                 IconButton(
                     onClick = {
                         isDownloading = true
-                        kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                        coroutineScope.launch {
                             val uri = imageHandler.downloadImageToGallery(imageUri)
                             isDownloading = false
                             val message = if (uri != null) {

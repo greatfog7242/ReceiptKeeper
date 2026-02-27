@@ -27,7 +27,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.receiptkeeper.core.util.IconHelper
 import com.receiptkeeper.core.util.ImageHandler
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.time.format.DateTimeFormatter
@@ -38,12 +37,11 @@ import java.util.Locale
 fun ReceiptDetailScreen(
     receiptId: Long,
     onNavigateBack: () -> Unit,
-    viewModel: ReceiptsViewModel = hiltViewModel(),
+    viewModel: ReceiptDetailViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val receipt = uiState.receipts.find { it.id == receiptId }
-        ?: uiState.allReceipts.find { it.id == receiptId }
+    val receipt = uiState.receipt
     var showFullScreenImage by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -63,7 +61,16 @@ fun ReceiptDetailScreen(
         },
         modifier = modifier
     ) { paddingValues ->
-        if (receipt == null) {
+        if (uiState.isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else if (receipt == null) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -73,12 +80,10 @@ fun ReceiptDetailScreen(
                 Text("Receipt not found", style = MaterialTheme.typography.bodyLarge)
             }
         } else {
-            val vendor = uiState.vendors.find { it.id == receipt.vendorId }
-            val category = uiState.categories.find { it.id == receipt.categoryId }
-            val paymentMethod = receipt.paymentMethodId?.let { id ->
-                uiState.paymentMethods.find { it.id == id }
-            }
-            val book = uiState.books.find { it.id == receipt.bookId }
+            val vendor = uiState.vendor
+            val category = uiState.category
+            val paymentMethod = uiState.paymentMethod
+            val book = uiState.book
 
             Column(
                 modifier = Modifier
@@ -381,6 +386,7 @@ private fun FullScreenImageDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val imageHandler = remember { ImageHandler(context) }
     var isDownloading by remember { mutableStateOf(false) }
 
@@ -411,7 +417,7 @@ private fun FullScreenImageDialog(
                 IconButton(
                     onClick = {
                         isDownloading = true
-                        GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                        coroutineScope.launch {
                             val uri = imageHandler.downloadImageToGallery(imageUri)
                             isDownloading = false
                             val message = if (uri != null) {
