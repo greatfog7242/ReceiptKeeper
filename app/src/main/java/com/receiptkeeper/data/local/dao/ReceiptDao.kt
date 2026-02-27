@@ -76,6 +76,7 @@ interface ReceiptDao {
         WHERE transactionDate BETWEEN :startDate AND :endDate
         AND categoryId IS NOT NULL
         GROUP BY categoryId
+        ORDER BY total DESC
     """)
     fun getCategorySpendingBreakdown(startDate: LocalDate, endDate: LocalDate): Flow<List<CategorySpending>>
 
@@ -85,6 +86,7 @@ interface ReceiptDao {
         WHERE transactionDate BETWEEN :startDate AND :endDate
         AND vendorId IS NOT NULL
         GROUP BY vendorId
+        ORDER BY total DESC
     """)
     fun getVendorSpendingBreakdown(startDate: LocalDate, endDate: LocalDate): Flow<List<VendorSpending>>
 
