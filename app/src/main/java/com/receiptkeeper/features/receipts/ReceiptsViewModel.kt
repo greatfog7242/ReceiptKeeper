@@ -99,7 +99,8 @@ class ReceiptsViewModel @Inject constructor(
         totalAmount: Double,
         transactionDate: LocalDate,
         notes: String?,
-        imageUri: Uri?
+        imageUri: Uri?,
+        extractedText: String?
     ) {
         viewModelScope.launch {
             try {
@@ -122,7 +123,7 @@ class ReceiptsViewModel @Inject constructor(
                     transactionDate = transactionDate,
                     notes = notes,
                     imageUri = savedImagePath,
-                    extractedText = null,
+                    extractedText = extractedText,
                     createdAt = Instant.now(),
                     updatedAt = Instant.now()
                 )

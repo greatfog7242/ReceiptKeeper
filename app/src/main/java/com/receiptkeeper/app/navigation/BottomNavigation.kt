@@ -3,7 +3,9 @@ package com.receiptkeeper.app.navigation
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -27,9 +29,11 @@ fun BottomNavigationBar(
         bottomNavItems.forEach { item ->
             NavigationBarItem(
                 icon = {
+                    val iconSize = if (item.route == Routes.Scan) 42.dp else 24.dp
                     Icon(
                         imageVector = item.icon,
-                        contentDescription = item.label
+                        contentDescription = item.label,
+                        modifier = Modifier.size(iconSize)
                     )
                 },
                 label = { Text(item.label) },

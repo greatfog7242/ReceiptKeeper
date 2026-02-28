@@ -424,14 +424,16 @@ private fun IconPickerDialog(
     onIconSelected: (String) -> Unit
 ) {
     val context = LocalContext.current
+    var showAddCustomIconDialog by remember { mutableStateOf(false) }
+    var iconRefreshCounter by remember { mutableStateOf(0) }
     val iconCategories = remember { IconHelper.getIconCategories() }
     val brandIcons = remember { IconHelper.getBrandIcons() }
-    val customIcons = remember { IconHelper.getCustomBrandIcons(context) }
+    // Refresh custom icons when counter changes (after adding new icon)
+    val customIcons by remember(iconRefreshCounter) { mutableStateOf(IconHelper.getCustomBrandIcons(context)) }
     val allCategories = remember {
         listOf("Brands", "Custom") + iconCategories.keys.toList()
     }
     var selectedCategory by remember { mutableStateOf(allCategories.first()) }
-    var showAddCustomIconDialog by remember { mutableStateOf(false) }
 
     // Check if current icon is a brand icon
     val isCurrentBrand = IconHelper.isBrandIcon(currentIcon)
@@ -442,6 +444,7 @@ private fun IconPickerDialog(
             onDismiss = { showAddCustomIconDialog = false },
             onIconAdded = { iconName ->
                 showAddCustomIconDialog = false
+                iconRefreshCounter++ // Force refresh of custom icons list
                 // Refresh custom icons and select the new one
                 onIconSelected(iconName)
             }
@@ -529,7 +532,10 @@ private fun IconPickerDialog(
                         Column {
                             // Add button
                             OutlinedButton(
-                                onClick = { showAddCustomIconDialog = true },
+                                onClick = {
+                                    iconRefreshCounter++ // Refresh before opening dialog
+                                    showAddCustomIconDialog = true
+                                },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(bottom = 8.dp)

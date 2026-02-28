@@ -55,6 +55,16 @@ class ScanReceiptViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     /**
+     * Find a payment method that matches the extracted card last 4 digits
+     * @param cardLast4 The last 4 digits extracted from OCR
+     * @return The matching PaymentMethod or null if no match found
+     */
+    fun findMatchingPaymentMethod(cardLast4: String?): PaymentMethod? {
+        if (cardLast4.isNullOrBlank()) return null
+        return paymentMethods.value.find { it.lastFourDigits == cardLast4 }
+    }
+
+    /**
      * Called when image is captured from camera
      */
     fun onImageCaptured(imageUri: Uri) {
