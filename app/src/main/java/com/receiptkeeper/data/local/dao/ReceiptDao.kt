@@ -2,6 +2,7 @@ package com.receiptkeeper.data.local.dao
 
 import androidx.room.*
 import com.receiptkeeper.data.local.entity.CategorySpending
+import com.receiptkeeper.data.local.entity.DailySpending
 import com.receiptkeeper.data.local.entity.ReceiptEntity
 import com.receiptkeeper.data.local.entity.VendorSpending
 import kotlinx.coroutines.flow.Flow
@@ -142,6 +143,27 @@ interface ReceiptDao {
         startDate: LocalDate,
         endDate: LocalDate
     ): Flow<List<VendorSpending>>
+
+    /**
+     * Get daily spending totals for a date range, optionally filtered by book
+     * Returns daily totals (accumulation calculated in repository)
+     */
+    @Query("""
+        SELECT
+            transactionDate,
+            COALESCE(SUM(totalAmount), 0) as dailyTotal,
+            0.0 as accumulatedTotal  -- Placeholder, will be calculated in repository
+        FROM receipts
+        WHERE transactionDate BETWEEN :startDate AND :endDate
+        AND (:bookId IS NULL OR bookId = :bookId)
+        GROUP BY transactionDate
+        ORDER BY transactionDate
+    """)
+    fun getDailySpending(
+        startDate: LocalDate,
+        endDate: LocalDate,
+        bookId: Long?
+    ): Flow<List<DailySpending>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertReceipt(receipt: ReceiptEntity): Long

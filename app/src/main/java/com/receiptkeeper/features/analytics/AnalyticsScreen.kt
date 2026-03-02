@@ -23,6 +23,7 @@ import com.receiptkeeper.features.analytics.components.CategoryBreakdownChart
 import com.receiptkeeper.features.analytics.components.ChartType
 import com.receiptkeeper.features.analytics.components.DateRangePicker
 import com.receiptkeeper.features.analytics.components.SpendingGoalCard
+import com.receiptkeeper.features.analytics.components.SpendingTrendChart
 import com.receiptkeeper.features.analytics.components.VendorBreakdownChart
 import com.receiptkeeper.features.analytics.components.getGoalPeriodDateRange
 import androidx.compose.material.icons.filled.Book
@@ -51,6 +52,7 @@ fun AnalyticsScreen(
     val vendors by viewModel.vendors.collectAsState()
     val books by viewModel.books.collectAsState()
     val paymentMethods by viewModel.paymentMethods.collectAsState()
+    val dailyAccumulatedSpending by viewModel.dailyAccumulatedSpending.collectAsState()
 
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -272,6 +274,29 @@ fun AnalyticsScreen(
                         text = "${receipts.size} receipts",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    )
+                }
+            }
+
+            // Spending Trend Chart
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    SpendingTrendChart(
+                        dailySpending = dailyAccumulatedSpending,
+                        spendingGoals = spendingGoals,
+                        startDate = startDate,
+                        endDate = endDate,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }

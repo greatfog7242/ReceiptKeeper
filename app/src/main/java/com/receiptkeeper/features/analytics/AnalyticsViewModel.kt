@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.receiptkeeper.data.local.entity.CategorySpending
 import com.receiptkeeper.data.local.entity.VendorSpending
+import com.receiptkeeper.data.local.entity.DailySpending
 import com.receiptkeeper.data.repository.*
 import com.receiptkeeper.domain.model.*
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -100,6 +101,17 @@ class AnalyticsViewModel @Inject constructor(
 
     val paymentMethods: StateFlow<List<PaymentMethod>> = paymentMethodRepository.getAllPaymentMethods()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // Daily accumulated spending for trend chart
+    val dailyAccumulatedSpending: StateFlow<List<DailySpending>> = combine(
+        _startDate,
+        _endDate,
+        _selectedBookId
+    ) { start, end, bookId ->
+        Triple(start, end, bookId)
+    }.flatMapLatest { (start, end, bookId) ->
+        analyticsRepository.getDailyAccumulatedSpending(start, end, bookId)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     /**
      * Update date range
