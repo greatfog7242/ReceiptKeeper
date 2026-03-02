@@ -301,6 +301,66 @@ fun AnalyticsScreen(
                 }
             }
 
+            // Spending Goals with Progress
+            if (spendingGoals.isNotEmpty()) {
+                Text(
+                    text = "Spending Goals",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                spendingGoals.forEach { goal ->
+                    // Calculate spending for this goal's period
+                    val (goalStart, goalEnd) = getGoalPeriodDateRange(goal.period)
+
+                    // Get current spending for goal period
+                    // We'll use a simplified calculation based on current data
+                    // In production, you'd query the repository with goal's date range
+                    val goalSpending = if (goal.categoryId != null) {
+                        // Category-specific goal
+                        categoryBreakdown.find { it.categoryId == goal.categoryId }?.total ?: 0.0
+                    } else {
+                        // Global goal
+                        totalSpending
+                    }
+
+                    val category = categories.find { it.id == goal.categoryId }
+
+                    SpendingGoalCard(
+                        goal = goal,
+                        currentSpending = goalSpending,
+                        category = category
+                    )
+                }
+            } else {
+                // Empty state for goals
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "No Spending Goals",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Set budget goals in Settings to track your spending",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+            }
+
             // Category Breakdown Chart with type selector
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -426,66 +486,6 @@ fun AnalyticsScreen(
                 totalSpending = totalSpending,
                 chartType = selectedChartType
             )
-
-            // Spending Goals with Progress
-            if (spendingGoals.isNotEmpty()) {
-                Text(
-                    text = "Spending Goals",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                spendingGoals.forEach { goal ->
-                    // Calculate spending for this goal's period
-                    val (goalStart, goalEnd) = getGoalPeriodDateRange(goal.period)
-
-                    // Get current spending for goal period
-                    // We'll use a simplified calculation based on current data
-                    // In production, you'd query the repository with goal's date range
-                    val goalSpending = if (goal.categoryId != null) {
-                        // Category-specific goal
-                        categoryBreakdown.find { it.categoryId == goal.categoryId }?.total ?: 0.0
-                    } else {
-                        // Global goal
-                        totalSpending
-                    }
-
-                    val category = categories.find { it.id == goal.categoryId }
-
-                    SpendingGoalCard(
-                        goal = goal,
-                        currentSpending = goalSpending,
-                        category = category
-                    )
-                }
-            } else {
-                // Empty state for goals
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "No Spending Goals",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Set budget goals in Settings to track your spending",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                        )
-                    }
-                }
-            }
         }
     }
 }

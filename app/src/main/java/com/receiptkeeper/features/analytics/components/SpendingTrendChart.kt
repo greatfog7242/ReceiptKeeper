@@ -236,13 +236,14 @@ fun SpendingTrendChart(
 
                 // Draw legend
                 val legendY = 20f
-                val legendSpacing = 100f
+                val legendItemSpacing = 30f  // Space between legend items
 
                 // Actual spending legend
+                val actualSymbolX = 10f
                 drawCircle(
                     color = Color.Red,
                     radius = 6f,
-                    center = Offset(10f, legendY)
+                    center = Offset(actualSymbolX, legendY)
                 )
                 val actualText = "Actual Spending"
                 val actualTextLayout = textMeasurer.measure(
@@ -252,17 +253,22 @@ fun SpendingTrendChart(
                         color = surfaceColor
                     )
                 )
+                val actualTextX = actualSymbolX + 15f  // Space after circle
                 drawText(
                     actualTextLayout,
-                    topLeft = Offset(25f, legendY - actualTextLayout.size.height / 2)
+                    topLeft = Offset(actualTextX, legendY - actualTextLayout.size.height / 2)
                 )
 
                 // Goal projection legend
                 if (spendingGoals.isNotEmpty()) {
+                    // Calculate position based on actual legend width
+                    val actualLegendWidth = actualTextX + actualTextLayout.size.width
+                    val goalSymbolX = actualLegendWidth + legendItemSpacing
+
                     drawLine(
                         color = Color.Green,
-                        start = Offset(10f + legendSpacing, legendY),
-                        end = Offset(30f + legendSpacing, legendY),
+                        start = Offset(goalSymbolX, legendY),
+                        end = Offset(goalSymbolX + 20f, legendY),  // 20px line
                         strokeWidth = 3f
                     )
                     val goalText = "Goal Projection"
@@ -273,9 +279,10 @@ fun SpendingTrendChart(
                             color = surfaceColor
                         )
                     )
+                    val goalTextX = goalSymbolX + 25f  // Space after line
                     drawText(
                         goalTextLayout,
-                        topLeft = Offset(40f + legendSpacing, legendY - goalTextLayout.size.height / 2)
+                        topLeft = Offset(goalTextX, legendY - goalTextLayout.size.height / 2)
                     )
                 }
             }
