@@ -415,6 +415,11 @@
           "id": "6.13",
           "task": "Add book selection to analytics page",
           "status": "Complete"
+        },
+        {
+          "id": "6.14",
+          "task": "Add spending trend chart with right-side legends",
+          "status": "Complete"
         }
       ]
     },
