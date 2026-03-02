@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <data-extraction-rules>
     <cloud-backup>
+        <!-- Include root file directory -->
+        <include domain="file" path="." />
+
         <!-- Include database for cloud backup -->
         <include domain="database" path="." />
 

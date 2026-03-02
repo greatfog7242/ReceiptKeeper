@@ -249,7 +249,16 @@ private fun ExtractedDataForm(
 ) {
     var selectedBookId by remember { mutableStateOf(books.firstOrNull()?.id ?: 0L) }
     var selectedCategoryId by remember { mutableStateOf(categories.firstOrNull()?.id ?: 0L) }
-    var selectedPaymentMethodId by remember { mutableStateOf<Long?>(null) }
+
+    // Auto-select payment method based on extracted card last 4 digits
+    var selectedPaymentMethodId by remember(extractedData.cardLast4, paymentMethods) {
+        mutableStateOf(
+            extractedData.cardLast4?.let { cardLast4 ->
+                paymentMethods.find { it.lastFourDigits == cardLast4 }?.id
+            }
+        )
+    }
+
     var notes by remember { mutableStateOf("") }
     var showFullImage by remember { mutableStateOf(false) }
 
@@ -492,6 +501,27 @@ private fun ExtractedDataForm(
                             selectedCategoryId = category.id
                             categoryExpanded = false
                         }
+                    )
+                }
+            }
+        }
+
+        // Display extracted card last 4 if available
+        if (!extractedData.cardLast4.isNullOrBlank()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Card Detected: **** ${extractedData.cardLast4}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                if (selectedPaymentMethodId != null) {
+                    AssistChip(
+                        onClick = { },
+                        label = { Text("Auto-matched") }
                     )
                 }
             }
