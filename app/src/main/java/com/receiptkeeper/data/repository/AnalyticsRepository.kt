@@ -23,33 +23,51 @@ class AnalyticsRepository @Inject constructor(
 ) {
 
     /**
-     * Get receipts within a date range
+     * Get receipts within a date range, optionally filtered by book
      */
-    fun getReceiptsByDateRange(startDate: LocalDate, endDate: LocalDate): Flow<List<Receipt>> {
-        return receiptDao.getReceiptsByDateRange(startDate, endDate)
-            .map { entities -> entities.map { it.toDomain() } }
+    fun getReceiptsByDateRange(startDate: LocalDate, endDate: LocalDate, bookId: Long? = null): Flow<List<Receipt>> {
+        return if (bookId != null) {
+            receiptDao.getReceiptsByBookAndDateRange(bookId, startDate, endDate)
+                .map { entities -> entities.map { it.toDomain() } }
+        } else {
+            receiptDao.getReceiptsByDateRange(startDate, endDate)
+                .map { entities -> entities.map { it.toDomain() } }
+        }
     }
 
     /**
-     * Get total spending for a date range
+     * Get total spending for a date range, optionally filtered by book
      */
-    fun getTotalSpendingByDateRange(startDate: LocalDate, endDate: LocalDate): Flow<Double> {
-        return receiptDao.getTotalSpendingByDateRange(startDate, endDate)
-            .map { it ?: 0.0 }
+    fun getTotalSpendingByDateRange(startDate: LocalDate, endDate: LocalDate, bookId: Long? = null): Flow<Double> {
+        return if (bookId != null) {
+            receiptDao.getTotalSpendingByBookAndDateRange(bookId, startDate, endDate)
+                .map { it ?: 0.0 }
+        } else {
+            receiptDao.getTotalSpendingByDateRange(startDate, endDate)
+                .map { it ?: 0.0 }
+        }
     }
 
     /**
-     * Get spending breakdown by category for a date range
+     * Get spending breakdown by category for a date range, optionally filtered by book
      */
-    fun getCategorySpendingBreakdown(startDate: LocalDate, endDate: LocalDate): Flow<List<CategorySpending>> {
-        return receiptDao.getCategorySpendingBreakdown(startDate, endDate)
+    fun getCategorySpendingBreakdown(startDate: LocalDate, endDate: LocalDate, bookId: Long? = null): Flow<List<CategorySpending>> {
+        return if (bookId != null) {
+            receiptDao.getCategorySpendingBreakdownByBook(bookId, startDate, endDate)
+        } else {
+            receiptDao.getCategorySpendingBreakdown(startDate, endDate)
+        }
     }
 
     /**
-     * Get spending breakdown by vendor for a date range
+     * Get spending breakdown by vendor for a date range, optionally filtered by book
      */
-    fun getVendorSpendingBreakdown(startDate: LocalDate, endDate: LocalDate): Flow<List<VendorSpending>> {
-        return receiptDao.getVendorSpendingBreakdown(startDate, endDate)
+    fun getVendorSpendingBreakdown(startDate: LocalDate, endDate: LocalDate, bookId: Long? = null): Flow<List<VendorSpending>> {
+        return if (bookId != null) {
+            receiptDao.getVendorSpendingBreakdownByBook(bookId, startDate, endDate)
+        } else {
+            receiptDao.getVendorSpendingBreakdown(startDate, endDate)
+        }
     }
 
     /**

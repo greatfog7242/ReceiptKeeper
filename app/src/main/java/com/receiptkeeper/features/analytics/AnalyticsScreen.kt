@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.IosShare
@@ -24,6 +25,9 @@ import com.receiptkeeper.features.analytics.components.DateRangePicker
 import com.receiptkeeper.features.analytics.components.SpendingGoalCard
 import com.receiptkeeper.features.analytics.components.VendorBreakdownChart
 import com.receiptkeeper.features.analytics.components.getGoalPeriodDateRange
+import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material3.HorizontalDivider
 import kotlinx.coroutines.launch
 
 /**
@@ -37,6 +41,7 @@ fun AnalyticsScreen(
 ) {
     val startDate by viewModel.startDate.collectAsState()
     val endDate by viewModel.endDate.collectAsState()
+    val selectedBookId by viewModel.selectedBookId.collectAsState()
     val totalSpending by viewModel.totalSpending.collectAsState()
     val categoryBreakdown by viewModel.categoryBreakdown.collectAsState()
     val categories by viewModel.categories.collectAsState()
@@ -66,6 +71,14 @@ fun AnalyticsScreen(
                                     val bookNames = books.associate { it.id to it.name }
                                     val paymentMethodNames = paymentMethods.associate { it.id to it.name }
 
+                                    // Get current book selection for export
+                                    val selectedBook = books.find { it.id == selectedBookId }
+                                    val bookFilterText = if (selectedBook != null) {
+                                        " for ${selectedBook.name}"
+                                    } else {
+                                        ""
+                                    }
+
                                     // Save to Downloads folder
                                     val uri = CsvExporter.saveToDownloads(
                                         context = context,
@@ -78,7 +91,7 @@ fun AnalyticsScreen(
 
                                     // Show result message
                                     val message = if (uri != null) {
-                                        "Exported to Downloads/ReceiptKeeper_ timestamp folder"
+                                        "Exported${bookFilterText} to Downloads/ReceiptKeeper_ timestamp folder"
                                     } else {
                                         "Failed to export"
                                     }
@@ -117,6 +130,119 @@ fun AnalyticsScreen(
                     viewModel.setPredefinedRange(preset)
                 }
             )
+
+            // Book Selection
+            var showBookDropdown by remember { mutableStateOf(false) }
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Book Filter",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        IconButton(
+                            onClick = { showBookDropdown = !showBookDropdown }
+                        ) {
+                            Icon(
+                                if (showBookDropdown) Icons.Default.Book else Icons.Default.BookmarkBorder,
+                                contentDescription = "Toggle book selection"
+                            )
+                        }
+                    }
+
+                    if (showBookDropdown) {
+                        // All Books option
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    viewModel.setSelectedBook(null)
+                                    showBookDropdown = false
+                                }
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "All Books",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = if (selectedBookId == null) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                }
+                            )
+                            if (selectedBookId == null) {
+                                Icon(
+                                    Icons.Default.Book,
+                                    contentDescription = "Selected",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+
+                        // Individual books
+                        books.forEach { book ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        viewModel.setSelectedBook(book.id)
+                                        showBookDropdown = false
+                                    }
+                                    .padding(vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = book.name,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = if (selectedBookId == book.id) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    }
+                                )
+                                if (selectedBookId == book.id) {
+                                    Icon(
+                                        Icons.Default.Book,
+                                        contentDescription = "Selected",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        // Show current selection summary
+                        val selectedBook = books.find { it.id == selectedBookId }
+                        Text(
+                            text = selectedBook?.name ?: "All Books",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        )
+                    }
+                }
+            }
 
             // Total Spending Card
             Card(

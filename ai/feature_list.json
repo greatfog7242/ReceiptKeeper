@@ -410,6 +410,11 @@
           "id": "6.12",
           "task": "Create AnalyticsRepository",
           "status": "Complete"
+        },
+        {
+          "id": "6.13",
+          "task": "Add book selection to analytics page",
+          "status": "Complete"
         }
       ]
     },

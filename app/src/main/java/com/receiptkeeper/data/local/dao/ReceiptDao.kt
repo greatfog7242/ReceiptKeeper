@@ -37,6 +37,18 @@ interface ReceiptDao {
 
     @Query("""
         SELECT * FROM receipts
+        WHERE bookId = :bookId
+        AND transactionDate BETWEEN :startDate AND :endDate
+        ORDER BY transactionDate DESC
+    """)
+    fun getReceiptsByBookAndDateRange(
+        bookId: Long,
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): Flow<List<ReceiptEntity>>
+
+    @Query("""
+        SELECT * FROM receipts
         WHERE categoryId = :categoryId
         AND transactionDate BETWEEN :startDate AND :endDate
         ORDER BY transactionDate DESC
@@ -61,6 +73,17 @@ interface ReceiptDao {
 
     @Query("""
         SELECT SUM(totalAmount) FROM receipts
+        WHERE bookId = :bookId
+        AND transactionDate BETWEEN :startDate AND :endDate
+    """)
+    fun getTotalSpendingByBookAndDateRange(
+        bookId: Long,
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): Flow<Double?>
+
+    @Query("""
+        SELECT SUM(totalAmount) FROM receipts
         WHERE categoryId = :categoryId
         AND transactionDate BETWEEN :startDate AND :endDate
     """)
@@ -81,6 +104,21 @@ interface ReceiptDao {
     fun getCategorySpendingBreakdown(startDate: LocalDate, endDate: LocalDate): Flow<List<CategorySpending>>
 
     @Query("""
+        SELECT categoryId, SUM(totalAmount) as total
+        FROM receipts
+        WHERE bookId = :bookId
+        AND transactionDate BETWEEN :startDate AND :endDate
+        AND categoryId IS NOT NULL
+        GROUP BY categoryId
+        ORDER BY total DESC
+    """)
+    fun getCategorySpendingBreakdownByBook(
+        bookId: Long,
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): Flow<List<CategorySpending>>
+
+    @Query("""
         SELECT vendorId, SUM(totalAmount) as total
         FROM receipts
         WHERE transactionDate BETWEEN :startDate AND :endDate
@@ -89,6 +127,21 @@ interface ReceiptDao {
         ORDER BY total DESC
     """)
     fun getVendorSpendingBreakdown(startDate: LocalDate, endDate: LocalDate): Flow<List<VendorSpending>>
+
+    @Query("""
+        SELECT vendorId, SUM(totalAmount) as total
+        FROM receipts
+        WHERE bookId = :bookId
+        AND transactionDate BETWEEN :startDate AND :endDate
+        AND vendorId IS NOT NULL
+        GROUP BY vendorId
+        ORDER BY total DESC
+    """)
+    fun getVendorSpendingBreakdownByBook(
+        bookId: Long,
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): Flow<List<VendorSpending>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertReceipt(receipt: ReceiptEntity): Long

@@ -10,11 +10,13 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import java.time.LocalDate
 import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 /**
  * ViewModel for analytics screen
  * Manages date range selection and spending calculations
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class AnalyticsViewModel @Inject constructor(
     private val analyticsRepository: AnalyticsRepository,
@@ -30,48 +32,55 @@ class AnalyticsViewModel @Inject constructor(
     // Date range - default to current month
     private val _startDate = MutableStateFlow(LocalDate.now().withDayOfMonth(1))
     private val _endDate = MutableStateFlow(LocalDate.now())
+    // Book selection - null means "All Books"
+    private val _selectedBookId = MutableStateFlow<Long?>(null)
 
     val startDate: StateFlow<LocalDate> = _startDate.asStateFlow()
     val endDate: StateFlow<LocalDate> = _endDate.asStateFlow()
+    val selectedBookId: StateFlow<Long?> = _selectedBookId.asStateFlow()
 
-    // Receipts for selected date range
+    // Receipts for selected date range and book
     val receipts: StateFlow<List<Receipt>> = combine(
         _startDate,
-        _endDate
-    ) { start, end ->
-        start to end
-    }.flatMapLatest { (start, end) ->
-        analyticsRepository.getReceiptsByDateRange(start, end)
+        _endDate,
+        _selectedBookId
+    ) { start, end, bookId ->
+        Triple(start, end, bookId)
+    }.flatMapLatest { (start, end, bookId) ->
+        analyticsRepository.getReceiptsByDateRange(start, end, bookId)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // Total spending for selected date range
+    // Total spending for selected date range and book
     val totalSpending: StateFlow<Double> = combine(
         _startDate,
-        _endDate
-    ) { start, end ->
-        start to end
-    }.flatMapLatest { (start, end) ->
-        analyticsRepository.getTotalSpendingByDateRange(start, end)
+        _endDate,
+        _selectedBookId
+    ) { start, end, bookId ->
+        Triple(start, end, bookId)
+    }.flatMapLatest { (start, end, bookId) ->
+        analyticsRepository.getTotalSpendingByDateRange(start, end, bookId)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
-    // Category spending breakdown
+    // Category spending breakdown for selected date range and book
     val categoryBreakdown: StateFlow<List<CategorySpending>> = combine(
         _startDate,
-        _endDate
-    ) { start, end ->
-        start to end
-    }.flatMapLatest { (start, end) ->
-        analyticsRepository.getCategorySpendingBreakdown(start, end)
+        _endDate,
+        _selectedBookId
+    ) { start, end, bookId ->
+        Triple(start, end, bookId)
+    }.flatMapLatest { (start, end, bookId) ->
+        analyticsRepository.getCategorySpendingBreakdown(start, end, bookId)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // Vendor spending breakdown
+    // Vendor spending breakdown for selected date range and book
     val vendorBreakdown: StateFlow<List<VendorSpending>> = combine(
         _startDate,
-        _endDate
-    ) { start, end ->
-        start to end
-    }.flatMapLatest { (start, end) ->
-        analyticsRepository.getVendorSpendingBreakdown(start, end)
+        _endDate,
+        _selectedBookId
+    ) { start, end, bookId ->
+        Triple(start, end, bookId)
+    }.flatMapLatest { (start, end, bookId) ->
+        analyticsRepository.getVendorSpendingBreakdown(start, end, bookId)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // All categories for reference
@@ -132,6 +141,13 @@ class AnalyticsViewModel @Inject constructor(
                 _endDate.value = now
             }
         }
+    }
+
+    /**
+     * Set selected book for filtering analytics
+     */
+    fun setSelectedBook(bookId: Long?) {
+        _selectedBookId.value = bookId
     }
 }
 

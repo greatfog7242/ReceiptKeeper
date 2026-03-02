@@ -1010,13 +1010,101 @@ None - Phase 6 complete, ready to proceed to Phase 7
 
 ---
 
+## 2026-03-02 - Enhancement: Book Selection in Analytics Page
+
+**Agent:** Claude Sonnet 3.5
+**Feature:** Book Selection for Analytics Filtering
+**Status:** ✅ Complete
+
+### Work Completed
+
+**Analytics Page Enhancement:**
+- ✅ Added book selection UI to AnalyticsScreen with collapsible dropdown
+- ✅ Updated AnalyticsViewModel to support book filtering
+- ✅ Enhanced AnalyticsRepository with book-filtered queries
+- ✅ Added new DAO methods in ReceiptDao for book-specific analytics
+- ✅ Updated CSV export to respect book filter
+- ✅ Spending goals calculation respects book filter
+
+**Technical Implementation:**
+- ✅ `AnalyticsViewModel.kt` - Added `selectedBookId` StateFlow and `setSelectedBook()` method
+- ✅ `AnalyticsRepository.kt` - Updated all methods to accept optional `bookId` parameter
+- ✅ `ReceiptDao.kt` - Added 4 new queries for book-filtered analytics:
+  - `getReceiptsByBookAndDateRange()`
+  - `getTotalSpendingByBookAndDateRange()`
+  - `getCategorySpendingBreakdownByBook()`
+  - `getVendorSpendingBreakdownByBook()`
+- ✅ `AnalyticsScreen.kt` - Added book selection card with:
+  - Collapsible dropdown UI (toggles with Book icon)
+  - "All Books" option (null bookId)
+  - List of all books with selection indicators
+  - Current selection summary when collapsed
+  - Updated CSV export message to include book filter context
+
+**UI Features:**
+- ✅ Book filter card with surfaceVariant background
+- ✅ Expand/collapse toggle with Book/BookmarkBorder icons
+- ✅ Visual selection indicators (checkmark icon for selected)
+- ✅ Primary color highlighting for selected items
+- ✅ HorizontalDivider between "All Books" and book list
+- ✅ Responsive layout with proper spacing
+
+**Data Flow:**
+- ✅ Book selection triggers reactive updates to all analytics data
+- ✅ Total spending recalculates for selected book
+- ✅ Category and vendor breakdowns filter to selected book
+- ✅ Spending goals calculate progress based on filtered data
+- ✅ CSV export includes only receipts from selected book
+
+### Build & Deploy
+- **Build time:** 15s (first build), 5s (subsequent builds)
+- **Build warnings:** Fixed deprecated Divider usage (replaced with HorizontalDivider)
+- **Build warnings:** Added @OptIn(ExperimentalCoroutinesApi::class) for flatMapLatest usage
+- **Deploy:** SUCCESS to device RRCY802F6PV
+- **Launch:** SUCCESS - app running cleanly
+- **Logcat:** ✅ No errors from ReceiptKeeper
+
+### Testing Recommendations
+1. **Create multiple books** via Books screen
+2. **Add receipts to different books** (via manual entry or scan)
+3. **Navigate to Analytics** tab
+4. **Test book selection:**
+   - Expand book dropdown (tap Book icon)
+   - Select "All Books" → analytics show all receipts
+   - Select specific book → analytics filter to that book only
+   - Verify total spending updates correctly
+   - Verify category/vendor breakdowns filter correctly
+5. **Test CSV export with book filter:**
+   - Export with "All Books" selected
+   - Export with specific book selected
+   - Verify exported CSV contains correct receipts
+
+### Benefits
+- **Better organization:** Users can analyze spending per book/project
+- **Flexible reporting:** Compare spending across different books
+- **Project budgeting:** Track expenses for specific projects separately
+- **Consistent UX:** Follows same pattern as book filtering in Receipts screen
+
+### Files Modified (4)
+```
+app/src/main/java/com/receiptkeeper/features/analytics/AnalyticsScreen.kt
+app/src/main/java/com/receiptkeeper/features/analytics/AnalyticsViewModel.kt
+app/src/main/java/com/receiptkeeper/data/repository/AnalyticsRepository.kt
+app/src/main/java/com/receiptkeeper/data/local/dao/ReceiptDao.kt
+```
+
+### Feature List Updated
+- Added task "6.13: Add book selection to analytics page" with status "Complete"
+
+---
+
 ## Handoff Notes for Next Session
 
 **Current Task:** Phase 7 - Polish & Testing
 **Next Immediate Action:** Review app for polish opportunities and testing needs
-**Environment Status:** ✅ Fully operational - Phases 0-6 complete
-**Device:** RRCY802F6PV (physical phone) + emulator-5554 available
+**Environment Status:** ✅ Fully operational - Phases 0-6 complete + book selection enhancement
+**Device:** RRCY802F6PV (physical phone) connected
 **Package:** com.receiptkeeper.debug (note the .debug suffix for adb commands)
 **JAVA_HOME:** Set in local.properties for Gradle builds
 **Phases Complete:** 0, 1, 2, 3, 4, 5, 6 ✅ | Next: Phase 7 (Polish & Testing)
-**Recent Completion:** Phase 6 Analytics & Reporting fully functional with CSV export ✅
+**Recent Completion:** Book selection in analytics page - fully functional ✅
