@@ -234,43 +234,13 @@ fun SpendingTrendChart(
                     style = Stroke(width = 2f)
                 )
 
-                // Draw legend
+                // Draw legend on right side
                 val legendY = 20f
                 val legendItemSpacing = 30f  // Space between legend items
+                val rightPadding = 10f  // Padding from right edge
 
-                // Actual spending legend
-                val actualSymbolX = 10f
-                drawCircle(
-                    color = Color.Red,
-                    radius = 6f,
-                    center = Offset(actualSymbolX, legendY)
-                )
-                val actualText = "Actual Spending"
-                val actualTextLayout = textMeasurer.measure(
-                    actualText,
-                    style = TextStyle(
-                        fontSize = 12.sp,
-                        color = surfaceColor
-                    )
-                )
-                val actualTextX = actualSymbolX + 15f  // Space after circle
-                drawText(
-                    actualTextLayout,
-                    topLeft = Offset(actualTextX, legendY - actualTextLayout.size.height / 2)
-                )
-
-                // Goal projection legend
+                // Goal projection legend (rightmost)
                 if (spendingGoals.isNotEmpty()) {
-                    // Calculate position based on actual legend width
-                    val actualLegendWidth = actualTextX + actualTextLayout.size.width
-                    val goalSymbolX = actualLegendWidth + legendItemSpacing
-
-                    drawLine(
-                        color = Color.Green,
-                        start = Offset(goalSymbolX, legendY),
-                        end = Offset(goalSymbolX + 20f, legendY),  // 20px line
-                        strokeWidth = 3f
-                    )
                     val goalText = "Goal Projection"
                     val goalTextLayout = textMeasurer.measure(
                         goalText,
@@ -279,10 +249,62 @@ fun SpendingTrendChart(
                             color = surfaceColor
                         )
                     )
-                    val goalTextX = goalSymbolX + 25f  // Space after line
+                    val goalTextX = canvasWidth - rightPadding - goalTextLayout.size.width
+                    val goalSymbolX = goalTextX - 25f  // Space before text
+
+                    drawLine(
+                        color = Color.Green,
+                        start = Offset(goalSymbolX, legendY),
+                        end = Offset(goalSymbolX + 20f, legendY),  // 20px line
+                        strokeWidth = 3f
+                    )
                     drawText(
                         goalTextLayout,
                         topLeft = Offset(goalTextX, legendY - goalTextLayout.size.height / 2)
+                    )
+
+                    // Actual spending legend (left of goal legend)
+                    val actualText = "Actual Spending"
+                    val actualTextLayout = textMeasurer.measure(
+                        actualText,
+                        style = TextStyle(
+                            fontSize = 12.sp,
+                            color = surfaceColor
+                        )
+                    )
+                    val actualTextX = goalSymbolX - legendItemSpacing - actualTextLayout.size.width
+                    val actualSymbolX = actualTextX - 15f  // Space before text
+
+                    drawCircle(
+                        color = Color.Red,
+                        radius = 6f,
+                        center = Offset(actualSymbolX, legendY)
+                    )
+                    drawText(
+                        actualTextLayout,
+                        topLeft = Offset(actualTextX, legendY - actualTextLayout.size.height / 2)
+                    )
+                } else {
+                    // Only actual spending legend (no goals)
+                    val actualText = "Actual Spending"
+                    val actualTextLayout = textMeasurer.measure(
+                        actualText,
+                        style = TextStyle(
+                            fontSize = 12.sp,
+                            color = surfaceColor
+                        )
+                    )
+                    val actualTextX = canvasWidth - rightPadding - actualTextLayout.size.width
+                    val actualSymbolX = actualTextX - 15f  // Space before text
+
+                    drawCircle(
+                        color = Color.Red,
+                        radius = 6f,
+                        center = Offset(actualSymbolX, legendY)
+                    )
+                    drawText(
+                        actualTextLayout,
+                        topLeft = Offset(actualTextX, legendY - actualTextLayout.size.height / 2)
                     )
                 }
             }
