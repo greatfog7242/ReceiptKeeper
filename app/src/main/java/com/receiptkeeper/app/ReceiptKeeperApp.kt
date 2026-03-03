@@ -1,7 +1,9 @@
 package com.receiptkeeper.app
 
 import android.app.Application
+import com.receiptkeeper.core.work.BackupScheduler
 import dagger.hilt.android.HiltAndroidApp
+import javax.inject.Inject
 
 /**
  * Application class for ReceiptKeeper
@@ -9,8 +11,14 @@ import dagger.hilt.android.HiltAndroidApp
  */
 @HiltAndroidApp
 class ReceiptKeeperApp : Application() {
+
+    @Inject
+    lateinit var backupScheduler: BackupScheduler
+
     override fun onCreate() {
         super.onCreate()
-        // Application initialization code here
+        
+        // Schedule daily backup at 5:00 AM
+        backupScheduler.scheduleDailyBackup()
     }
 }

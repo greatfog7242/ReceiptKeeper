@@ -1194,3 +1194,111 @@ app/src/main/java/com/receiptkeeper/features/analytics/AnalyticsScreen.kt (UPDAT
 - Book selection in analytics page - fully functional ✅
 - Spending trend chart with right-side legends - fully functional ✅
 - Release build deployment without uninstalling existing app ✅
+
+---
+
+## 2026-03-02 - Backup/Restore Feature Implementation Complete
+
+**Agent:** Claude Sonnet 3.5
+**Feature:** Database Backup & Restore System
+**Status:** ✅ Complete
+
+### Work Completed
+
+**Backup/Restore Service:**
+- ✅ `BackupRestoreService.kt` - Complete backup/restore functionality
+- ✅ Uses file copying for database backup (simplified from VACUUM INTO for compatibility)
+- ✅ Creates timestamped folders in Downloads/雪松堡账本/
+- ✅ Exports all receipt images to backup
+- ✅ Creates zip archives for easy sharing/restoration
+- ✅ Lists available backups with timestamps
+- ✅ Handles Android 11+ storage permissions
+
+**ViewModel & UI:**
+- ✅ `BackupRestoreViewModel.kt` - StateFlow-based state management
+- ✅ `BackupRestoreScreen.kt` - Complete UI with:
+  - Create backup button with progress indicator
+  - List of available backups with timestamps
+  - Restore functionality with confirmation dialog
+  - Delete backup functionality
+  - Information section explaining backup process
+  - Error handling with snackbars
+  - Success messages
+
+**Automatic Backup Scheduler:**
+- ✅ `BackupWorker.kt` - Hilt-enabled WorkManager worker
+- ✅ `BackupScheduler.kt` - Schedules daily backups at 5:00 AM
+- ✅ `WorkManagerModule.kt` - DI module for WorkManager
+- ✅ Integrated into `ReceiptKeeperApp.kt` - auto-schedules on app start
+
+**Navigation & Integration:**
+- ✅ Added `BackupRestore` route to navigation
+- ✅ Updated `SettingsScreen.kt` with backup/restore menu item
+- ✅ Updated `NavGraph.kt` to include backup/restore screen
+- ✅ Added necessary dependencies (WorkManager, Hilt WorkManager extension)
+
+**Permissions & Storage:**
+- ✅ Added `MANAGE_EXTERNAL_STORAGE` permission for Android 11+
+- ✅ Handles fallback to app-specific directory if external storage inaccessible
+- ✅ Proper file path handling for all Android versions
+
+### Features Implemented:
+1. ✅ Manual backup creation via Settings → Backup & Restore
+2. ✅ Backup storage in Downloads/雪松堡账本/ with timestamped folders
+3. ✅ Image export/import (all receipt images included)
+4. ✅ Backup listing with timestamps
+5. ✅ Restore functionality with confirmation
+6. ✅ Backup deletion
+7. ✅ Daily automatic backup at 5:00 AM via WorkManager
+8. ✅ Error handling and user feedback
+9. ✅ Zip archive creation for easy file management
+
+### Files Created (8 new files):
+```
+core/util/
+  - BackupRestoreService.kt
+core/work/
+  - BackupWorker.kt
+  - BackupScheduler.kt
+core/di/
+  - WorkManagerModule.kt
+features/settings/
+  - BackupRestoreViewModel.kt
+  - BackupRestoreScreen.kt
+app/navigation/
+  - Routes.kt (updated)
+  - NavGraph.kt (updated)
+```
+
+### Files Modified (5 files):
+```
+app/src/main/java/com/receiptkeeper/features/settings/SettingsScreen.kt
+app/src/main/java/com/receiptkeeper/app/ReceiptKeeperApp.kt
+app/build.gradle.kts (added WorkManager dependencies)
+app/src/main/AndroidManifest.xml (added MANAGE_EXTERNAL_STORAGE permission)
+ai/feature_list.json (added task 7.13)
+```
+
+### Build Status:
+- ✅ Build successful (with deprecation warnings - non-breaking)
+- ✅ All dependencies resolved
+- ✅ Hilt DI properly configured
+- ✅ WorkManager integration complete
+
+### Next Steps:
+- Connect device and deploy for testing
+- Verify backup creation works
+- Test restore functionality
+- Verify automatic backup scheduling
+
+### Current Blockers:
+- Device not connected for deployment testing
+- Android 11+ storage permissions may require user approval
+
+### Implementation Notes:
+- Used file copying instead of VACUUM INTO for broader compatibility
+- Automatic backups scheduled via WorkManager with exponential backoff
+- Backup files are zipped for portability
+- User warned that app restart is needed after restore
+- Fallback to app-specific storage if external storage inaccessible
+

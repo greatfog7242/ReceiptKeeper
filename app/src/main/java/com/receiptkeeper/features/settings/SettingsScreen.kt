@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.receiptkeeper.BuildConfig
+import androidx.navigation.NavController
 
 private val userManualContent = """
 ReceiptKeeper - User Manual
@@ -226,6 +227,7 @@ fun SettingsScreen(
     onNavigateToCategories: () -> Unit = {},
     onNavigateToPaymentMethods: () -> Unit = {},
     onNavigateToSpendingGoals: () -> Unit = {},
+    onNavigateToBackupRestore: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var showAboutDialog by remember { mutableStateOf(false) }
@@ -288,6 +290,15 @@ fun SettingsScreen(
                 title = "Spending Goals",
                 subtitle = "Set and track budget goals",
                 onClick = onNavigateToSpendingGoals
+            )
+
+            HorizontalDivider()
+
+            SettingsItem(
+                icon = Icons.Default.Backup,
+                title = "Backup & Restore",
+                subtitle = "Backup database and restore from backup",
+                onClick = onNavigateToBackupRestore
             )
 
             HorizontalDivider()

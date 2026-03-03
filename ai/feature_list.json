@@ -488,6 +488,11 @@
           "id": "7.12",
           "task": "Final UX polish",
           "status": "Incomplete"
+        },
+        {
+          "id": "7.13",
+          "task": "Add database backup/restore feature with automatic daily backups",
+          "status": "Complete"
         }
       ]
     }

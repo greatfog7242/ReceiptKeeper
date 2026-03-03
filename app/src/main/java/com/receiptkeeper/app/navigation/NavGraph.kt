@@ -12,6 +12,7 @@ import com.receiptkeeper.features.books.BooksScreen
 import com.receiptkeeper.features.receipts.ReceiptsScreen
 import com.receiptkeeper.features.scan.ScanScreen
 import com.receiptkeeper.features.settings.SettingsScreen
+import com.receiptkeeper.features.settings.BackupRestoreScreen
 
 /**
  * Main navigation graph for the app
@@ -72,6 +73,9 @@ fun NavGraph(
                 },
                 onNavigateToSpendingGoals = {
                     navController.navigate(Routes.SpendingGoals.route)
+                },
+                onNavigateToBackupRestore = {
+                    navController.navigate(Routes.BackupRestore.route)
                 }
             )
         }
@@ -123,6 +127,12 @@ fun NavGraph(
 
         composable(route = Routes.SpendingGoals.route) {
             com.receiptkeeper.features.settings.SpendingGoalsScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(route = Routes.BackupRestore.route) {
+            BackupRestoreScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
