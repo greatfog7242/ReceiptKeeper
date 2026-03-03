@@ -114,3 +114,8 @@ Thumbs.db
 
 # Claude Code local settings
 .claude/
+
+# Brand icons and script files
+brand_icons/
+*.ps1
+test_screenshot.png
