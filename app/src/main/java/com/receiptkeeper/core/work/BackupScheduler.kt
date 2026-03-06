@@ -1,7 +1,9 @@
 package com.receiptkeeper.core.work
 
 import android.content.Context
+import android.util.Log
 import androidx.work.*
+import com.receiptkeeper.core.util.BatteryOptimizationHelper
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,14 +26,22 @@ class BackupScheduler @Inject constructor(
     fun scheduleDailyBackup() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                Log.d(TAG, "Scheduling daily backup at 5:00 AM")
+                
+                // Check battery optimization status
+                val batteryOptimizationStatus = BatteryOptimizationHelper.checkBatteryOptimizationStatus(context)
+                Log.d(TAG, batteryOptimizationStatus)
+                
                 // Cancel any existing backup work
                 WorkManager.getInstance(context).cancelUniqueWork(BackupWorker.WORK_NAME)
 
                 // Create constraints for the backup work
+                // Use minimal constraints to ensure backup runs reliably
                 val constraints = Constraints.Builder()
                     .setRequiredNetworkType(NetworkType.NOT_REQUIRED) // Backup doesn't need network
-                    .setRequiresBatteryNotLow(true) // Don't run if battery is low
-                    .setRequiresStorageNotLow(true) // Don't run if storage is low
+                    // Remove battery and storage constraints to ensure backup runs
+                    // .setRequiresBatteryNotLow(true) // Removed: prevents backup when battery is low
+                    // .setRequiresStorageNotLow(true) // Removed: prevents backup when storage is low
                     .build()
 
                 // Create a PeriodicWorkRequest that runs daily at 5:00 AM
@@ -55,8 +65,10 @@ class BackupScheduler @Inject constructor(
                     ExistingPeriodicWorkPolicy.KEEP, // Keep existing schedule if already scheduled
                     backupRequest
                 )
+                
+                Log.d(TAG, "Daily backup scheduled successfully")
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e(TAG, "Failed to schedule daily backup: ${e.message}", e)
             }
         }
     }
@@ -76,7 +88,30 @@ class BackupScheduler @Inject constructor(
             .getWorkInfosForUniqueWork(BackupWorker.WORK_NAME)
             .await()
         
-        return workInfo.any { it.state == WorkInfo.State.ENQUEUED }
+        val isScheduled = workInfo.any { it.state == WorkInfo.State.ENQUEUED }
+        Log.d(TAG, "Backup scheduled: $isScheduled")
+        return isScheduled
+    }
+
+    /**
+     * Checks if battery optimization might prevent background work
+     */
+    fun checkBatteryOptimizationStatus(): String {
+        return BatteryOptimizationHelper.checkBatteryOptimizationStatus(context)
+    }
+
+    /**
+     * Checks if app is exempt from battery optimizations
+     */
+    fun isIgnoringBatteryOptimizations(): Boolean {
+        return BatteryOptimizationHelper.isIgnoringBatteryOptimizations(context)
+    }
+
+    /**
+     * Opens battery optimization settings for user to grant permission
+     */
+    fun requestIgnoreBatteryOptimizations() {
+        BatteryOptimizationHelper.requestIgnoreBatteryOptimizations(context)
     }
 
     /**
@@ -107,6 +142,7 @@ class BackupScheduler @Inject constructor(
      * Triggers an immediate backup (for testing or manual trigger)
      */
     fun triggerImmediateBackup() {
+        Log.d(TAG, "Triggering immediate backup")
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
             .build()
@@ -117,5 +153,9 @@ class BackupScheduler @Inject constructor(
             .build()
 
         WorkManager.getInstance(context).enqueue(backupRequest)
+    }
+
+    companion object {
+        private const val TAG = "BackupScheduler"
     }
 }

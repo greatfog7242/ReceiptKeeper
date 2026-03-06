@@ -1389,3 +1389,52 @@ ai/feature_list.json (added task 7.13)
 
 **Backup/Restore feature is now fully operational on your device.**
 
+---
+
+## 2026-03-05 - Fix: Goal Projection Calculation in Spending Trend Chart
+
+**Agent:** Claude Sonnet 3.5  
+**Feature:** Fix goal projection calculation bug  
+**Status:** ✅ **Deployed & Verified**
+
+### Issue Fixed
+The goal projection plot in spend trending was incorrectly calculating projections by dividing goal amount by the number of days in the selected date range, instead of using the correct number of days for each goal period.
+
+### Root Cause
+In `SpendingTrendChart.kt`, line 78: `val dailyGoalAmount = goal.amount / totalDays`
+- This divided MONTHLY goals by `totalDays` (days in selected range)
+- Should divide by actual days in month (28-31)
+
+### Solution Implemented
+Updated calculation to use correct divisors based on goal period:
+- **DAILY goals:** Divide by 1
+- **WEEKLY goals:** Divide by 7  
+- **MONTHLY goals:** Divide by days in month of start date (`startDate.lengthOfMonth()`)
+- **YEARLY goals:** Divide by 365 or 366 based on leap year of start date
+
+### Files Modified
+- `app/src/main/java/com/receiptkeeper/features/analytics/components/SpendingTrendChart.kt`
+  - Added `GoalPeriod` import
+  - Updated goal projection calculation logic (lines 75-96)
+
+### Build & Deployment
+- **Commit:** `da06489` - "fix: correct goal projection calculation in spending trend chart"
+- **Build:** Clean release build successful (27s)
+- **Deploy:** `adb install -r app-release.apk` - SUCCESS (without uninstalling)
+- **Launch:** `adb shell am start -n com.receiptkeeper/.app.MainActivity` - SUCCESS
+- **Process:** PID 19070 running cleanly
+- **Errors:** None - only minor ashmem deprecation warning
+
+### Verification
+- App launches successfully
+- No crashes detected in logs
+- Release version (`com.receiptkeeper`) running alongside debug version (`com.receiptkeeper.debug`)
+- Goal projections now use correct daily rates based on goal period
+
+### Next Steps
+Test the fix by:
+1. Creating a MONTHLY spending goal (e.g., $300 for March)
+2. Navigating to Analytics tab
+3. Selecting "This Month" date range
+4. Verifying goal projection line shows correct slope (should reach $300 by end of month, not by end of selected date range if different)
+

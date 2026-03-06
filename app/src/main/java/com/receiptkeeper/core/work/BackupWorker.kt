@@ -1,6 +1,7 @@
 package com.receiptkeeper.core.work
 
 import android.content.Context
+import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
@@ -22,18 +23,21 @@ class BackupWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+        Log.d(TAG, "BackupWorker starting automatic backup")
         try {
             // Perform backup
             val (success, message) = backupRestoreService.createBackup()
             
             if (success) {
+                Log.d(TAG, "BackupWorker completed successfully: $message")
                 Result.success()
             } else {
+                Log.e(TAG, "BackupWorker failed: $message")
                 // Retry with exponential backoff if backup fails
                 Result.retry()
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "BackupWorker exception: ${e.message}", e)
             // Retry with exponential backoff
             Result.retry()
         }
@@ -41,5 +45,6 @@ class BackupWorker @AssistedInject constructor(
 
     companion object {
         const val WORK_NAME = "receipt_keeper_backup_worker"
+        private const val TAG = "BackupWorker"
     }
 }

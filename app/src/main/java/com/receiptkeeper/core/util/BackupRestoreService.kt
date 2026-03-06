@@ -7,9 +7,11 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import androidx.core.net.toUri
+import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.receiptkeeper.data.local.dao.ReceiptDao
+import java.io.RandomAccessFile
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -51,13 +53,21 @@ class BackupRestoreService @Inject constructor(
      */
     suspend fun createBackup(): Pair<Boolean, String> = withContext(Dispatchers.IO) {
         try {
+            println("=== Starting backup creation ===")
+            
             // Create backup directory with timestamp
             val timestamp = LocalDateTime.now().format(timestampFormatter)
+            println("Backup timestamp: $timestamp")
+            
             val backupDir = createBackupDirectory(timestamp)
+            println("Backup directory: $backupDir")
             
             // Export database using VACUUM INTO
             val dbBackupFile = File(backupDir, DATABASE_BACKUP_NAME)
+            println("Database backup file: $dbBackupFile")
+            
             val dbExportSuccess = exportDatabase(dbBackupFile)
+            println("Database export success: $dbExportSuccess")
             
             if (!dbExportSuccess) {
                 return@withContext Pair(false, "Failed to export database")
@@ -66,8 +76,10 @@ class BackupRestoreService @Inject constructor(
             // Copy all receipt images
             val imagesDir = File(backupDir, IMAGES_SUBFOLDER)
             imagesDir.mkdirs()
+            println("Images directory: $imagesDir")
             
             val imageCopySuccess = copyReceiptImages(imagesDir)
+            println("Image copy success: $imageCopySuccess")
             
             if (!imageCopySuccess) {
                 return@withContext Pair(false, "Failed to copy images")
@@ -75,10 +87,14 @@ class BackupRestoreService @Inject constructor(
             
             // Create backup metadata file
             createBackupMetadata(backupDir, timestamp)
+            println("Created backup metadata")
             
             // Create zip archive of the backup
             val zipFile = File(backupDir.parentFile, "receipt_keeper_backup_$timestamp.zip")
+            println("Creating zip archive: $zipFile")
+            
             val zipSuccess = createZipArchive(backupDir, zipFile)
+            println("Zip creation success: $zipSuccess")
             
             if (!zipSuccess) {
                 return@withContext Pair(false, "Failed to create zip archive")
@@ -86,10 +102,15 @@ class BackupRestoreService @Inject constructor(
             
             // Clean up the unzipped backup directory (keep only the zip)
             backupDir.deleteRecursively()
+            println("Cleaned up temporary directory")
+            
+            val zipSize = zipFile.length()
+            println("Backup completed: $zipFile, size: $zipSize bytes")
             
             Pair(true, zipFile.absolutePath)
         } catch (e: Exception) {
             e.printStackTrace()
+            println("Backup failed with exception: ${e.message}")
             Pair(false, "Backup failed: ${e.message}")
         }
     }
@@ -234,15 +255,53 @@ class BackupRestoreService @Inject constructor(
             // Get the database file path
             val dbFile = context.getDatabasePath("receipt_keeper_db")
             
-            // Create a copy of the database file
-            dbFile.copyTo(destinationFile, overwrite = true)
+            if (!dbFile.exists()) {
+                println("Database file doesn't exist: $dbFile")
+                return false
+            }
             
-            // For SQLite backup, we can use a simpler approach: copy the file
-            // VACUUM INTO requires SQLite 3.27+ and specific permissions
-            // This approach works for all Android versions
-            true
+            println("Database file exists: $dbFile, size: ${dbFile.length()} bytes")
+            
+            // First, ensure all WAL journal is written to main database
+            // Close any open database connections by creating a temporary connection
+            val tempDb = androidx.room.Room.databaseBuilder(
+                context,
+                com.receiptkeeper.core.database.ReceiptDatabase::class.java,
+                "receipt_keeper_db"
+            )
+                .setJournalMode(androidx.room.RoomDatabase.JournalMode.TRUNCATE) // Force no WAL
+                .build()
+            
+            // Execute VACUUM INTO to create a clean backup
+            tempDb.openHelper.writableDatabase.execSQL(
+                "VACUUM INTO '${destinationFile.absolutePath}'"
+            )
+            
+            tempDb.close()
+            
+            // Verify the backup was created
+            if (!destinationFile.exists()) {
+                println("Backup file not created: $destinationFile")
+                return false
+            }
+            
+            val backupSize = destinationFile.length()
+            println("Backup created: $destinationFile, size: $backupSize bytes")
+            
+            if (backupSize == 0L) {
+                println("Backup file is empty!")
+                destinationFile.delete()
+                return false
+            }
+            
+            // Verify it's a valid SQLite database
+            val isValid = isSqliteDatabaseValid(destinationFile)
+            println("Backup database valid: $isValid")
+            
+            isValid
         } catch (e: Exception) {
             e.printStackTrace()
+            println("Export database error: ${e.message}")
             false
         }
     }
@@ -252,18 +311,72 @@ class BackupRestoreService @Inject constructor(
      */
     private fun importDatabase(sourceFile: File): Boolean {
         return try {
+            println("Starting database import from: $sourceFile")
+            println("Source file size: ${sourceFile.length()} bytes")
+            
+            // First verify the backup is a valid SQLite database
+            if (!isSqliteDatabaseValid(sourceFile)) {
+                println("Backup file is not a valid SQLite database")
+                return false
+            }
+            
             // Get the current database file path
             val dbFile = context.getDatabasePath("receipt_keeper_db")
+            println("Current database path: $dbFile")
             
-            // Close the app database first by clearing Hilt components
-            // This is a simplified approach - the app will need to be restarted
-            // after restore for the new database to take effect
+            // Close any open database connections by creating and closing a temporary connection
+            try {
+                val tempDb = Room.databaseBuilder(
+                    context,
+                    com.receiptkeeper.core.database.ReceiptDatabase::class.java,
+                    "receipt_keeper_db"
+                ).build()
+                tempDb.close()
+                println("Closed existing database connection")
+            } catch (e: Exception) {
+                println("Warning: Could not close database: ${e.message}")
+            }
             
-            // Copy the backup file over the current database
+            // Delete the existing database files (main db + WAL journal)
+            val dbDir = dbFile.parentFile
+            if (dbDir != null && dbDir.exists()) {
+                dbDir.listFiles()?.forEach { file ->
+                    if (file.name.startsWith("receipt_keeper_db")) {
+                        println("Deleting old database file: ${file.name}")
+                        file.delete()
+                    }
+                }
+            }
+            
+            // Copy the backup file to the database location
+            println("Copying backup to: $dbFile")
             sourceFile.copyTo(dbFile, overwrite = true)
+            
+            // Verify the copy succeeded
+            if (!dbFile.exists()) {
+                println("Database file not created after copy")
+                return false
+            }
+            
+            val newSize = dbFile.length()
+            println("New database size: $newSize bytes")
+            
+            if (newSize == 0L) {
+                println("Database file is empty after copy")
+                return false
+            }
+            
+            // Verify the new database is valid
+            if (!isSqliteDatabaseValid(dbFile)) {
+                println("Restored database is not valid")
+                return false
+            }
+            
+            println("Database import successful")
             true
         } catch (e: Exception) {
             e.printStackTrace()
+            println("Import database error: ${e.message}")
             false
         }
     }
@@ -401,5 +514,51 @@ class BackupRestoreService @Inject constructor(
         val pattern = "receipt_keeper_backup_(\\d{8}_\\d{6})\\.zip".toRegex()
         val match = pattern.find(filename)
         return match?.groupValues?.get(1) ?: "Unknown"
+    }
+
+    /**
+     * Checks if a file is a valid SQLite database
+     */
+    private fun isSqliteDatabaseValid(file: File): Boolean {
+        return try {
+            if (!file.exists() || file.length() < 100) {
+                return false
+            }
+            
+            RandomAccessFile(file, "r").use { raf ->
+                // Check SQLite magic header
+                val magic = ByteArray(16)
+                raf.readFully(magic)
+                if (String(magic) != "SQLite format 3\u0000") {
+                    println("Invalid SQLite magic: ${String(magic)}")
+                    return false
+                }
+                
+                // Read page size
+                raf.seek(16)
+                val pageSize = raf.readShort().toInt() and 0xFFFF
+                if (pageSize !in 512..65536) {
+                    println("Invalid page size: $pageSize")
+                    return false
+                }
+                
+                // Read page count
+                raf.seek(28)
+                val pageCount = raf.readInt()
+                val expectedSize = pageSize.toLong() * pageCount
+                val actualSize = file.length()
+                
+                // Allow small difference for WAL/shm files
+                if (actualSize < expectedSize) {
+                    println("File truncated: expected $expectedSize, got $actualSize")
+                    return false
+                }
+                
+                true
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
     }
 }

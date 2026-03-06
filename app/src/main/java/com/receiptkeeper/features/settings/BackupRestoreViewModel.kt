@@ -3,6 +3,7 @@ package com.receiptkeeper.features.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.receiptkeeper.core.util.BackupRestoreService
+import com.receiptkeeper.core.work.BackupScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +17,8 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class BackupRestoreViewModel @Inject constructor(
-    private val backupRestoreService: BackupRestoreService
+    private val backupRestoreService: BackupRestoreService,
+    private val backupScheduler: BackupScheduler
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BackupRestoreUiState())
@@ -84,6 +86,66 @@ class BackupRestoreViewModel @Inject constructor(
                 }
             }
         }
+    }
+    
+    /**
+     * Creates a backup via WorkManager (for testing automatic backup)
+     */
+    fun createBackupViaWorkManager() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isCreatingBackup = true, error = null) }
+            try {
+                backupScheduler.triggerImmediateBackup()
+                _uiState.update {
+                    it.copy(
+                        isCreatingBackup = false,
+                        showSuccessMessage = true,
+                        successMessage = "Immediate backup triggered via WorkManager. Check logs for status."
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isCreatingBackup = false,
+                        error = "Failed to trigger WorkManager backup: ${e.message}"
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Loads battery optimization status
+     */
+    fun loadBatteryOptimizationStatus() {
+        viewModelScope.launch {
+            try {
+                val isIgnoring = backupScheduler.isIgnoringBatteryOptimizations()
+                val statusMessage = backupScheduler.checkBatteryOptimizationStatus()
+                val isScheduled = backupScheduler.isBackupScheduled()
+                
+                _uiState.update {
+                    it.copy(
+                        isIgnoringBatteryOptimizations = isIgnoring,
+                        batteryOptimizationStatus = statusMessage,
+                        isBackupScheduled = isScheduled
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        error = "Failed to load battery optimization status: ${e.message}"
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Requests battery optimization exemption
+     */
+    fun requestBatteryOptimizationExemption() {
+        backupScheduler.requestIgnoreBatteryOptimizations()
     }
 
     /**
@@ -235,5 +297,9 @@ data class BackupRestoreUiState(
     val backupToDelete: String? = null,
     val showRestoreConfirmation: Boolean = false,
     val showDeleteConfirmation: Boolean = false,
-    val lastBackupPath: String? = null
+    val lastBackupPath: String? = null,
+    // Battery optimization status
+    val isIgnoringBatteryOptimizations: Boolean = false,
+    val batteryOptimizationStatus: String = "",
+    val isBackupScheduled: Boolean = false
 )

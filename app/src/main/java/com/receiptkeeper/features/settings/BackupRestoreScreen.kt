@@ -61,9 +61,10 @@ fun BackupRestoreScreen(
         }
     }
 
-    // Load backups on first launch
+    // Load backups and battery optimization status on first launch
     LaunchedEffect(Unit) {
         viewModel.loadBackups()
+        viewModel.loadBatteryOptimizationStatus()
     }
 
     // Restore confirmation dialog
@@ -218,10 +219,150 @@ fun BackupRestoreScreen(
                         }
                     }
                     
-                    if (uiState.lastBackupPath != null) {
+                     if (uiState.lastBackupPath != null) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "Last backup: ${uiState.lastBackupPath!!.substringAfterLast("/")}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    // Test WorkManager backup button
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedButton(
+                        onClick = { viewModel.createBackupViaWorkManager() },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !uiState.isCreatingBackup
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Work,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Test WorkManager Backup")
+                    }
+                }
+            }
+
+            // Battery optimization status section
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "Automatic Backup Status",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    // Battery optimization status
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = if (uiState.isIgnoringBatteryOptimizations) 
+                                Icons.Default.BatteryFull 
+                            else 
+                                Icons.Default.BatteryAlert,
+                            contentDescription = null,
+                            tint = if (uiState.isIgnoringBatteryOptimizations) 
+                                MaterialTheme.colorScheme.primary 
+                            else 
+                                MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = if (uiState.isIgnoringBatteryOptimizations) 
+                                    "Battery optimization: Disabled ✓" 
+                                else 
+                                    "Battery optimization: Enabled",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = if (uiState.isIgnoringBatteryOptimizations) 
+                                    MaterialTheme.colorScheme.primary 
+                                else 
+                                    MaterialTheme.colorScheme.error
+                            )
+                            Text(
+                                text = uiState.batteryOptimizationStatus,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    // Backup schedule status
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = if (uiState.isBackupScheduled) 
+                                Icons.Default.Schedule 
+                            else 
+                                Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = if (uiState.isBackupScheduled) 
+                                MaterialTheme.colorScheme.primary 
+                            else 
+                                MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = if (uiState.isBackupScheduled) 
+                                    "Backup scheduled: Daily at 5:00 AM ✓" 
+                                else 
+                                    "Backup not scheduled",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = if (uiState.isBackupScheduled) 
+                                    MaterialTheme.colorScheme.primary 
+                                else 
+                                    MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // Action buttons
+                    if (!uiState.isIgnoringBatteryOptimizations) {
+                        Button(
+                            onClick = { viewModel.requestBatteryOptimizationExemption() },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer,
+                                contentColor = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Disable Battery Optimization")
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Note: Battery optimization may prevent automatic backups from running in the background.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
