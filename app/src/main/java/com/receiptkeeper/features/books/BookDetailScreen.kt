@@ -1,17 +1,22 @@
 package com.receiptkeeper.features.books
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.receiptkeeper.features.receipts.components.ReceiptListItem
+import com.receiptkeeper.features.receipts.components.ReceiptListItemSimple
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 /**
  * Book detail screen - shows receipts in a specific book
@@ -35,6 +40,16 @@ fun BookDetailScreen(
     // Load book data
     LaunchedEffect(bookId) {
         viewModel.loadBook(bookId)
+    }
+
+    // Group receipts by date and track expanded/collapsed state
+    val receiptsByDate = receipts
+        .groupBy { it.transactionDate }
+        .toSortedMap(compareByDescending<LocalDate> { it })
+
+    // Initially collapse all dates
+    var expandedDates by remember(receiptsByDate.keys) {
+        mutableStateOf<Set<LocalDate>>(emptySet())
     }
 
     Scaffold(
@@ -125,29 +140,81 @@ fun BookDetailScreen(
                     )
                 }
             } else {
+                // Receipts list grouped by date
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    contentPadding = PaddingValues(vertical = 8.dp)
                 ) {
-                    items(receipts) { receipt ->
-                        val vendor = vendors.find { it.id == receipt.vendorId }
-                        val category = categories.find { it.id == receipt.categoryId }
-                        val currentBook = book
+                    receiptsByDate.forEach { (date, receiptsForDate) ->
+                        val isExpanded = expandedDates.contains(date)
+                        val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy")
+                        val dateTotal = receiptsForDate.sumOf { it.totalAmount }
 
-                        ReceiptListItem(
-                            receipt = receipt,
-                            vendorName = vendor?.name ?: "Unknown",
-                            vendorIconName = vendor?.iconName ?: "Store",
-                            categoryName = category?.name ?: "Uncategorized",
-                            categoryColor = category?.colorHex ?: "#808080",
-                            categoryIconName = category?.iconName ?: "Category",
-                            bookName = currentBook?.name ?: "",
-                            onItemClick = { onNavigateToReceiptDetail(receipt.id) },
-                            onEditClick = { /* Not needed in detail view */ },
-                            onDeleteClick = { /* Not needed in detail view */ },
-                            onImageClick = { /* Not needed in detail view */ }
-                        )
+                        // Date header
+                        item(key = "header_$date") {
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        expandedDates = if (isExpanded) {
+                                            expandedDates - date
+                                        } else {
+                                            expandedDates + date
+                                        }
+                                    },
+                                color = MaterialTheme.colorScheme.surfaceVariant
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                            contentDescription = if (isExpanded) "Collapse" else "Expand",
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                            text = date.format(dateFormatter),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    Text(
+                                        text = "$${"%.2f".format(dateTotal)}",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        }
+
+                        // Receipts for this date
+                        if (isExpanded) {
+                            items(receiptsForDate, key = { it.id }) { receipt ->
+                                val vendor = vendors.find { it.id == receipt.vendorId }
+                                val category = categories.find { it.id == receipt.categoryId }
+                                val currentBook = book
+
+                                ReceiptListItemSimple(
+                                    receipt = receipt,
+                                    vendorName = vendor?.name ?: "Unknown",
+                                    vendorIconName = vendor?.iconName ?: "Store",
+                                    categoryName = category?.name ?: "Uncategorized",
+                                    categoryColor = category?.colorHex ?: "#808080",
+                                    categoryIconName = category?.iconName ?: "Category",
+                                    bookName = currentBook?.name ?: "",
+                                    onItemClick = { onNavigateToReceiptDetail(receipt.id) },
+                                    onImageClick = { /* Not needed in detail view */ }
+                                )
+                            }
+                        }
                     }
                 }
             }

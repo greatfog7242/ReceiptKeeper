@@ -494,6 +494,12 @@
           "task": "Add database backup/restore feature with automatic daily backups",
           "status": "Complete",
           "notes": "✅ Fixed with VACUUM INTO implementation and validation - verified working"
+        },
+        {
+          "id": "7.14",
+          "task": "Fix BookDetailScreen: remove unused pen/trash icons and add date-based grouping",
+          "status": "Complete",
+          "notes": "✅ Created ReceiptListItemSimple without action buttons, added date grouping like ReceiptsScreen"
         }
       ]
     }

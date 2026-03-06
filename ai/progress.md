@@ -1350,6 +1350,94 @@ ai/feature_list.json (added task 7.13)
 
 ---
 
+## 2026-03-06 - Enhancement: BookDetailScreen Date Grouping & Icon Removal
+
+**Agent:** Claude Sonnet 3.5
+**Feature:** Fix BookDetailScreen receipt display
+**Status:** ✅ Complete
+
+### Work Completed
+
+**Issue:** In BookDetailScreen, receipts showed pen and trash icons that didn't work, and receipts weren't grouped by date like in ReceiptsScreen.
+
+**Solutions Implemented:**
+
+1. **✅ Created `ReceiptListItemSimple.kt`** - Simplified version of ReceiptListItem without edit/delete action buttons
+   - Removed pen (edit) and trash (delete) icons
+   - Removed `onEditClick` and `onDeleteClick` parameters
+   - Kept all other functionality (image thumbnail, vendor/category info, etc.)
+
+2. **✅ Updated `BookDetailScreen.kt`** - Added date-based grouping like ReceiptsScreen
+   - Group receipts by transaction date using `groupBy { it.transactionDate }`
+   - Sort dates in descending order (newest first)
+   - Add expandable/collapsible date headers with total spending per date
+   - Use `ReceiptListItemSimple` instead of `ReceiptListItem`
+   - Date headers show formatted date (e.g., "Friday, March 6, 2026") and total for that date
+
+3. **✅ Build Verification**
+   - Build successful: `./gradlew.bat assembleDebug` completed without errors
+   - Only deprecation warnings (non-breaking)
+   - All Kotlin compilation successful
+
+### Technical Implementation
+
+**Date Grouping Logic:**
+```kotlin
+val receiptsByDate = receipts
+    .groupBy { it.transactionDate }
+    .toSortedMap(compareByDescending<LocalDate> { it })
+```
+
+**Expanded/Collapsed State:**
+```kotlin
+var expandedDates by remember(receiptsByDate.keys) {
+    mutableStateOf<Set<LocalDate>>(emptySet())
+}
+```
+
+**Date Header UI:**
+- Shows date formatted as "EEEE, MMMM d, yyyy" (e.g., "Friday, March 6, 2026")
+- Shows total spending for that date
+- Expand/collapse toggle with arrow icons
+- Clickable surface to toggle expansion
+
+### Files Created/Modified
+
+**New Files (1):**
+- `app/src/main/java/com/receiptkeeper/features/receipts/components/ReceiptListItemSimple.kt`
+
+**Modified Files (1):**
+- `app/src/main/java/com/receiptkeeper/features/books/BookDetailScreen.kt`
+
+### Benefits
+
+1. **Consistent UX:** BookDetailScreen now matches ReceiptsScreen date grouping pattern
+2. **Cleaner UI:** Removed non-functional pen/trash icons that confused users
+3. **Better Organization:** Date-based grouping makes it easier to find receipts
+4. **Read-Only View:** BookDetailScreen is now properly read-only (no edit/delete actions)
+5. **Maintainable:** Separate component for simplified list items keeps code clean
+
+### Testing Recommendations
+
+When device is available:
+1. Navigate to Books screen
+2. Select a book with multiple receipts from different dates
+3. Verify:
+   - No pen/trash icons on receipt cards
+   - Receipts grouped by date with expandable headers
+   - Date headers show correct totals
+   - Expand/collapse functionality works
+   - Receipt details display correctly
+   - Tapping receipt navigates to ReceiptDetailScreen
+
+### Build Status
+- ✅ **Build:** Successful (17s build time)
+- ✅ **Compilation:** No errors
+- ✅ **Dependencies:** All resolved
+- ✅ **Ready for Deployment:** APK built at `app/build/outputs/apk/debug/app-debug.apk`
+
+---
+
 ## 2026-03-06 - Books Page Enhancements: Receipt Count Sorting & Reordering
 
 **Agent:** Claude Sonnet 3.5
