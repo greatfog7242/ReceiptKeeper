@@ -38,9 +38,8 @@ fun BottomNavigationBar(
                         Icon(
                             painter = painterResource(id = item.iconResId),
                             contentDescription = item.label,
-                            modifier = Modifier.size(iconSize),
-                            // Use Color.Unspecified to preserve multi-color SVG colors
-                            tint = Color.Unspecified
+                            modifier = Modifier.size(iconSize)
+                            // WebP images preserve their colors naturally, no tint needed
                         )
                     } else if (item.iconVector != null) {
                         Icon(
