@@ -1455,6 +1455,78 @@ When device is available:
 
 ---
 
+## 2026-03-06 - Enhancement: BackupRestoreScreen Layout Reorganization
+
+**Agent:** Claude Sonnet 3.5
+**Feature:** Reorganize BackupRestoreScreen layout
+**Status:** ✅ Complete & Deployed
+
+### Work Completed
+
+**Issue:** The "Test WorkManager Backup" button was in the wrong location and there was a redundant Automatic Backup Status card.
+
+**Solutions Implemented:**
+
+1. **✅ Moved "Test WorkManager Backup" button** - Now appears immediately below the Automatic Daily Backup switch
+2. **✅ Removed Automatic Backup Status card** - Redundant information already shown in the main backup card
+3. **✅ Improved visual hierarchy:**
+   - Automatic Daily Backup (toggle switch)
+   - Test WorkManager Backup (outlined button)
+   - Divider
+   - Manual Backup section
+4. **✅ Better UX flow:** Test button now logically follows the auto-backup setting it tests
+
+### Layout Changes
+
+**Before:**
+```
+┌─────────────────────────┐
+│ Automatic Daily Backup  │ ← Switch
+├─────────────────────────┤
+│ Manual Backup Section   │
+│ • Create Backup Now     │
+│ • Test WorkManager      │ ← Button here (wrong location)
+├─────────────────────────┤
+│ Automatic Backup Status │ ← Redundant card
+└─────────────────────────┘
+```
+
+**After:**
+```
+┌─────────────────────────┐
+│ Automatic Daily Backup  │ ← Switch
+│ Test WorkManager Backup │ ← Button here (correct location)
+├─────────────────────────┤
+│ Manual Backup Section   │
+│ • Create Backup Now     │
+└─────────────────────────┘
+```
+
+### Files Modified (1)
+- `app/src/main/java/com/receiptkeeper/features/settings/BackupRestoreScreen.kt`
+
+### Deployment Status (2026-03-06)
+- ✅ **Clean Release Build:** `./gradlew.bat clean assembleRelease` successful (36s)
+- ✅ **Device Deployment:** Installed on device RRCY802F6PV using `adb install -r`
+- ✅ **App Launch:** Successfully started `com.receiptkeeper/.app.MainActivity`
+- ✅ **Error Check:** No ReceiptKeeper crashes in logcat
+- ✅ **Git Operations:** Committed as `0721df2` and pushed to remote repository
+
+### Testing Recommendations
+1. **Navigate to Settings → Backup & Restore**
+2. **Verify new layout:**
+   - Automatic Daily Backup switch at top
+   - "Test WorkManager Backup" button immediately below switch
+   - No redundant "Automatic Backup Status" card
+   - Manual backup section below divider
+3. **Test functionality:**
+   - Toggle auto-backup on/off
+   - Tap "Test WorkManager Backup" button
+   - Should see success message "Immediate backup triggered via WorkManager"
+   - Test manual backup creation
+
+---
+
 ## 2026-03-06 - Books Page Enhancements: Receipt Count Sorting & Reordering
 
 **Agent:** Claude Sonnet 3.5
