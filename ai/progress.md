@@ -1611,3 +1611,110 @@ Backup/restore was failing because:
 
 **Backup/Restore feature is now fully functional and verified working on device.**
 
+---
+
+## 2026-03-06 - Daily Backup Feature Rewrite Based on Diary Project
+
+**Agent:** Claude Sonnet 3.5  
+**Feature:** Rewrite daily backup system with dual backup strategy  
+**Status:** ✅ **Complete & Deployed**
+
+### Work Completed
+
+**Dual Backup System:**
+- ✅ **Manual backups:** `createBackup()` creates timestamped zip files in `Downloads/雪松堡账本/backup_YYYYMMDD_HHMMSS.zip`
+- ✅ **Automatic daily backups:** `createDailyBackup()` creates `daily_backup.zip` (overwrites previous daily backup)
+- ✅ **Fixed path:** Daily backups saved to `Downloads/雪松堡账本/daily_backup.zip` (not inside DailyBackup subfolder)
+- ✅ **Overwrite logic:** Deletes existing `daily_backup.zip` before creating new one
+- ✅ **Consistent location:** All backup zips in same parent folder for easy management
+
+**WorkManager/Hilt Integration Fix:**
+- ✅ **Configuration.Provider:** Added to `ReceiptKeeperApp.kt` for WorkManager Hilt support
+- ✅ **ProGuard rules:** Added WorkManager and Hilt Worker rules for release builds
+- ✅ **Manifest cleanup:** Removed WorkManager initializer from AndroidManifest.xml
+- ✅ **BackupWorker:** Hilt-enabled worker with dependency injection
+- ✅ **BackupScheduler:** Uses `ExistingPeriodicWorkPolicy.REPLACE` for reliable scheduling
+
+**Backup Preferences:**
+- ✅ **Auto-backup toggle:** `BackupPreferences.kt` stores user preference for automatic backups
+- ✅ **Last backup time:** Tracks when last backup was performed
+- ✅ **UI integration:** Auto-backup toggle in `BackupRestoreScreen.kt`
+- ✅ **WorkManager check:** `BackupWorker` checks if auto-backup is enabled before running
+
+**UI Improvements:**
+- ✅ **Daily backup display:** Fixed timestamp formatting for `daily_backup.zip` in restore list
+- ✅ **"Daily Backup:" prefix:** Added to daily backups in UI for clear identification
+- ✅ **Auto-backup status:** Shows "Last backup" time and schedule status
+- ✅ **Test button:** Added "Test WorkManager Backup" button for testing automatic backups
+
+**Database Export Fix:**
+- ✅ **VACUUM INTO:** Uses proper SQLite `VACUUM INTO` command for database export
+- ✅ **Database injection:** Injected `ReceiptDatabase` into `BackupRestoreService` instead of creating new instance
+- ✅ **Validation:** Added SQLite database validation before restore
+
+### Files Modified (8 files):
+```
+app/src/main/java/com/receiptkeeper/app/ReceiptKeeperApp.kt (added Configuration.Provider)
+app/src/main/java/com/receiptkeeper/core/util/BackupRestoreService.kt (dual backup system)
+app/src/main/java/com/receiptkeeper/core/util/BackupPreferences.kt (NEW - backup settings)
+app/src/main/java/com/receiptkeeper/core/work/BackupScheduler.kt (updated scheduling)
+app/src/main/java/com/receiptkeeper/core/work/BackupWorker.kt (Hilt-enabled worker)
+app/src/main/java/com/receiptkeeper/features/settings/BackupRestoreViewModel.kt (auto-backup toggle)
+app/src/main/java/com/receiptkeeper/features/settings/BackupRestoreScreen.kt (UI updates)
+app/proguard-rules.pro (added WorkManager/Hilt rules)
+app/src/main/AndroidManifest.xml (removed WorkManager initializer)
+```
+
+### Key Features Implemented:
+
+1. **Dual Backup Strategy:**
+   - **Manual:** `backup_YYYYMMDD_HHMMSS.zip` (timestamped, preserved)
+   - **Automatic:** `daily_backup.zip` (overwrites, fixed name)
+
+2. **WorkManager Reliability:**
+   - Hilt dependency injection for `BackupWorker`
+   - Configuration.Provider in Application class
+   - ProGuard rules for release builds
+   - REPLACE policy for periodic work
+
+3. **User Control:**
+   - Auto-backup toggle (enabled/disabled)
+   - Manual backup button
+   - Test WorkManager backup button
+   - Last backup time display
+
+4. **Storage Location:**
+   - All backups in `Downloads/雪松堡账本/`
+   - Daily backup: `daily_backup.zip` (overwrites)
+   - Manual backups: `backup_YYYYMMDD_HHMMSS.zip`
+
+### Build & Deployment:
+- **Commit:** `9f7707e` - "fix: backup display and daily backup timestamp formatting"
+- **Clean build:** `./gradlew.bat clean assembleRelease` - SUCCESS
+- **Deploy:** `adb install -r app-release.apk` - SUCCESS (without uninstalling)
+- **Launch:** `adb shell am start -n com.receiptkeeper/.app.MainActivity` - SUCCESS
+- **Push:** ✅ Successfully pushed to remote repository
+
+### Testing Verified ✅:
+- ✓ Manual backups create timestamped zip files
+- ✓ Daily backup creates `daily_backup.zip` (overwrites previous)
+- ✓ Auto-backup toggle works (enables/disables WorkManager scheduling)
+- ✓ Daily backup appears in restore list with "Daily Backup:" prefix
+- ✓ WorkManager backup test button triggers immediate backup
+- ✓ Release build deployed without uninstalling existing app
+- ✓ All changes committed and pushed to remote repository
+
+### Daily Backup Schedule:
+- **Time:** 5:00 AM daily (if device is on and app has been used)
+- **Location:** `Downloads/雪松堡账本/daily_backup.zip`
+- **Overwrite:** Yes - deletes previous daily backup before creating new one
+- **Enabled:** By default, can be toggled off in Settings → Backup & Restore
+
+### Git Status:
+- **Current Branch:** master
+- **Remote:** Synchronized with origin/master
+- **Commits:** Daily backup feature rewrite complete
+- **Clean working tree:** No uncommitted changes
+
+**Daily backup feature is now fully operational with proper WorkManager/Hilt integration and dual backup strategy.**
+
