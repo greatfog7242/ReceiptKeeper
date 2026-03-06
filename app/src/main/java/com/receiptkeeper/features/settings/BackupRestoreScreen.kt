@@ -229,6 +229,22 @@ fun BackupRestoreScreen(
                         )
                     }
                     
+                    // Test WorkManager backup button
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedButton(
+                        onClick = { viewModel.createBackupViaWorkManager() },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !uiState.isCreatingBackup
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Work,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Test WorkManager Backup")
+                    }
+                    
                     Divider(modifier = Modifier.padding(vertical = 8.dp))
                     
                     Text(
@@ -277,64 +293,6 @@ fun BackupRestoreScreen(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                    }
-
-                    // Test WorkManager backup button
-                    Spacer(modifier = Modifier.height(16.dp))
-                    OutlinedButton(
-                        onClick = { viewModel.createBackupViaWorkManager() },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !uiState.isCreatingBackup
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Work,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Test WorkManager Backup")
-                    }
-                }
-            }
-
-            // Automatic backup status section
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Text(
-                        text = "Automatic Backup Status",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                    
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    // Backup schedule status
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Schedule,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(
-                                text = "Backup scheduled: daily at 5:00am",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
                     }
                 }
             }
