@@ -1438,3 +1438,65 @@ Test the fix by:
 3. Selecting "This Month" date range
 4. Verifying goal projection line shows correct slope (should reach $300 by end of month, not by end of selected date range if different)
 
+---
+
+## 2026-03-05 - Fix: Backup/Restore System with VACUUM INTO
+
+**Agent:** Claude Sonnet 3.5  
+**Feature:** Fix backup/restore database corruption  
+**Status:** ✅ **Deployed & Verified Working**
+
+### Issue Fixed
+Backup/restore was failing because:
+1. **Backup database corrupted** - Simple file copy created malformed SQLite files (98KB with extra 529 bytes)
+2. **No validation** - Corrupted backups were being restored
+3. **No VACUUM INTO** - Not using proper SQLite backup mechanism
+
+### Root Cause
+- `BackupRestoreService.exportDatabase()` was using `dbFile.copyTo()` instead of `VACUUM INTO`
+- SQLite database was locked by Room, causing incomplete/corrupted copies
+- No validation of backup files before restore
+
+### Solution Implemented
+1. **VACUUM INTO Implementation**: Proper SQLite backup using `database.openHelper.writableDatabase.execSQL("VACUUM INTO '${destinationFile.absolutePath}'")`
+2. **Database Validation**: Added `isSqliteDatabaseValid()` function checking:
+   - SQLite magic header
+   - Page size and count
+   - File integrity
+3. **Debug Logging**: Added `println` statements for troubleshooting
+4. **Error Handling**: Better validation and error messages
+
+### Files Modified
+- `app/src/main/java/com/receiptkeeper/core/util/BackupRestoreService.kt`
+  - Fixed `exportDatabase()` to use VACUUM INTO
+  - Fixed `importDatabase()` with validation
+  - Added `isSqliteDatabaseValid()` validation function
+  - Added debug logging throughout
+
+### Build & Deployment
+- **Commit:** `267e622` - "fix: backup/restore system with VACUUM INTO and validation"
+- **Build:** Clean release build successful (50s)
+- **Deploy:** `adb install -r app-release.apk` - SUCCESS
+- **Launch:** `adb shell am start -n com.receiptkeeper/.app.MainActivity` - SUCCESS
+- **Verification:** ✅ User confirmed backup/restore now works
+
+### Key Improvements
+1. **Valid SQLite backups**: Using `VACUUM INTO` creates clean, standalone database copies
+2. **Validation**: Backup files validated before restore
+3. **Debug logging**: `println` statements show backup/restore progress
+4. **Error handling**: Better error messages and validation
+
+### Testing Verified ✅
+- ✓ Backup creates valid SQLite database
+- ✓ Restore successfully recovers deleted receipts
+- ✓ Database validation prevents corrupted restores
+- ✓ App restart required after restore (Hilt DI limitation)
+
+### Git Status
+- **Current Branch**: master
+- **Remote**: Synchronized with origin/master
+- **Commits**: Backup/restore fix + validation
+- **Clean build**: Fresh release APK deployed
+
+**Backup/Restore feature is now fully functional and verified working on device.**
+
