@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.receiptkeeper.data.repository.BookRepository
 import com.receiptkeeper.domain.model.Book
+import com.receiptkeeper.domain.model.BookWithReceiptCount
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,7 +34,7 @@ class BooksViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
-            bookRepository.getAllBooks()
+            bookRepository.getAllBooksSortedByReceiptCount()
                 .catch { exception ->
                     _uiState.update {
                         it.copy(
@@ -42,10 +43,11 @@ class BooksViewModel @Inject constructor(
                         )
                     }
                 }
-                .collect { books ->
+                .collect { booksWithCount ->
                     _uiState.update {
                         it.copy(
-                            books = books,
+                            books = booksWithCount.map { it.book },
+                            booksWithReceiptCount = booksWithCount,
                             isLoading = false,
                             error = null
                         )
@@ -117,6 +119,49 @@ class BooksViewModel @Inject constructor(
     fun clearError() {
         _uiState.update { it.copy(error = null) }
     }
+
+    fun reorderBooks(fromIndex: Int, toIndex: Int) {
+        viewModelScope.launch {
+            try {
+                val currentBooks = _uiState.value.books.toMutableList()
+                if (fromIndex < 0 || fromIndex >= currentBooks.size || 
+                    toIndex < 0 || toIndex >= currentBooks.size) {
+                    return@launch
+                }
+
+                // Reorder the list
+                val bookToMove = currentBooks.removeAt(fromIndex)
+                currentBooks.add(toIndex, bookToMove)
+
+                // Update displayOrder for all books
+                val booksWithNewOrder = currentBooks.mapIndexed { index, book ->
+                    book.copy(displayOrder = index)
+                }
+
+                // Update in repository
+                bookRepository.updateBooksDisplayOrder(booksWithNewOrder)
+
+                // Update UI state
+                _uiState.update { state ->
+                    state.copy(
+                        books = booksWithNewOrder,
+                        booksWithReceiptCount = state.booksWithReceiptCount.map { bookWithCount ->
+                            val updatedBook = booksWithNewOrder.find { it.id == bookWithCount.book.id }
+                            if (updatedBook != null) {
+                                bookWithCount.copy(book = updatedBook)
+                            } else {
+                                bookWithCount
+                            }
+                        }
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(error = e.message ?: "Failed to reorder books")
+                }
+            }
+        }
+    }
 }
 
 /**
@@ -124,6 +169,7 @@ class BooksViewModel @Inject constructor(
  */
 data class BooksUiState(
     val books: List<Book> = emptyList(),
+    val booksWithReceiptCount: List<BookWithReceiptCount> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
     val showAddDialog: Boolean = false,

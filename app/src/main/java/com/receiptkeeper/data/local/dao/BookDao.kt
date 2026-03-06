@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface BookDao {
 
-    @Query("SELECT * FROM books ORDER BY createdAt DESC")
+    @Query("SELECT * FROM books ORDER BY displayOrder ASC, createdAt DESC")
     fun getAllBooks(): Flow<List<BookEntity>>
 
     @Query("SELECT * FROM books WHERE id = :bookId")
@@ -30,4 +30,7 @@ interface BookDao {
 
     @Query("DELETE FROM books WHERE id = :bookId")
     suspend fun deleteBookById(bookId: Long)
+
+    @Query("UPDATE books SET displayOrder = :displayOrder WHERE id = :bookId")
+    suspend fun updateBookDisplayOrder(bookId: Long, displayOrder: Int)
 }

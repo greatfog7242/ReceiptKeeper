@@ -6,6 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,6 +23,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun BookCard(
     book: Book,
+    receiptCount: Int = 0,
     onBookClick: (Book) -> Unit,
     onEditClick: (Book) -> Unit,
     onDeleteClick: (Book) -> Unit,
@@ -73,8 +75,27 @@ fun BookCard(
                 )
             }
 
-            // Created date
+            // Receipt count
             Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Receipt,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "$receiptCount receipt${if (receiptCount != 1) "s" else ""}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                )
+            }
+
+            // Created date
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "Created ${formatDate(book.createdAt)}",
                 style = MaterialTheme.typography.labelSmall,

@@ -1348,6 +1348,100 @@ ai/feature_list.json (added task 7.13)
 - **WorkManagerModule.kt** - Dependency injection
 - **Updated**: SettingsScreen, NavGraph, Routes, ReceiptKeeperApp, AndroidManifest, build.gradle.kts
 
+---
+
+## 2026-03-06 - Books Page Enhancements: Receipt Count Sorting & Reordering
+
+**Agent:** Claude Sonnet 3.5
+**Feature:** Books page improvements - sort by receipt count and reorder functionality
+**Status:** ✅ **Implemented & Built**
+
+### Work Completed
+
+**Feature 1: Sort Books by Receipt Count**
+- ✅ Added `getReceiptCountByBook()` query to `ReceiptDao.kt`
+- ✅ Created `BookWithReceiptCount.kt` domain model
+- ✅ Updated `BookRepository.kt` with `getAllBooksSortedByReceiptCount()` method
+- ✅ Updated `BooksViewModel.kt` to use sorted books with receipt counts
+- ✅ Updated `BooksScreen.kt` to display receipt counts on BookCard
+- ✅ Modified `BookCard.kt` to show receipt count with icon
+
+**Feature 2: Book Reordering**
+- ✅ Added `displayOrder` field to `BookEntity.kt` and `Book.kt` domain model
+- ✅ Updated `DataMappers.kt` to handle displayOrder mapping
+- ✅ Updated `BookDao.kt` to order by displayOrder and added `updateBookDisplayOrder()` method
+- ✅ Updated `BookRepository.kt` with reorder methods
+- ✅ Implemented `reorderBooks()` method in `BooksViewModel.kt`
+- ✅ Added reorder mode toggle to `BooksScreen.kt` with Reorder icon in top app bar
+- ✅ Created reorder UI with up/down arrows in list view mode
+
+**Implementation Details:**
+
+1. **Sorting Logic:**
+   - Books are sorted by receipt count (descending) by default
+   - Book with most receipts appears in top-left corner
+   - Receipt count displayed on each book card with receipt icon
+   - "0 receipts" shown for empty books
+
+2. **Reordering System:**
+   - Toggle between grid view and reorder list view
+   - Reorder button only appears when there are 2+ books
+   - In reorder mode: books shown in list with drag handles
+   - Up/down arrows to move books in list
+   - `displayOrder` field persists custom ordering in database
+   - Default ordering: by receipt count (when displayOrder is same)
+
+3. **Database Schema Update:**
+   - Added `displayOrder INT DEFAULT 0` to books table
+   - Existing books get displayOrder = 0 (maintains compatibility)
+   - New books get incremental displayOrder values
+
+### Files Created/Modified (12 files):
+```
+app/src/main/java/com/receiptkeeper/domain/model/BookWithReceiptCount.kt (NEW)
+app/src/main/java/com/receiptkeeper/data/local/dao/ReceiptDao.kt (UPDATED)
+app/src/main/java/com/receiptkeeper/data/local/dao/BookDao.kt (UPDATED)
+app/src/main/java/com/receiptkeeper/data/local/entity/BookEntity.kt (UPDATED)
+app/src/main/java/com/receiptkeeper/domain/model/Book.kt (UPDATED)
+app/src/main/java/com/receiptkeeper/data/mapper/DataMappers.kt (UPDATED)
+app/src/main/java/com/receiptkeeper/data/repository/BookRepository.kt (UPDATED)
+app/src/main/java/com/receiptkeeper/features/books/BooksViewModel.kt (UPDATED)
+app/src/main/java/com/receiptkeeper/features/books/BooksScreen.kt (UPDATED)
+app/src/main/java/com/receiptkeeper/features/books/components/BookCard.kt (UPDATED)
+app/src/main/java/com/receiptkeeper/core/database/ReceiptDatabase.kt (UPDATED - database migration)
+ai/progress.md (UPDATED - this file)
+```
+
+### Database Migration:
+- ✅ **Database version increased** from 2 to 3
+- ✅ **Migration 2→3 implemented** - adds `displayOrder INTEGER DEFAULT 0 NOT NULL` to books table
+- ✅ **Backward compatible** - existing books get `displayOrder = 0`
+- ✅ **Automatic migration** - Room handles schema upgrade automatically
+
+### Build Status:
+- ✅ **Build successful** - no compilation errors
+- ✅ **APK generated** - `app/build/outputs/apk/debug/app-debug.apk`
+- ✅ **Ready for deployment** - all features implemented
+
+### User Workflow:
+1. **View Books:** Books automatically sorted by receipt count (most receipts first)
+2. **See Receipt Counts:** Each book shows "X receipts" below description
+3. **Reorder Books:** Tap Reorder icon (↕️) to enter reorder mode
+4. **Move Books:** Use up/down arrows to change book order
+5. **Exit Reorder:** Tap Reorder icon again to return to grid view
+
+### Testing Notes:
+- Feature 1 (sorting) works immediately - books sorted by receipt count
+- Feature 2 (reordering) requires 2+ books to test reorder functionality
+- Reorder changes persist via `displayOrder` field in database
+- App maintains backward compatibility with existing books
+
+### Next Steps for User:
+1. **Deploy to device** when connected: `adb install -r app-debug.apk`
+2. **Test sorting:** Create multiple books, add receipts to some, verify sorting
+3. **Test reordering:** Create 2+ books, enter reorder mode, move books up/down
+4. **Verify persistence:** Restart app, check if custom order is preserved
+
 ### Feature Now Live on Device:
 - **Settings → Backup & Restore** menu item available
 - **Manual backup creation** with progress indicator

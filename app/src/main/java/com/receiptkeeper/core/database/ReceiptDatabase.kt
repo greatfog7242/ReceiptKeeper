@@ -15,7 +15,7 @@ import androidx.room.migration.Migration
 
 /**
  * Room Database for ReceiptKeeper
- * Version 2: Added iconName to categories and vendors
+ * Version 3: Added displayOrder to books for custom ordering
  */
 @Database(
     entities = [
@@ -26,7 +26,7 @@ import androidx.room.migration.Migration
         SpendingGoalEntity::class,
         ReceiptEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -56,9 +56,19 @@ abstract class ReceiptDatabase : RoomDatabase() {
         }
 
         /**
+         * Migration from version 2 to 3: Add displayOrder column to books table
+         */
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Add displayOrder column to books table with default value 0
+                db.execSQL("ALTER TABLE books ADD COLUMN displayOrder INTEGER DEFAULT 0 NOT NULL")
+            }
+        }
+
+        /**
          * Get all migrations
          */
-        val MIGRATIONS = arrayOf(MIGRATION_1_2)
+        val MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3)
 
         /**
          * Database callback to seed default categories on first creation

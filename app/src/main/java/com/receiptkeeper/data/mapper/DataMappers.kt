@@ -13,7 +13,8 @@ fun BookEntity.toDomain(): Book = Book(
     name = name,
     description = description,
     createdAt = createdAt,
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
+    displayOrder = displayOrder
 )
 
 fun Book.toEntity(): BookEntity = BookEntity(
@@ -21,7 +22,8 @@ fun Book.toEntity(): BookEntity = BookEntity(
     name = name,
     description = description,
     createdAt = createdAt,
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
+    displayOrder = displayOrder
 )
 
 // Category mappings

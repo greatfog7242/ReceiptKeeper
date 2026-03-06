@@ -179,4 +179,7 @@ interface ReceiptDao {
 
     @Query("DELETE FROM receipts WHERE bookId = :bookId")
     suspend fun deleteReceiptsByBook(bookId: Long)
+
+    @Query("SELECT COUNT(*) FROM receipts WHERE bookId = :bookId")
+    fun getReceiptCountByBook(bookId: Long): Flow<Int>
 }

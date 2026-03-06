@@ -10,5 +10,6 @@ data class Book(
     val name: String,
     val description: String? = null,
     val createdAt: Instant = Instant.now(),
-    val updatedAt: Instant = Instant.now()
+    val updatedAt: Instant = Instant.now(),
+    val displayOrder: Int = 0
 )
