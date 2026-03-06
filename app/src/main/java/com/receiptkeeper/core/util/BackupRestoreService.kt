@@ -51,7 +51,7 @@ class BackupRestoreService @Inject constructor(
 
     /**
      * Creates a daily backup with fixed path (overwrites previous daily backup)
-     * Used for automatic daily backups
+     * Used for automatic daily backups - creates a zip file for compatibility with restore
      * @return Pair of success status and message
      */
     suspend fun createDailyBackup(): Pair<Boolean, String> = withContext(Dispatchers.IO) {
@@ -62,19 +62,28 @@ class BackupRestoreService @Inject constructor(
             val dailyBackupDir = getDailyBackupDirectory()
             println("Daily backup directory: $dailyBackupDir")
             
+            // Create timestamp for the zip file name
+            val timestamp = LocalDateTime.now().format(timestampFormatter)
+            
+            // Create a temporary directory for this backup
+            val tempBackupDir = File(dailyBackupDir, "temp_backup_$timestamp")
+            tempBackupDir.mkdirs()
+            println("Temp backup directory: $tempBackupDir")
+            
             // Export database using VACUUM INTO
-            val dbBackupFile = File(dailyBackupDir, DATABASE_BACKUP_NAME)
+            val dbBackupFile = File(tempBackupDir, DATABASE_BACKUP_NAME)
             println("Database backup file: $dbBackupFile")
             
             val dbExportSuccess = exportDatabase(dbBackupFile)
             println("Database export success: $dbExportSuccess")
             
             if (!dbExportSuccess) {
+                tempBackupDir.deleteRecursively()
                 return@withContext Pair(false, "Failed to export database")
             }
             
             // Copy all receipt images to images subfolder
-            val imagesDir = File(dailyBackupDir, IMAGES_SUBFOLDER)
+            val imagesDir = File(tempBackupDir, IMAGES_SUBFOLDER)
             imagesDir.mkdirs()
             println("Images directory: $imagesDir")
             
@@ -82,15 +91,40 @@ class BackupRestoreService @Inject constructor(
             println("Image copy success: $imageCopySuccess")
             
             if (!imageCopySuccess) {
+                tempBackupDir.deleteRecursively()
                 return@withContext Pair(false, "Failed to copy images")
             }
             
             // Create backup metadata file
-            createBackupMetadata(dailyBackupDir, LocalDateTime.now().format(timestampFormatter))
+            createBackupMetadata(tempBackupDir, timestamp)
             println("Created backup metadata")
             
-            println("Daily backup completed successfully")
-            Pair(true, "Daily backup completed: ${dailyBackupDir.absolutePath}")
+            // Create zip archive of the backup in parent folder (overwrites previous daily backup)
+            val parentDir = dailyBackupDir.parentFile
+            val zipFile = File(parentDir, "daily_backup.zip")
+            println("Creating daily backup zip: $zipFile")
+            
+            // Delete existing file first if it exists (to avoid permission issues)
+            if (zipFile.exists()) {
+                println("Deleting existing daily backup file")
+                zipFile.delete()
+            }
+            
+            val zipSuccess = createZipArchive(tempBackupDir, zipFile)
+            println("Zip creation success: $zipSuccess")
+            
+            // Clean up the temporary directory
+            tempBackupDir.deleteRecursively()
+            println("Cleaned up temporary directory")
+            
+            if (!zipSuccess) {
+                return@withContext Pair(false, "Failed to create zip archive")
+            }
+            
+            val zipSize = zipFile.length()
+            println("Daily backup completed: $zipFile, size: $zipSize bytes")
+            
+            Pair(true, "Daily backup completed: ${zipFile.absolutePath}")
         } catch (e: Exception) {
             e.printStackTrace()
             println("Daily backup failed with exception: ${e.message}")
@@ -233,9 +267,18 @@ class BackupRestoreService @Inject constructor(
             }
             
             backupParentDir.listFiles()?.forEach { file ->
-                if (file.isFile && file.name.endsWith(".zip") && file.name.contains("receipt_keeper_backup_")) {
-                    val timestamp = extractTimestampFromFilename(file.name)
-                    backups.add(Pair(file.absolutePath, timestamp))
+                if (file.isFile && file.name.endsWith(".zip")) {
+                    if (file.name.contains("receipt_keeper_backup_")) {
+                        val timestamp = extractTimestampFromFilename(file.name)
+                        backups.add(Pair(file.absolutePath, timestamp))
+                    } else if (file.name == "daily_backup.zip") {
+                        // Check when daily backup was last modified
+                        val lastModified = file.lastModified()
+                        val date = java.util.Date(lastModified)
+                        val formatter = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault())
+                        val timestamp = formatter.format(date)
+                        backups.add(Pair(file.absolutePath, timestamp))
+                    }
                 }
             }
             

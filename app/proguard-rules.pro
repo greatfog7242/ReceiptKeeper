@@ -29,3 +29,20 @@
 -keep class * extends androidx.room.RoomDatabase
 -keep @androidx.room.Entity class *
 -dontwarn androidx.room.paging.**
+
+# Keep WorkManager and Hilt Worker classes
+-keep class * extends androidx.work.Worker { *; }
+-keep class * extends androidx.hilt.work.HiltWorker { *; }
+-keep class com.receiptkeeper.core.work.BackupWorker { *; }
+-keep class androidx.hilt.work.HiltWorkerFactory { *; }
+
+# Keep Hilt WorkerFactory
+-keep class * implements androidx.work.Configuration$Provider { *; }
+
+# Keep WorkManager internal classes
+-keepclassmembers class androidx.work.impl.WorkerWrapper {
+    *;
+}
+-keepclassmembers class androidx.work.impl.utils.futures.SettableFuture {
+    *;
+}

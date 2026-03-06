@@ -506,8 +506,9 @@ private fun BackupItem(
                 Column(
                     modifier = Modifier.weight(1f)
                 ) {
+                    val isDailyBackup = backupPath.endsWith("daily_backup.zip")
                     Text(
-                        text = formatTimestamp(timestamp),
+                        text = if (isDailyBackup) "Daily Backup: ${formatTimestamp(timestamp)}" else formatTimestamp(timestamp),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Medium
                     )
