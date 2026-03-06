@@ -2,6 +2,7 @@ package com.receiptkeeper.features.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.receiptkeeper.core.util.BackupPreferences
 import com.receiptkeeper.core.util.BackupRestoreService
 import com.receiptkeeper.core.work.BackupScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,11 +19,17 @@ import javax.inject.Inject
 @HiltViewModel
 class BackupRestoreViewModel @Inject constructor(
     private val backupRestoreService: BackupRestoreService,
-    private val backupScheduler: BackupScheduler
+    private val backupScheduler: BackupScheduler,
+    private val backupPreferences: BackupPreferences
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BackupRestoreUiState())
     val uiState: StateFlow<BackupRestoreUiState> = _uiState.asStateFlow()
+
+    init {
+        // Load initial state
+        loadAutoBackupStatus()
+    }
 
     /**
      * Loads the list of available backups
@@ -47,6 +54,46 @@ class BackupRestoreViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    /**
+     * Loads auto-backup status
+     */
+    fun loadAutoBackupStatus() {
+        viewModelScope.launch {
+            try {
+                val isEnabled = backupPreferences.isAutoBackupEnabled
+                val lastBackupTime = backupPreferences.lastBackupTime
+                val isScheduled = backupScheduler.isBackupScheduled()
+                
+                _uiState.update {
+                    it.copy(
+                        isAutoBackupEnabled = isEnabled,
+                        lastBackupTime = lastBackupTime,
+                        isBackupScheduled = isScheduled
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        error = "Failed to load auto-backup status: ${e.message}"
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Toggles auto-backup enabled/disabled
+     */
+    fun toggleAutoBackup(enabled: Boolean) {
+        backupPreferences.isAutoBackupEnabled = enabled
+        _uiState.update { it.copy(isAutoBackupEnabled = enabled) }
+        
+        if (enabled) {
+            // Reschedule backup if enabling
+            backupScheduler.scheduleDailyBackup()
         }
     }
 
@@ -301,5 +348,8 @@ data class BackupRestoreUiState(
     // Battery optimization status
     val isIgnoringBatteryOptimizations: Boolean = false,
     val batteryOptimizationStatus: String = "",
-    val isBackupScheduled: Boolean = false
+    val isBackupScheduled: Boolean = false,
+    // Auto-backup settings
+    val isAutoBackupEnabled: Boolean = true,
+    val lastBackupTime: Long = 0
 )

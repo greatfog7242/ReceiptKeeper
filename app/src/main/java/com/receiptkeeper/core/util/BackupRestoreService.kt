@@ -35,10 +35,12 @@ import javax.inject.Singleton
 class BackupRestoreService @Inject constructor(
     @ApplicationContext private val context: Context,
     private val imageHandler: ImageHandler,
-    private val receiptDao: ReceiptDao
+    private val receiptDao: ReceiptDao,
+    private val database: com.receiptkeeper.core.database.ReceiptDatabase
 ) {
     companion object {
         private const val BACKUP_FOLDER_NAME = "雪松堡账本"
+        private const val DAILY_BACKUP_FOLDER_NAME = "DailyBackup"
         private const val DATABASE_BACKUP_NAME = "receipt_keeper_backup.db"
         private const val IMAGES_SUBFOLDER = "images"
         private const val BACKUP_ZIP_NAME = "receipt_keeper_backup.zip"
@@ -48,8 +50,58 @@ class BackupRestoreService @Inject constructor(
     }
 
     /**
-     * Creates a backup of the database and all receipt images
-     * @return Pair of success status and backup folder path (or error message)
+     * Creates a daily backup with fixed path (overwrites previous daily backup)
+     * Used for automatic daily backups
+     * @return Pair of success status and message
+     */
+    suspend fun createDailyBackup(): Pair<Boolean, String> = withContext(Dispatchers.IO) {
+        try {
+            println("=== Starting daily backup creation ===")
+            
+            // Create daily backup directory (fixed path)
+            val dailyBackupDir = getDailyBackupDirectory()
+            println("Daily backup directory: $dailyBackupDir")
+            
+            // Export database using VACUUM INTO
+            val dbBackupFile = File(dailyBackupDir, DATABASE_BACKUP_NAME)
+            println("Database backup file: $dbBackupFile")
+            
+            val dbExportSuccess = exportDatabase(dbBackupFile)
+            println("Database export success: $dbExportSuccess")
+            
+            if (!dbExportSuccess) {
+                return@withContext Pair(false, "Failed to export database")
+            }
+            
+            // Copy all receipt images to images subfolder
+            val imagesDir = File(dailyBackupDir, IMAGES_SUBFOLDER)
+            imagesDir.mkdirs()
+            println("Images directory: $imagesDir")
+            
+            val imageCopySuccess = copyReceiptImages(imagesDir)
+            println("Image copy success: $imageCopySuccess")
+            
+            if (!imageCopySuccess) {
+                return@withContext Pair(false, "Failed to copy images")
+            }
+            
+            // Create backup metadata file
+            createBackupMetadata(dailyBackupDir, LocalDateTime.now().format(timestampFormatter))
+            println("Created backup metadata")
+            
+            println("Daily backup completed successfully")
+            Pair(true, "Daily backup completed: ${dailyBackupDir.absolutePath}")
+        } catch (e: Exception) {
+            e.printStackTrace()
+            println("Daily backup failed with exception: ${e.message}")
+            Pair(false, "Daily backup failed: ${e.message}")
+        }
+    }
+
+    /**
+     * Creates a backup of the database and all receipt images with timestamp
+     * Used for manual backups (creates timestamped zip file)
+     * @return Pair of success status and backup file path (or error message)
      */
     suspend fun createBackup(): Pair<Boolean, String> = withContext(Dispatchers.IO) {
         try {
@@ -248,6 +300,28 @@ class BackupRestoreService @Inject constructor(
     }
 
     /**
+     * Gets the daily backup directory (Downloads/雪松堡账本/DailyBackup)
+     */
+    private fun getDailyBackupDirectory(): File {
+        return try {
+            val parentDir = getBackupParentDirectory()
+            val dailyBackupDir = File(parentDir, DAILY_BACKUP_FOLDER_NAME)
+            
+            // Create directory if it doesn't exist
+            if (!dailyBackupDir.exists()) {
+                dailyBackupDir.mkdirs()
+            }
+            
+            dailyBackupDir
+        } catch (e: Exception) {
+            // Fallback to app-specific directory
+            val fallbackDir = File(context.getExternalFilesDir(null), "$BACKUP_FOLDER_NAME/$DAILY_BACKUP_FOLDER_NAME")
+            fallbackDir.mkdirs()
+            fallbackDir
+        }
+    }
+
+    /**
      * Exports database using VACUUM INTO command
      */
     private fun exportDatabase(destinationFile: File): Boolean {
@@ -262,22 +336,10 @@ class BackupRestoreService @Inject constructor(
             
             println("Database file exists: $dbFile, size: ${dbFile.length()} bytes")
             
-            // First, ensure all WAL journal is written to main database
-            // Close any open database connections by creating a temporary connection
-            val tempDb = androidx.room.Room.databaseBuilder(
-                context,
-                com.receiptkeeper.core.database.ReceiptDatabase::class.java,
-                "receipt_keeper_db"
-            )
-                .setJournalMode(androidx.room.RoomDatabase.JournalMode.TRUNCATE) // Force no WAL
-                .build()
-            
-            // Execute VACUUM INTO to create a clean backup
-            tempDb.openHelper.writableDatabase.execSQL(
+            // Execute VACUUM INTO to create a clean backup using the existing database connection
+            database.openHelper.writableDatabase.execSQL(
                 "VACUUM INTO '${destinationFile.absolutePath}'"
             )
-            
-            tempDb.close()
             
             // Verify the backup was created
             if (!destinationFile.exists()) {
@@ -324,14 +386,9 @@ class BackupRestoreService @Inject constructor(
             val dbFile = context.getDatabasePath("receipt_keeper_db")
             println("Current database path: $dbFile")
             
-            // Close any open database connections by creating and closing a temporary connection
+            // Close any open database connections
             try {
-                val tempDb = Room.databaseBuilder(
-                    context,
-                    com.receiptkeeper.core.database.ReceiptDatabase::class.java,
-                    "receipt_keeper_db"
-                ).build()
-                tempDb.close()
+                database.close()
                 println("Closed existing database connection")
             } catch (e: Exception) {
                 println("Warning: Could not close database: ${e.message}")

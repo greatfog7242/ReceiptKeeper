@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.receiptkeeper.core.util.BackupPreferences
 import com.receiptkeeper.core.util.BackupRestoreService
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -19,17 +20,27 @@ import kotlinx.coroutines.withContext
 class BackupWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
-    private val backupRestoreService: BackupRestoreService
+    private val backupRestoreService: BackupRestoreService,
+    private val backupPreferences: BackupPreferences
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         Log.d(TAG, "BackupWorker starting automatic backup")
+        
+        // Check if auto-backup is enabled
+        if (!backupPreferences.isAutoBackupEnabled) {
+            Log.d(TAG, "Auto-backup is disabled, skipping")
+            return@withContext Result.success()
+        }
+        
         try {
-            // Perform backup
-            val (success, message) = backupRestoreService.createBackup()
+            // Perform daily backup (uses fixed path, overwrites previous daily backup)
+            val (success, message) = backupRestoreService.createDailyBackup()
             
             if (success) {
                 Log.d(TAG, "BackupWorker completed successfully: $message")
+                // Update last backup time
+                backupPreferences.lastBackupTime = System.currentTimeMillis()
                 Result.success()
             } else {
                 Log.e(TAG, "BackupWorker failed: $message")

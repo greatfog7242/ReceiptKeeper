@@ -35,6 +35,13 @@ fun BackupRestoreScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
+    // Load backups and auto-backup status when screen appears
+    LaunchedEffect(Unit) {
+        viewModel.loadBackups()
+        viewModel.loadAutoBackupStatus()
+        viewModel.loadBatteryOptimizationStatus()
+    }
+
     // Show error snackbar
     LaunchedEffect(uiState.error) {
         uiState.error?.let { error ->
@@ -181,15 +188,59 @@ fun BackupRestoreScreen(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "Create Backup",
+                        text = "Backup Settings",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                     
                     Spacer(modifier = Modifier.height(8.dp))
                     
+                    // Auto-backup toggle
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "Automatic Daily Backup",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                text = "Backup daily at 5:00 AM to Downloads/雪松堡账本/DailyBackup/",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            if (uiState.lastBackupTime > 0) {
+                                Text(
+                                    text = "Last backup: ${formatBackupTime(uiState.lastBackupTime)}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        Switch(
+                            checked = uiState.isAutoBackupEnabled,
+                            onCheckedChange = { viewModel.toggleAutoBackup(it) }
+                        )
+                    }
+                    
+                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+                    
                     Text(
-                        text = "Backups are saved to: Downloads/雪松堡账本/",
+                        text = "Manual Backup",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text(
+                        text = "Manual backups are saved to: Downloads/雪松堡账本/ with timestamp",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -545,7 +596,18 @@ private fun InfoRow(
 }
 
 /**
- * Formats a timestamp string for display
+ * Formats a backup time (milliseconds since epoch) to a readable format
+ */
+private fun formatBackupTime(timeMillis: Long): String {
+    if (timeMillis <= 0) return "Never"
+    
+    val date = java.util.Date(timeMillis)
+    val formatter = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault())
+    return formatter.format(date)
+}
+
+/**
+ * Formats a timestamp string (yyyyMMdd_HHmmss) to a readable format
  */
 private fun formatTimestamp(timestamp: String): String {
     return try {

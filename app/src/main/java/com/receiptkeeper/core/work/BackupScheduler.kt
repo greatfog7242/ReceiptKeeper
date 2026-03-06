@@ -62,7 +62,7 @@ class BackupScheduler @Inject constructor(
                 // Enqueue the work with a unique name
                 WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                     BackupWorker.WORK_NAME,
-                    ExistingPeriodicWorkPolicy.KEEP, // Keep existing schedule if already scheduled
+                    ExistingPeriodicWorkPolicy.REPLACE, // Replace existing schedule to ensure it's updated
                     backupRequest
                 )
                 
