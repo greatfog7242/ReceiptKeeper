@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.receiptkeeper.data.local.entity.DailySpending
+import com.receiptkeeper.data.local.entity.GoalPeriod
 import com.receiptkeeper.domain.model.SpendingGoal
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -72,10 +73,23 @@ fun SpendingTrendChart(
     // Date range for x-axis
     val totalDays = startDate.until(endDate).days + 1
 
-    // Calculate goal projection for each day
+    // Calculate goal projection for each day based on average daily spend rate
     val goalProjections = mutableListOf<Pair<LocalDate, Double>>()
     spendingGoals.forEach { goal ->
-        val dailyGoalAmount = goal.amount / totalDays
+        // Calculate average daily spend rate based on goal period
+        val daysInGoalPeriod = when (goal.period) {
+            GoalPeriod.DAILY -> 1
+            GoalPeriod.WEEKLY -> 7
+            GoalPeriod.MONTHLY -> {
+                // Get actual days in the month of the start date
+                startDate.lengthOfMonth()
+            }
+            GoalPeriod.YEARLY -> {
+                // Get actual days in the year of the start date
+                if (startDate.isLeapYear()) 366 else 365
+            }
+        }
+        val dailyGoalAmount = goal.amount / daysInGoalPeriod
         var accumulated = 0.0
         for (dayOffset in 0 until totalDays) {
             val date = startDate.plusDays(dayOffset.toLong())
