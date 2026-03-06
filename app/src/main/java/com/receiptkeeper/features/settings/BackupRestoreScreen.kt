@@ -246,7 +246,7 @@ fun BackupRestoreScreen(
                 }
             }
 
-            // Battery optimization status section
+            // Automatic backup status section
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -263,63 +263,15 @@ fun BackupRestoreScreen(
                     
                     Spacer(modifier = Modifier.height(8.dp))
                     
-                    // Battery optimization status
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = if (uiState.isIgnoringBatteryOptimizations) 
-                                Icons.Default.BatteryFull 
-                            else 
-                                Icons.Default.BatteryAlert,
-                            contentDescription = null,
-                            tint = if (uiState.isIgnoringBatteryOptimizations) 
-                                MaterialTheme.colorScheme.primary 
-                            else 
-                                MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(
-                                text = if (uiState.isIgnoringBatteryOptimizations) 
-                                    "Battery optimization: Disabled ✓" 
-                                else 
-                                    "Battery optimization: Enabled",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = if (uiState.isIgnoringBatteryOptimizations) 
-                                    MaterialTheme.colorScheme.primary 
-                                else 
-                                    MaterialTheme.colorScheme.error
-                            )
-                            Text(
-                                text = uiState.batteryOptimizationStatus,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                    
-                    Spacer(modifier = Modifier.height(12.dp))
-                    
                     // Backup schedule status
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = if (uiState.isBackupScheduled) 
-                                Icons.Default.Schedule 
-                            else 
-                                Icons.Default.Warning,
+                            imageVector = Icons.Default.Schedule,
                             contentDescription = null,
-                            tint = if (uiState.isBackupScheduled) 
-                                MaterialTheme.colorScheme.primary 
-                            else 
-                                MaterialTheme.colorScheme.error,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
@@ -327,45 +279,11 @@ fun BackupRestoreScreen(
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(
-                                text = if (uiState.isBackupScheduled) 
-                                    "Backup scheduled: Daily at 5:00 AM ✓" 
-                                else 
-                                    "Backup not scheduled",
+                                text = "Backup scheduled: daily at 5:00am",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = if (uiState.isBackupScheduled) 
-                                    MaterialTheme.colorScheme.primary 
-                                else 
-                                    MaterialTheme.colorScheme.error
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
-                    }
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    // Action buttons
-                    if (!uiState.isIgnoringBatteryOptimizations) {
-                        Button(
-                            onClick = { viewModel.requestBatteryOptimizationExemption() },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer,
-                                contentColor = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Disable Battery Optimization")
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Note: Battery optimization may prevent automatic backups from running in the background.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
                     }
                 }
             }
