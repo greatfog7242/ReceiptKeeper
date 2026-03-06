@@ -1438,11 +1438,13 @@ ai/progress.md (UPDATED - this file)
 
 ### Deployment Status:
 - ✅ **Committed:** `e3d30f4` - "feat: implement books sorting by receipt count and reordering functionality"
+- ✅ **Committed:** `670d509` - "docs: update progress.md with books features deployment status"
 - ✅ **Clean release build:** `./gradlew.bat clean assembleRelease` - SUCCESS
 - ✅ **Deployed to device:** `adb -s RRCY802F6PV install -r app-release.apk` - SUCCESS
 - ✅ **App launched:** `adb -s RRCY802F6PV shell am start -n com.receiptkeeper/.app.MainActivity` - SUCCESS
 - ✅ **App running:** PID 14750, no ReceiptKeeper errors in logs
 - ✅ **Database migration:** Version 2→3 applied automatically
+- ⚠️ **Git push:** Network timeout - commits ready for manual push
 
 ### Next Steps for Testing:
 1. **Test sorting:** Create multiple books, add receipts to some, verify books sorted by receipt count
