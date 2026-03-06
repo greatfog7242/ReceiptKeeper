@@ -1,17 +1,24 @@
 package com.receiptkeeper.app.navigation
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.ui.graphics.vector.ImageVector
 
 /**
  * Data class for bottom navigation items
  */
 data class BottomNavItem(
     val route: Routes,
-    val icon: ImageVector,
+    val iconVector: ImageVector? = null,
+    val iconResId: Int? = null,
     val label: String
-)
+) {
+    init {
+        require(iconVector != null || iconResId != null) {
+            "Either iconVector or iconResId must be provided"
+        }
+    }
+}
 
 /**
  * Bottom navigation items configuration
@@ -19,27 +26,27 @@ data class BottomNavItem(
 val bottomNavItems = listOf(
     BottomNavItem(
         route = Routes.Books,
-        icon = Icons.Default.Book,
+        iconResId = com.receiptkeeper.R.drawable.ic_bottom_books,
         label = "Books"
     ),
     BottomNavItem(
         route = Routes.Receipts,
-        icon = Icons.Default.Receipt,
+        iconResId = com.receiptkeeper.R.drawable.ic_bottom_receipts,
         label = "Receipts"
     ),
     BottomNavItem(
         route = Routes.Scan,
-        icon = Icons.Default.CameraAlt,
+        iconResId = com.receiptkeeper.R.drawable.ic_bottom_scan,
         label = "Scan"
     ),
     BottomNavItem(
         route = Routes.Analytics,
-        icon = Icons.Default.Analytics,
+        iconResId = com.receiptkeeper.R.drawable.ic_bottom_analytics,
         label = "Analytics"
     ),
     BottomNavItem(
         route = Routes.Settings,
-        icon = Icons.Default.Settings,
+        iconResId = com.receiptkeeper.R.drawable.ic_bottom_settings,
         label = "Settings"
     )
 )

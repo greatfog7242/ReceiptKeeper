@@ -5,6 +5,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -30,11 +34,21 @@ fun BottomNavigationBar(
             NavigationBarItem(
                 icon = {
                     val iconSize = if (item.route == Routes.Scan) 42.dp else 24.dp
-                    Icon(
-                        imageVector = item.icon,
-                        contentDescription = item.label,
-                        modifier = Modifier.size(iconSize)
-                    )
+                    if (item.iconResId != null) {
+                        Icon(
+                            painter = painterResource(id = item.iconResId),
+                            contentDescription = item.label,
+                            modifier = Modifier.size(iconSize),
+                            // Use Color.Unspecified to preserve multi-color SVG colors
+                            tint = Color.Unspecified
+                        )
+                    } else if (item.iconVector != null) {
+                        Icon(
+                            imageVector = item.iconVector,
+                            contentDescription = item.label,
+                            modifier = Modifier.size(iconSize)
+                        )
+                    }
                 },
                 label = { Text(item.label) },
                 selected = currentDestination?.hierarchy?.any { it.route == item.route.route } == true,
