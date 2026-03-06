@@ -1436,11 +1436,26 @@ ai/progress.md (UPDATED - this file)
 - Reorder changes persist via `displayOrder` field in database
 - App maintains backward compatibility with existing books
 
-### Next Steps for User:
-1. **Deploy to device** when connected: `adb install -r app-debug.apk`
-2. **Test sorting:** Create multiple books, add receipts to some, verify sorting
-3. **Test reordering:** Create 2+ books, enter reorder mode, move books up/down
-4. **Verify persistence:** Restart app, check if custom order is preserved
+### Deployment Status:
+- ✅ **Committed:** `e3d30f4` - "feat: implement books sorting by receipt count and reordering functionality"
+- ✅ **Clean release build:** `./gradlew.bat clean assembleRelease` - SUCCESS
+- ✅ **Deployed to device:** `adb -s RRCY802F6PV install -r app-release.apk` - SUCCESS
+- ✅ **App launched:** `adb -s RRCY802F6PV shell am start -n com.receiptkeeper/.app.MainActivity` - SUCCESS
+- ✅ **App running:** PID 14750, no ReceiptKeeper errors in logs
+- ✅ **Database migration:** Version 2→3 applied automatically
+
+### Next Steps for Testing:
+1. **Test sorting:** Create multiple books, add receipts to some, verify books sorted by receipt count
+2. **Test reordering:** Create 2+ books, tap Reorder icon (↕️), use up/down arrows to change order
+3. **Verify persistence:** Restart app, check if custom order is preserved
+4. **Check receipt counts:** Each book card should show "X receipts" with receipt icon
+
+### Features Ready for Testing:
+1. **Automatic sorting:** Books with most receipts appear first (top-left)
+2. **Receipt count display:** Each book shows receipt count below description
+3. **Reorder mode:** Toggle with Reorder icon in top app bar (appears when 2+ books)
+4. **Custom ordering:** Up/down arrows in reorder mode, saved to database
+5. **Database migration:** Existing users' databases automatically upgraded
 
 ### Feature Now Live on Device:
 - **Settings → Backup & Restore** menu item available
