@@ -28,6 +28,9 @@ sealed class Routes(val route: String) {
     data object PaymentMethods : Routes("payment_methods")
     data object SpendingGoals : Routes("spending_goals")
     data object BackupRestore : Routes("backup_restore")
+    
+    // Debug screen (hidden, accessible via Settings)
+    data object Debug : Routes("debug")
 
     companion object {
         // List of bottom navigation destinations

@@ -13,6 +13,7 @@ import com.receiptkeeper.features.receipts.ReceiptsScreen
 import com.receiptkeeper.features.scan.ScanScreen
 import com.receiptkeeper.features.settings.SettingsScreen
 import com.receiptkeeper.features.settings.BackupRestoreScreen
+import com.receiptkeeper.features.debug.DebugScreen
 
 /**
  * Main navigation graph for the app
@@ -76,6 +77,9 @@ fun NavGraph(
                 },
                 onNavigateToBackupRestore = {
                     navController.navigate(Routes.BackupRestore.route)
+                },
+                onNavigateToDebug = {
+                    navController.navigate(Routes.Debug.route)
                 }
             )
         }
@@ -134,6 +138,13 @@ fun NavGraph(
         composable(route = Routes.BackupRestore.route) {
             BackupRestoreScreen(
                 onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        // Debug screen (hidden)
+        composable(route = Routes.Debug.route) {
+            DebugScreen(
+                onBack = { navController.popBackStack() }
             )
         }
     }

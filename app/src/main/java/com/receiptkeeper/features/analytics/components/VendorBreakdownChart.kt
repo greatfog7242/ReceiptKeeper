@@ -22,6 +22,7 @@ import coil.request.ImageRequest
 import com.receiptkeeper.core.util.IconHelper
 import com.receiptkeeper.data.local.entity.VendorSpending
 import com.receiptkeeper.domain.model.Vendor
+import kotlin.math.max
 
 // Default colors for vendors without brand icons
 private val vendorColors = listOf(
@@ -85,29 +86,35 @@ private fun VendorTreeMapChart(
     totalSpending: Double
 ) {
     val total = vendorSpending.sumOf { it.total }
-
-    if (vendorSpending.isEmpty() || total == 0.0) {
-        Text(
-            text = "No spending data",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-            modifier = Modifier.padding(16.dp)
-        )
+    if (total == 0.0) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(220.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "No vendor data",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+            )
+        }
         return
     }
 
     // Aggregate small vendors (<10%) into "Other" for tree view only
     val aggregatedData = aggregateSmallVendorsForTreeView(vendorSpending, total)
-    
-    val rectangles = calculateVendorTreemap(aggregatedData, vendors, total)
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(180.dp)
+                .height(220.dp)
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
+                // Calculate tree map with actual canvas dimensions
+                val rectangles = calculateVendorTreemap(aggregatedData, vendors, total, size.width, size.height)
+                
                 rectangles.forEach { rect ->
                     drawRect(
                         color = Color(rect.color),
@@ -292,26 +299,35 @@ private fun calculateAdjustedVendorPercentages(
 private fun calculateVendorTreemap(
     vendorSpending: List<VendorSpending>,
     vendors: List<Vendor>,
-    total: Double
+    total: Double,
+    canvasWidth: Float,
+    canvasHeight: Float
 ): List<VendorTreemapRect> {
     if (vendorSpending.isEmpty() || total == 0.0) return emptyList()
 
-    val width = 300f
-    val height = 160f
+    // Add padding around the tree map for centering
+    val padding = 8f
+    val width = canvasWidth - 2 * padding
+    val height = canvasHeight - 2 * padding
+    val totalArea = width * height
 
     val sorted = vendorSpending.sortedByDescending { it.total }
     val rectangles = mutableListOf<VendorTreemapRect>()
 
-    // Simple slice-and-dice algorithm
-    // We'll alternate between horizontal and vertical slices
-    var remainingX = 0f
-    var remainingY = 0f
+    // Calculate percentages and target areas
+    val itemsWithPercentages = sorted.mapIndexed { index, spending ->
+        val percentage = spending.total / total
+        val targetArea = totalArea * percentage.toFloat()
+        Triple(spending, percentage, targetArea)
+    }
+
+    // Simple algorithm: always use full dimensions for each slice
+    var currentX = padding
+    var currentY = padding
     var remainingWidth = width
     var remainingHeight = height
-    var isHorizontal = true
 
-    sorted.forEachIndexed { index, spending ->
-        val ratio = (spending.total / total).toFloat()
+    itemsWithPercentages.forEachIndexed { index, (spending, percentage, targetArea) ->
         val isOtherVendor = spending.vendorId == -1L
         val vendor = if (!isOtherVendor) vendors.find { it.id == spending.vendorId } else null
         val colorIndex = index % vendorColors.size
@@ -329,30 +345,39 @@ private fun calculateVendorTreemap(
         val rectWidth: Float
         val rectHeight: Float
 
-        if (isHorizontal) {
-            // Horizontal slice: full height, width proportional to ratio
-            rectWidth = remainingWidth * ratio
+        // Decide direction based on which dimension gives better aspect ratio
+        // For horizontal slice: width = targetArea / remainingHeight
+        val horizontalWidth = targetArea / remainingHeight
+        val horizontalAspectRatio = max(horizontalWidth / remainingHeight, remainingHeight / horizontalWidth)
+        
+        // For vertical slice: height = targetArea / remainingWidth  
+        val verticalHeight = targetArea / remainingWidth
+        val verticalAspectRatio = max(remainingWidth / verticalHeight, verticalHeight / remainingWidth)
+        
+        // Choose the direction that gives more square-like rectangle (lower aspect ratio)
+        val useHorizontal = horizontalAspectRatio <= verticalAspectRatio
+
+        if (useHorizontal) {
+            // Horizontal slice: full remaining height, calculated width
             rectHeight = remainingHeight
-            rectangles.add(VendorTreemapRect(remainingX, remainingY, rectWidth, rectHeight, color, 
+            rectWidth = targetArea / rectHeight
+            rectangles.add(VendorTreemapRect(currentX, currentY, rectWidth, rectHeight, color, 
                 if (!isOtherVendor && vendor != null) vendor.name else "Other"))
 
-            // Update remaining space for next rectangle
-            remainingX += rectWidth
+            // Update for next item
+            currentX += rectWidth
             remainingWidth -= rectWidth
         } else {
-            // Vertical slice: full width, height proportional to ratio
+            // Vertical slice: full remaining width, calculated height
             rectWidth = remainingWidth
-            rectHeight = remainingHeight * ratio
-            rectangles.add(VendorTreemapRect(remainingX, remainingY, rectWidth, rectHeight, color, 
+            rectHeight = targetArea / rectWidth
+            rectangles.add(VendorTreemapRect(currentX, currentY, rectWidth, rectHeight, color, 
                 if (!isOtherVendor && vendor != null) vendor.name else "Other"))
 
-            // Update remaining space for next rectangle
-            remainingY += rectHeight
+            // Update for next item
+            currentY += rectHeight
             remainingHeight -= rectHeight
         }
-
-        // Alternate direction for next item
-        isHorizontal = !isHorizontal
     }
 
     return rectangles

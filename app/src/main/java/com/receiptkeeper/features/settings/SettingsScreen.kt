@@ -670,6 +670,7 @@ fun SettingsScreen(
     onNavigateToPaymentMethods: () -> Unit = {},
     onNavigateToSpendingGoals: () -> Unit = {},
     onNavigateToBackupRestore: () -> Unit = {},
+    onNavigateToDebug: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var showAboutDialog by remember { mutableStateOf(false) }
@@ -760,6 +761,18 @@ fun SettingsScreen(
                 subtitle = "Version and build information",
                 onClick = { showAboutDialog = true }
             )
+
+            // Debug menu item (only in debug builds)
+            if (BuildConfig.DEBUG) {
+                HorizontalDivider()
+                
+                SettingsItem(
+                    icon = Icons.Default.BugReport,
+                    title = "Debug Helper",
+                    subtitle = "Add test data for debugging",
+                    onClick = onNavigateToDebug
+                )
+            }
 
             Spacer(modifier = Modifier.weight(1f))
 
