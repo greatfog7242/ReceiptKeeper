@@ -56,7 +56,8 @@ fun AnalyticsScreen(
 
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    var selectedChartType by remember { mutableStateOf(ChartType.PIE) }
+    var selectedCategoryChartType by remember { mutableStateOf(ChartType.PIE) }
+    var selectedVendorChartType by remember { mutableStateOf(ChartType.PIE) }
 
     Scaffold(
         topBar = {
@@ -376,12 +377,12 @@ fun AnalyticsScreen(
                 // Chart type toggle
                 Row {
                     IconButton(
-                        onClick = { selectedChartType = ChartType.PIE }
+                        onClick = { selectedCategoryChartType = ChartType.PIE }
                     ) {
                         Icon(
                             Icons.Default.PieChart,
                             contentDescription = "Pie Chart",
-                            tint = if (selectedChartType == ChartType.PIE) {
+                            tint = if (selectedCategoryChartType == ChartType.PIE) {
                                 MaterialTheme.colorScheme.primary
                             } else {
                                 MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
@@ -389,12 +390,12 @@ fun AnalyticsScreen(
                         )
                     }
                     IconButton(
-                        onClick = { selectedChartType = ChartType.STACKED_BAR }
+                        onClick = { selectedCategoryChartType = ChartType.STACKED_BAR }
                     ) {
                         Icon(
                             Icons.Default.StackedBarChart,
                             contentDescription = "Stacked Bar Chart",
-                            tint = if (selectedChartType == ChartType.STACKED_BAR) {
+                            tint = if (selectedCategoryChartType == ChartType.STACKED_BAR) {
                                 MaterialTheme.colorScheme.primary
                             } else {
                                 MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
@@ -402,12 +403,12 @@ fun AnalyticsScreen(
                         )
                     }
                     IconButton(
-                        onClick = { selectedChartType = ChartType.TREEMAP }
+                        onClick = { selectedCategoryChartType = ChartType.TREEMAP }
                     ) {
                         Icon(
                             Icons.Default.Dashboard,
                             contentDescription = "Treemap",
-                            tint = if (selectedChartType == ChartType.TREEMAP) {
+                            tint = if (selectedCategoryChartType == ChartType.TREEMAP) {
                                 MaterialTheme.colorScheme.primary
                             } else {
                                 MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
@@ -421,7 +422,7 @@ fun AnalyticsScreen(
                 categorySpending = categoryBreakdown,
                 categories = categories,
                 totalSpending = totalSpending,
-                chartType = selectedChartType
+                chartType = selectedCategoryChartType
             )
 
             // Vendor Breakdown Chart
@@ -436,15 +437,15 @@ fun AnalyticsScreen(
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
-                // Chart type toggle (reusing selectedChartType)
+                // Chart type toggle
                 Row {
                     IconButton(
-                        onClick = { selectedChartType = ChartType.PIE }
+                        onClick = { selectedVendorChartType = ChartType.PIE }
                     ) {
                         Icon(
                             Icons.Default.PieChart,
                             contentDescription = "Pie Chart",
-                            tint = if (selectedChartType == ChartType.PIE) {
+                            tint = if (selectedVendorChartType == ChartType.PIE) {
                                 MaterialTheme.colorScheme.primary
                             } else {
                                 MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
@@ -452,12 +453,12 @@ fun AnalyticsScreen(
                         )
                     }
                     IconButton(
-                        onClick = { selectedChartType = ChartType.STACKED_BAR }
+                        onClick = { selectedVendorChartType = ChartType.STACKED_BAR }
                     ) {
                         Icon(
                             Icons.Default.StackedBarChart,
                             contentDescription = "Stacked Bar Chart",
-                            tint = if (selectedChartType == ChartType.STACKED_BAR) {
+                            tint = if (selectedVendorChartType == ChartType.STACKED_BAR) {
                                 MaterialTheme.colorScheme.primary
                             } else {
                                 MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
@@ -465,12 +466,12 @@ fun AnalyticsScreen(
                         )
                     }
                     IconButton(
-                        onClick = { selectedChartType = ChartType.TREEMAP }
+                        onClick = { selectedVendorChartType = ChartType.TREEMAP }
                     ) {
                         Icon(
                             Icons.Default.Dashboard,
                             contentDescription = "Treemap",
-                            tint = if (selectedChartType == ChartType.TREEMAP) {
+                            tint = if (selectedVendorChartType == ChartType.TREEMAP) {
                                 MaterialTheme.colorScheme.primary
                             } else {
                                 MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
@@ -484,7 +485,7 @@ fun AnalyticsScreen(
                 vendorSpending = vendorBreakdown,
                 vendors = vendors,
                 totalSpending = totalSpending,
-                chartType = selectedChartType
+                chartType = selectedVendorChartType
             )
         }
     }
