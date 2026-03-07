@@ -155,7 +155,7 @@ private fun TreeMapChart(
                     ) {
                         Icon(
                             imageVector = if (!isOtherCategory && category != null) {
-                                IconHelper.getIcon(category.iconName)
+                                IconHelper.getIconWithTheme(category.iconName)
                             } else {
                                 // MoreHoriz icon for "Other" category
                                 Icons.Default.MoreHoriz
@@ -423,7 +423,7 @@ private fun PieChart(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                imageVector = IconHelper.getIcon(category.iconName),
+                                imageVector = IconHelper.getIconWithTheme(category.iconName),
                                 contentDescription = null,
                                 tint = categoryColor,
                                 modifier = Modifier.size(18.dp)
@@ -571,7 +571,7 @@ private fun StackedBarChart(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                imageVector = IconHelper.getIcon(category.iconName),
+                                imageVector = IconHelper.getIconWithTheme(category.iconName),
                                 contentDescription = null,
                                 tint = categoryColor,
                                 modifier = Modifier.size(18.dp)

@@ -25,6 +25,7 @@ sealed class Routes(val route: String) {
     // Settings sub-screens
     data object Vendors : Routes("vendors")
     data object Categories : Routes("categories")
+    data object IconTheme : Routes("icon_theme")
     data object PaymentMethods : Routes("payment_methods")
     data object SpendingGoals : Routes("spending_goals")
     data object BackupRestore : Routes("backup_restore")

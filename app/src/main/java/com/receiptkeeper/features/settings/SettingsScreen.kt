@@ -667,6 +667,7 @@ Your financial organization journey starts here. Scan, track, analyze, and save 
 fun SettingsScreen(
     onNavigateToVendors: () -> Unit = {},
     onNavigateToCategories: () -> Unit = {},
+    onNavigateToIconTheme: () -> Unit = {},
     onNavigateToPaymentMethods: () -> Unit = {},
     onNavigateToSpendingGoals: () -> Unit = {},
     onNavigateToBackupRestore: () -> Unit = {},
@@ -715,6 +716,15 @@ fun SettingsScreen(
                 title = "Categories",
                 subtitle = "Manage expense categories",
                 onClick = onNavigateToCategories
+            )
+
+            HorizontalDivider()
+
+            SettingsItem(
+                icon = Icons.Default.Palette,
+                title = "Icon Theme",
+                subtitle = "Switch between colorful and monochrome icons",
+                onClick = onNavigateToIconTheme
             )
 
             HorizontalDivider()

@@ -1,12 +1,21 @@
 package com.receiptkeeper.core.util
 
 import android.content.Context
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.receiptkeeper.core.preferences.IconTheme
+import com.receiptkeeper.core.preferences.rememberIconTheme
 import java.io.File
 
 /**
@@ -261,10 +270,85 @@ object IconHelper {
     /**
      * Get ImageVector from icon name
      * Returns default icon if not found
+     * Note: This version doesn't use theme - for theme-aware icons, use the composable version
      */
     fun getIcon(iconName: String): ImageVector {
         return iconMap[iconName] ?: Icons.Default.Category
     }
+
+    /**
+     * Get ImageVector from icon name with theme support
+     * Returns default icon if not found
+     * Uses current theme from IconThemeManager
+     */
+    @Composable
+    fun getIconWithTheme(iconName: String): ImageVector {
+        val iconTheme = rememberIconTheme().value
+        return getIconWithTheme(iconName, iconTheme)
+    }
+
+    /**
+     * Get ImageVector from icon name with theme support
+     * Returns default icon if not found
+     */
+    fun getIconWithTheme(iconName: String, theme: IconTheme): ImageVector {
+        return if (theme == IconTheme.MONOCHROME && isBrandIcon(iconName)) {
+            // For monochrome theme, map brand icons to appropriate Material Icons
+            getMonochromeFallbackIcon(iconName)
+        } else {
+            iconMap[iconName] ?: Icons.Default.Category
+        }
+    }
+
+    /**
+     * Map brand icons to Material Icons for monochrome theme
+     */
+    private fun getMonochromeFallbackIcon(iconName: String): ImageVector {
+        val brandName = getBrandIconName(iconName)
+        return brandToMaterialIconMap[brandName] ?: iconMap[iconName] ?: Icons.Default.Store
+    }
+
+    /**
+     * Map brand names to appropriate Material Icons for monochrome theme
+     */
+    private val brandToMaterialIconMap = mapOf(
+        // Grocery stores
+        "ALDI_SÜD" to Icons.Default.LocalGroceryStore,
+        "AsianMarket" to Icons.Default.LocalGroceryStore,
+        "Costco" to Icons.Default.LocalGroceryStore,
+        "Goodwill_Industries" to Icons.Default.LocalGroceryStore,
+        "H_MART" to Icons.Default.LocalGroceryStore,
+        "Kwik_Trip" to Icons.Default.LocalGroceryStore,
+        "Kohls" to Icons.Default.LocalMall,
+        "Lowes" to Icons.Default.HomeRepairService,
+        "Marshalls" to Icons.Default.LocalMall,
+        "McDonalds" to Icons.Default.Fastfood,
+        "Meijercom" to Icons.Default.LocalGroceryStore,
+        "Menards" to Icons.Default.HomeRepairService,
+        "Pick_n_Save" to Icons.Default.LocalGroceryStore,
+        "Piggly_Wiggly" to Icons.Default.LocalGroceryStore,
+        "Pizza_Hut" to Icons.Default.LocalPizza,
+        "QDOBA" to Icons.Default.Restaurant,
+        "Ross_Dress_for_Less" to Icons.Default.LocalMall,
+        "Sams_Club" to Icons.Default.LocalGroceryStore,
+        "Sendiks" to Icons.Default.LocalGroceryStore,
+        "Target" to Icons.Default.LocalMall,
+        "The_Home_Depot" to Icons.Default.HomeRepairService,
+        "TJ_Maxx" to Icons.Default.LocalMall,
+        "Trader_Joes" to Icons.Default.LocalGroceryStore,
+        "Walgreens" to Icons.Default.LocalPharmacy,
+        "Walmart" to Icons.Default.LocalGroceryStore,
+        
+        // Restaurants
+        "Chick-fil-A" to Icons.Default.Fastfood,
+        "Chinese_Restaurant" to Icons.Default.Restaurant,
+        
+        // Gas stations
+        "CITGO" to Icons.Default.LocalGasStation,
+        
+        // Default fallback
+        "" to Icons.Default.Store
+    )
 
     /**
      * Get all available icon names
@@ -317,5 +401,49 @@ object IconHelper {
      */
     fun getBrandIcons(): List<Pair<String, String>> {
         return brandIconNames.map { it to it.replace("_", " ").replace("'", "'") }
+    }
+
+    /**
+     * Composable for displaying vendor icons with theme support
+     */
+    @Composable
+    fun VendorIcon(
+        iconName: String,
+        size: Dp,
+        tint: Color = Color.Unspecified,
+        modifier: Modifier = Modifier
+    ) {
+        val context = LocalContext.current
+        val iconTheme = rememberIconTheme().value
+
+        if (iconTheme == IconTheme.MONOCHROME || !isBrandIcon(iconName)) {
+            // For monochrome theme or non-brand icons, use Material Icons
+            val materialIcon = getIconWithTheme(iconName, iconTheme)
+            Icon(
+                imageVector = materialIcon,
+                contentDescription = null,
+                modifier = modifier.size(size),
+                tint = tint
+            )
+        } else {
+            // For colorful theme with brand icons, load the image
+            val imageModel = if (isCustomIcon(iconName)) {
+                getCustomBrandIconUri(context, iconName)
+            } else {
+                val brandIconName = getBrandIconName(iconName)
+                "file:///android_asset/brand_logos/${brandIconName}.png"
+            }
+            val model = ImageRequest.Builder(context)
+                .data(imageModel)
+                .crossfade(true)
+                .build()
+
+            AsyncImage(
+                model = model,
+                contentDescription = null,
+                modifier = modifier.size(size),
+                contentScale = ContentScale.Fit
+            )
+        }
     }
 }

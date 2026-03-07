@@ -124,6 +124,9 @@ dependencies {
     implementation("androidx.hilt:hilt-work:1.2.0")
     ksp("androidx.hilt:hilt-compiler:1.2.0")
 
+    // DataStore for preferences
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+
     // Testing
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")

@@ -13,6 +13,7 @@ import com.receiptkeeper.features.receipts.ReceiptsScreen
 import com.receiptkeeper.features.scan.ScanScreen
 import com.receiptkeeper.features.settings.SettingsScreen
 import com.receiptkeeper.features.settings.BackupRestoreScreen
+import com.receiptkeeper.features.settings.IconThemeScreen
 import com.receiptkeeper.features.debug.DebugScreen
 
 /**
@@ -69,6 +70,9 @@ fun NavGraph(
                 onNavigateToCategories = {
                     navController.navigate(Routes.Categories.route)
                 },
+                onNavigateToIconTheme = {
+                    navController.navigate(Routes.IconTheme.route)
+                },
                 onNavigateToPaymentMethods = {
                     navController.navigate(Routes.PaymentMethods.route)
                 },
@@ -120,6 +124,12 @@ fun NavGraph(
         composable(route = Routes.Categories.route) {
             com.receiptkeeper.features.settings.CategoriesScreen(
                 onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(route = Routes.IconTheme.route) {
+            IconThemeScreen(
+                onBack = { navController.popBackStack() }
             )
         }
 

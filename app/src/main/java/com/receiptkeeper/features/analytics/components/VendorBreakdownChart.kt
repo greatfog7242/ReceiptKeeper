@@ -16,9 +16,6 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
 import com.receiptkeeper.core.util.IconHelper
 import com.receiptkeeper.data.local.entity.VendorSpending
 import com.receiptkeeper.domain.model.Vendor
@@ -158,8 +155,8 @@ private fun VendorTreeMapChart(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         if (!isOtherVendor && vendor != null) {
-                            VendorIcon(
-                                vendor = vendor,
+                            IconHelper.VendorIcon(
+                                iconName = vendor.iconName,
                                 size = 16.dp,
                                 tint = vendorColor
                             )
@@ -427,9 +424,9 @@ private fun VendorPieChart(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            VendorIcon(
-                                vendor = vendor,
-                                size = 18.dp,
+                            IconHelper.VendorIcon(
+                                iconName = vendor.iconName,
+                                size = 16.dp,
                                 tint = vendorColor
                             )
                             Text(
@@ -566,9 +563,9 @@ private fun VendorStackedBarChart(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            VendorIcon(
-                                vendor = vendor,
-                                size = 18.dp,
+                            IconHelper.VendorIcon(
+                                iconName = vendor.iconName,
+                                size = 16.dp,
                                 tint = vendorColor
                             )
                             Text(
@@ -600,44 +597,4 @@ private fun VendorStackedBarChart(
     }
 }
 
-/**
- * Composable to display vendor icon - brand logo if available, fallback to icon
- */
-@Composable
-private fun VendorIcon(
-    vendor: Vendor,
-    size: androidx.compose.ui.unit.Dp,
-    tint: Color,
-    modifier: Modifier = Modifier
-) {
-    val context = LocalContext.current
 
-    if (IconHelper.isBrandIcon(vendor.iconName)) {
-        // It's a brand icon - load the image
-        val imageModel = if (IconHelper.isCustomIcon(vendor.iconName)) {
-            IconHelper.getCustomBrandIconUri(context, vendor.iconName)
-        } else {
-            val brandIconName = IconHelper.getBrandIconName(vendor.iconName)
-            "file:///android_asset/brand_logos/${brandIconName}.png"
-        }
-        val model = ImageRequest.Builder(context)
-            .data(imageModel)
-            .crossfade(true)
-            .build()
-
-        AsyncImage(
-            model = model,
-            contentDescription = vendor.name,
-            modifier = modifier.size(size),
-            contentScale = ContentScale.Fit
-        )
-    } else {
-        // Use material icon
-        Icon(
-            imageVector = IconHelper.getIcon(vendor.iconName),
-            contentDescription = null,
-            modifier = modifier.size(size),
-            tint = tint
-        )
-    }
-}
