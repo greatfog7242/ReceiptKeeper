@@ -122,10 +122,13 @@ private fun VendorTreeMapChart(
 
         // Legend
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            // Calculate adjusted percentages that sum to 100%
+            val adjustedPercentages = calculateAdjustedVendorPercentages(aggregatedData, totalSpending)
+            
             aggregatedData.forEachIndexed { index, spending ->
                 val isOtherVendor = spending.vendorId == -1L
                 val vendor = if (!isOtherVendor) vendors.find { it.id == spending.vendorId } else null
-                val percentage = if (totalSpending > 0) (spending.total / totalSpending * 100).toInt() else 0
+                val percentage = adjustedPercentages[index]
                 val colorIndex = index % vendorColors.size
                 val vendorColor = if (!isOtherVendor) {
                     try {
@@ -237,6 +240,53 @@ private fun aggregateSmallVendorsForTreeView(
     }
     
     return result
+}
+
+/**
+ * Calculates adjusted percentages that sum to exactly 100%
+ * Uses largest remainder method to handle rounding errors
+ */
+private fun calculateAdjustedVendorPercentages(
+    spendingList: List<VendorSpending>,
+    totalSpending: Double
+): List<Int> {
+    if (spendingList.isEmpty() || totalSpending == 0.0) {
+        return List(spendingList.size) { 0 }
+    }
+    
+    // Calculate raw percentages with decimals
+    val rawPercentages = spendingList.map { spending ->
+        (spending.total / totalSpending * 100)
+    }
+    
+    // Round down to get integer parts
+    val integerParts = rawPercentages.map { it.toInt() }
+    val remainders = rawPercentages.mapIndexed { index, raw -> 
+        raw - integerParts[index] 
+    }
+    
+    // Calculate total of integer parts
+    var totalIntegerParts = integerParts.sum()
+    
+    // Distribute remaining percentage points to items with largest remainders
+    val sortedByRemainder = remainders
+        .mapIndexed { index, remainder -> index to remainder }
+        .sortedByDescending { (_, remainder) -> remainder }
+    
+    val adjusted = integerParts.toMutableList()
+    var remainingPoints = 100 - totalIntegerParts
+    
+    // Add 1 to items with largest remainders until we reach 100%
+    for ((index, _) in sortedByRemainder) {
+        if (remainingPoints > 0) {
+            adjusted[index] += 1
+            remainingPoints -= 1
+        } else {
+            break
+        }
+    }
+    
+    return adjusted
 }
 
 private fun calculateVendorTreemap(
