@@ -272,14 +272,14 @@ private fun calculateTreemap(
 
         if (isHorizontal) {
             rectWidth = remainingWidth * ratio
-            rectHeight = height
+            rectHeight = remainingHeight
             rectangles.add(TreemapRect(currentX, currentY, rectWidth, rectHeight, color, 
                 if (!isOtherCategory && category != null) category.name else "Other"))
 
             currentX += rectWidth
             remainingWidth -= rectWidth
         } else {
-            rectWidth = width
+            rectWidth = remainingWidth
             rectHeight = remainingHeight * ratio
             rectangles.add(TreemapRect(currentX, currentY, rectWidth, rectHeight, color, 
                 if (!isOtherCategory && category != null) category.name else "Other"))
