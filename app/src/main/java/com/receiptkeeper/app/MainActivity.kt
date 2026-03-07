@@ -90,11 +90,6 @@ fun MainApp() {
     }
     val iconTheme by iconThemeManager.iconTheme.collectAsState(initial = com.receiptkeeper.core.preferences.IconTheme.COLORFUL)
 
-    // Debug: log theme changes
-    androidx.compose.runtime.LaunchedEffect(iconTheme) {
-        android.util.Log.d("ReceiptKeeper", "Icon theme changed to: $iconTheme")
-    }
-
     if (showSplash) {
         SplashScreen(onSplashComplete = { showSplash = false })
     } else {

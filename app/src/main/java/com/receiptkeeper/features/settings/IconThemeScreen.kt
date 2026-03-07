@@ -67,7 +67,7 @@ fun IconThemeScreen(
         ) {
             // Description
             Text(
-                text = "Choose how icons appear throughout the app:",
+                text = "Choose the appearance of bottom navigation icons:",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 24.dp)
@@ -80,7 +80,7 @@ fun IconThemeScreen(
             ) {
                 IconThemeOption(
                     title = "Colorful Icons",
-                    description = "Display brand logos in their original colors",
+                    description = "Colorful WebP icons in the bottom navigation",
                     icon = Icons.Filled.ColorLens,
                     iconColor = Color(0xFF4285F4), // Google Blue
                     isSelected = iconTheme == IconTheme.COLORFUL,
@@ -93,7 +93,7 @@ fun IconThemeScreen(
 
                 IconThemeOption(
                     title = "Monochrome Icons",
-                    description = "Use simple black and white icons for consistency",
+                    description = "Material Design icons in the bottom navigation",
                     icon = Icons.Filled.Palette,
                     iconColor = MaterialTheme.colorScheme.onSurface,
                     isSelected = iconTheme == IconTheme.MONOCHROME,
@@ -105,141 +105,11 @@ fun IconThemeScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Preview section
-            Text(
-                text = "Preview:",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // Preview item 1 - Grocery store
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier.size(40.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = com.receiptkeeper.core.util.IconHelper.getIconWithTheme("Walmart"),
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                        Column {
-                            Text(
-                                text = "Walmart",
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Text(
-                                text = "Grocery shopping",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-
-                    // Preview item 2 - Restaurant
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier.size(40.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (iconTheme == IconTheme.COLORFUL) {
-                                // Show colorful brand icon preview
-                                Text(
-                                    text = "🍔",
-                                    style = MaterialTheme.typography.headlineMedium
-                                )
-                            } else {
-                                // Show monochrome icon preview
-                                Icon(
-                                    imageVector = Icons.Filled.Restaurant,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurface,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-                        }
-                        Column {
-                            Text(
-                                text = "McDonald's",
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Text(
-                                text = "Fast food",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-
-                    // Preview item 3 - Gas station
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier.size(40.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (iconTheme == IconTheme.COLORFUL) {
-                                // Show colorful brand icon preview
-                                Text(
-                                    text = "⛽",
-                                    style = MaterialTheme.typography.headlineMedium
-                                )
-                            } else {
-                                // Show monochrome icon preview
-                                Icon(
-                                    imageVector = Icons.Filled.LocalGasStation,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurface,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-                        }
-                        Column {
-                            Text(
-                                text = "Shell Gas Station",
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Text(
-                                text = "Fuel purchase",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-            }
-
             Spacer(modifier = Modifier.height(24.dp))
 
             // Note
             Text(
-                text = "Note: Changing the theme will update icons throughout the app immediately.",
+                text = "Note: The bottom navigation icons will update immediately when you change the theme.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
