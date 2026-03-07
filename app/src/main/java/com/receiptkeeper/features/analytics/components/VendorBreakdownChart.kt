@@ -3,6 +3,7 @@ package com.receiptkeeper.features.analytics.components
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -95,7 +96,10 @@ private fun VendorTreeMapChart(
         return
     }
 
-    val rectangles = calculateVendorTreemap(vendorSpending, vendors, total)
+    // Aggregate small vendors (<10%) into "Other" for tree view only
+    val aggregatedData = aggregateSmallVendorsForTreeView(vendorSpending, total)
+    
+    val rectangles = calculateVendorTreemap(aggregatedData, vendors, total)
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Box(
@@ -118,43 +122,61 @@ private fun VendorTreeMapChart(
 
         // Legend
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            vendorSpending.forEachIndexed { index, spending ->
-                val vendor = vendors.find { it.id == spending.vendorId }
-                if (vendor != null) {
-                    val percentage = if (totalSpending > 0) (spending.total / totalSpending * 100).toInt() else 0
-                    val colorIndex = index % vendorColors.size
-                    val vendorColor = try {
+            aggregatedData.forEachIndexed { index, spending ->
+                val isOtherVendor = spending.vendorId == -1L
+                val vendor = if (!isOtherVendor) vendors.find { it.id == spending.vendorId } else null
+                val percentage = if (totalSpending > 0) (spending.total / totalSpending * 100).toInt() else 0
+                val colorIndex = index % vendorColors.size
+                val vendorColor = if (!isOtherVendor) {
+                    try {
                         Color(android.graphics.Color.parseColor(vendorColors[colorIndex]))
                     } catch (e: Exception) {
                         MaterialTheme.colorScheme.primary
                     }
+                } else {
+                    // Gray color for "Other" vendor
+                    MaterialTheme.colorScheme.outline
+                }
 
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                        if (!isOtherVendor && vendor != null) {
                             VendorIcon(
                                 vendor = vendor,
                                 size = 16.dp,
                                 tint = vendorColor
                             )
-                            Text(
-                                text = vendor.name,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = vendorColor
+                        } else {
+                            // MoreHoriz icon for "Other" vendor
+                            Icon(
+                                imageVector = Icons.Default.MoreHoriz,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = vendorColor
                             )
                         }
                         Text(
-                            text = "$percentage%",
+                            text = if (!isOtherVendor && vendor != null) {
+                                vendor.name
+                            } else {
+                                "Other"
+                            },
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            color = vendorColor
                         )
                     }
+                    Text(
+                        text = "$percentage%",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    )
                 }
             }
         }
@@ -169,6 +191,53 @@ private data class VendorTreemapRect(
     val color: Int,
     val label: String
 )
+
+/**
+ * Aggregates vendors with less than 10% of total spending into "Other" vendor
+ * "Other" vendor ID is -1 to distinguish it from real vendors
+ * Only for tree view - other chart types show individual vendors
+ */
+private fun aggregateSmallVendorsForTreeView(
+    vendorSpendingList: List<VendorSpending>,
+    totalSpending: Double
+): List<VendorSpending> {
+    if (vendorSpendingList.isEmpty()) return emptyList()
+    
+    if (totalSpending == 0.0) return emptyList()
+    
+    // Calculate percentage for each vendor
+    val vendorsWithPercentage = vendorSpendingList.map { spending ->
+        val percentage = (spending.total / totalSpending) * 100
+        spending to percentage
+    }
+    
+    // Separate vendors above and below 10%
+    val (majorVendors, minorVendors) = vendorsWithPercentage.partition { (_, percentage) -> 
+        percentage >= 10.0 
+    }
+    
+    // If no minor vendors, return original list
+    if (minorVendors.isEmpty()) {
+        return vendorSpendingList
+    }
+    
+    // Calculate total for major vendors
+    val majorTotal = majorVendors.sumOf { (spending, _) -> spending.total }
+    
+    // Create "Other" vendor with remaining total
+    val otherTotal = totalSpending - majorTotal
+    
+    // Build result list with major vendors and "Other"
+    val result = mutableListOf<VendorSpending>()
+    result.addAll(majorVendors.map { (spending, _) -> spending })
+    
+    if (otherTotal > 0.0) {
+        // Use -1 as ID for "Other" vendor
+        result.add(VendorSpending(vendorId = -1, total = otherTotal))
+    }
+    
+    return result
+}
 
 private fun calculateVendorTreemap(
     vendorSpending: List<VendorSpending>,
@@ -191,11 +260,17 @@ private fun calculateVendorTreemap(
 
     sorted.forEachIndexed { index, spending ->
         val ratio = (spending.total / total).toFloat()
-        val vendor = vendors.find { it.id == spending.vendorId }
+        val isOtherVendor = spending.vendorId == -1L
+        val vendor = if (!isOtherVendor) vendors.find { it.id == spending.vendorId } else null
         val colorIndex = index % vendorColors.size
-        val color = try {
-            android.graphics.Color.parseColor(vendorColors[colorIndex])
-        } catch (e: Exception) {
+        val color = if (!isOtherVendor) {
+            try {
+                android.graphics.Color.parseColor(vendorColors[colorIndex])
+            } catch (e: Exception) {
+                android.graphics.Color.GRAY
+            }
+        } else {
+            // Gray color for "Other" vendor
             android.graphics.Color.GRAY
         }
 
@@ -205,14 +280,16 @@ private fun calculateVendorTreemap(
         if (isHorizontal) {
             rectWidth = remainingWidth * ratio
             rectHeight = height
-            rectangles.add(VendorTreemapRect(currentX, currentY, rectWidth, rectHeight, color, vendor?.name ?: ""))
+            rectangles.add(VendorTreemapRect(currentX, currentY, rectWidth, rectHeight, color, 
+                if (!isOtherVendor && vendor != null) vendor.name else "Other"))
 
             currentX += rectWidth
             remainingWidth -= rectWidth
         } else {
             rectWidth = width
             rectHeight = remainingHeight * ratio
-            rectangles.add(VendorTreemapRect(currentX, currentY, rectWidth, rectHeight, color, vendor?.name ?: ""))
+            rectangles.add(VendorTreemapRect(currentX, currentY, rectWidth, rectHeight, color, 
+                if (!isOtherVendor && vendor != null) vendor.name else "Other"))
 
             currentY += rectHeight
             remainingHeight -= rectHeight
