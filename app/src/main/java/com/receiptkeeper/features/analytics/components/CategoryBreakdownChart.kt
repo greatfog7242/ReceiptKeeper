@@ -296,13 +296,15 @@ private fun calculateTreemap(
     val sorted = categorySpending.sortedByDescending { it.total }
     val rectangles = mutableListOf<TreemapRect>()
 
-    var currentX = 0f
-    var currentY = 0f
-    var rowHeight = height  // Height of current row
-    var columnWidth = width // Width of current column
+    // Simple slice-and-dice algorithm
+    // We'll alternate between horizontal and vertical slices
+    var remainingX = 0f
+    var remainingY = 0f
+    var remainingWidth = width
+    var remainingHeight = height
     var isHorizontal = true
 
-    sorted.forEachIndexed { index, spending ->
+    sorted.forEach { spending ->
         val ratio = (spending.total / total).toFloat()
         val isOtherCategory = spending.categoryId == -1L
         val category = if (!isOtherCategory) categories.find { it.id == spending.categoryId } else null
@@ -321,44 +323,29 @@ private fun calculateTreemap(
         val rectHeight: Float
 
         if (isHorizontal) {
-            // Horizontal slice in current row
-            rectWidth = columnWidth * ratio
-            rectHeight = rowHeight
-            rectangles.add(TreemapRect(currentX, currentY, rectWidth, rectHeight, color, 
+            // Horizontal slice: full height, width proportional to ratio
+            rectWidth = remainingWidth * ratio
+            rectHeight = remainingHeight
+            rectangles.add(TreemapRect(remainingX, remainingY, rectWidth, rectHeight, color, 
                 if (!isOtherCategory && category != null) category.name else "Other"))
 
-            currentX += rectWidth
-            columnWidth -= rectWidth
+            // Update remaining space for next rectangle
+            remainingX += rectWidth
+            remainingWidth -= rectWidth
         } else {
-            // Vertical slice in current column
-            rectWidth = columnWidth
-            rectHeight = rowHeight * ratio
-            rectangles.add(TreemapRect(currentX, currentY, rectWidth, rectHeight, color, 
+            // Vertical slice: full width, height proportional to ratio
+            rectWidth = remainingWidth
+            rectHeight = remainingHeight * ratio
+            rectangles.add(TreemapRect(remainingX, remainingY, rectWidth, rectHeight, color, 
                 if (!isOtherCategory && category != null) category.name else "Other"))
 
-            currentY += rectHeight
-            rowHeight -= rectHeight
+            // Update remaining space for next rectangle
+            remainingY += rectHeight
+            remainingHeight -= rectHeight
         }
 
-        // Alternate direction and reset position when switching
-        if (index % 2 == 1) {
-            isHorizontal = !isHorizontal
-            if (isHorizontal) {
-                // Switching from vertical to horizontal
-                // Move to next row
-                currentY += rowHeight  // Move down by remaining row height
-                currentX = 0f  // Reset to left edge
-                rowHeight = height - currentY  // New row height is remaining space
-                columnWidth = width  // Reset column width for new row
-            } else {
-                // Switching from horizontal to vertical
-                // Move to next column
-                currentX += columnWidth  // Move right by remaining column width
-                currentY = 0f  // Reset to top edge
-                columnWidth = width - currentX  // New column width is remaining space
-                rowHeight = height  // Reset row height for new column
-            }
-        }
+        // Alternate direction for next item
+        isHorizontal = !isHorizontal
     }
 
     return rectangles
