@@ -33,13 +33,13 @@ fun BottomNavigationBar(
         bottomNavItems.forEach { item ->
             NavigationBarItem(
                 icon = {
-                    val iconSize = if (item.route == Routes.Scan) 42.dp else 24.dp
+                    val iconSize = if (item.route == Routes.Scan) 42.dp else 18.dp
                     if (item.iconResId != null) {
                         Icon(
                             painter = painterResource(id = item.iconResId),
                             contentDescription = item.label,
-                            modifier = Modifier.size(iconSize)
-                            // WebP images preserve their colors naturally, no tint needed
+                            modifier = Modifier.size(iconSize),
+                            tint = Color.Unspecified // Disable tint for WebP images
                         )
                     } else if (item.iconVector != null) {
                         Icon(
