@@ -14,6 +14,8 @@ import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.receiptkeeper.core.preferences.IconTheme
+import com.receiptkeeper.core.preferences.LocalIconTheme
 
 /**
  * Bottom navigation bar component
@@ -29,19 +31,28 @@ fun BottomNavigationBar(
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination
+        val iconTheme = LocalIconTheme.current
+        
+        val navItems = if (iconTheme == IconTheme.COLORFUL) {
+            bottomNavItemsColorful
+        } else {
+            bottomNavItemsMonochrome
+        }
 
-        bottomNavItems.forEach { item ->
+        navItems.forEach { item ->
             NavigationBarItem(
                 icon = {
                     val iconSize = if (item.route == Routes.Scan) 42.dp else 18.dp
                     if (item.iconResId != null) {
+                        // Colorful theme: WebP images with original colors
                         Icon(
                             painter = painterResource(id = item.iconResId),
                             contentDescription = item.label,
                             modifier = Modifier.size(iconSize),
-                            tint = Color.Unspecified // Disable tint for WebP images
+                            tint = Color.Unspecified // Disable tint to show WebP original colors
                         )
                     } else if (item.iconVector != null) {
+                        // Monochrome theme: Material Icons with theme tint
                         Icon(
                             imageVector = item.iconVector,
                             contentDescription = item.label,

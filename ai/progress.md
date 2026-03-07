@@ -1981,3 +1981,95 @@ app/src/main/res/drawable/ic_bottom_settings.xml (DELETED - vector drawable)
 
 **WebP icon implementation is complete and ready for device verification. Build successful, deployment pending device connection.**
 
+---
+
+## 2026-03-06 - Icon Theme Toggle Feature Complete
+
+**Agent:** Claude Sonnet 3.5
+**Feature:** Icon Theme Toggle (Colorful vs Monochrome)
+**Status:** ✅ **Complete & Deployed**
+
+### Work Completed
+
+**Theme Infrastructure:**
+- ✅ `IconTheme` enum (COLORFUL, MONOCHROME)
+- ✅ `PreferencesManager` with DataStore for theme persistence
+- ✅ `IconThemeManager` singleton for theme state management
+- ✅ `IconThemeViewModel` for screen state management
+- ✅ `LocalIconTheme` CompositionLocal for theme propagation
+
+**UI Implementation:**
+- ✅ `IconThemeScreen` with theme selection and live preview
+- ✅ Added "Icon Theme" option in Settings screen
+- ✅ Updated navigation with `Routes.IconTheme` route
+- ✅ **Bottom navigation bar theme switching:**
+  - Colorful theme: Shows WebP icons with original colors
+  - Monochrome theme: Shows Material Icons with theme tint
+  - Updated `BottomNavItem.kt` with two icon sets
+  - Updated `BottomNavigation.kt` to switch based on theme
+
+**Icon System Updates:**
+- ✅ Updated `IconHelper.getIconWithTheme()` to support both themes
+- ✅ Created brand-to-Material icon mapping for monochrome theme
+- ✅ Updated all icon calls throughout app (10+ files) to use `getIconWithTheme()`
+- ✅ Fixed crash by using Hilt entry points instead of `hiltViewModel()` in root
+
+**Technical Implementation Details:**
+- Used `CompositionLocalProvider` in `MainApp()` to provide `LocalIconTheme`
+- Used Hilt entry points to get `IconThemeManager` in composable root
+- DataStore flow collected via `collectAsState()` for reactive updates
+- Bottom nav uses `tint = Color.Unspecified` for WebP to preserve colors
+- Material Icons use theme tint colors for consistency
+
+### Files Created/Modified (12 files):
+```
+app/src/main/java/com/receiptkeeper/core/preferences/
+  - IconTheme.kt (NEW)
+  - PreferencesManager.kt (NEW)
+  - IconThemeManager.kt (NEW)
+app/src/main/java/com/receiptkeeper/core/di/
+  - PreferencesModule.kt (NEW)
+app/src/main/java/com/receiptkeeper/features/settings/
+  - IconThemeViewModel.kt (NEW)
+  - IconThemeScreen.kt (NEW)
+  - SettingsScreen.kt (UPDATED)
+app/src/main/java/com/receiptkeeper/app/navigation/
+  - BottomNavItem.kt (UPDATED)
+  - BottomNavigation.kt (UPDATED)
+  - NavGraph.kt (UPDATED)
+  - Routes.kt (UPDATED)
+app/src/main/java/com/receiptkeeper/app/
+  - MainActivity.kt (UPDATED)
+app/src/main/java/com/receiptkeeper/core/util/
+  - IconHelper.kt (UPDATED)
+app/build.gradle.kts (UPDATED - added DataStore dependency)
+```
+
+### Build & Deploy Status:
+- ✅ **Build:** Successful (no compilation errors)
+- ✅ **Deploy:** Successfully installed on device ZY22L7H2V2
+- ✅ **Launch:** App running without crashes
+- ✅ **Logcat:** No ReceiptKeeper errors detected
+- ✅ **Git:** Committed as `468d399` "feat: implement icon theme toggle with CompositionLocal"
+
+### Testing Instructions:
+1. **Default state:** Bottom nav shows colorful WebP icons
+2. **Navigate to Settings** → **Icon Theme**
+3. **Select "Monochrome Icons"** → Bottom nav should switch to Material Icons
+4. **Select "Colorful Icons"** → Bottom nav should switch back to WebP icons
+5. **Navigate to other screens** (Books, Receipts, etc.) → Icons should respect selected theme
+
+### Feature Benefits:
+- **User choice:** Users can choose between colorful brand icons or clean monochrome icons
+- **Consistency:** All icons throughout app respect theme selection
+- **Performance:** Uses Compose recomposition for instant updates
+- **Persistence:** Theme preference saved via DataStore
+- **Professional:** Material Icons provide clean, consistent look for monochrome theme
+
+### Next Steps:
+- User testing to verify theme switching works correctly
+- Consider adding more brand-to-Material icon mappings
+- Potentially add theme preview in IconThemeScreen using actual icons
+
+---
+

@@ -500,6 +500,12 @@
           "task": "Fix BookDetailScreen: remove unused pen/trash icons and add date-based grouping",
           "status": "Complete",
           "notes": "✅ Created ReceiptListItemSimple without action buttons, added date grouping like ReceiptsScreen"
+        },
+        {
+          "id": "7.15",
+          "task": "Add icon theme toggle (colorful WebP vs monochrome Material icons)",
+          "status": "Complete",
+          "notes": "✅ Implemented theme switching with DataStore persistence, bottom nav icons switch between WebP and Material icons based on theme"
         }
       ]
     }

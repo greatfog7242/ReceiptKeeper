@@ -284,6 +284,10 @@ object IconHelper {
     @Composable
     fun getIconWithTheme(iconName: String): ImageVector {
         val iconTheme = LocalIconTheme.current
+        // Debug: log icon theme usage
+        androidx.compose.runtime.LaunchedEffect(iconTheme) {
+            android.util.Log.d("ReceiptKeeper", "getIconWithTheme called with theme: $iconTheme for icon: $iconName")
+        }
         return getIconWithTheme(iconName, iconTheme)
     }
 

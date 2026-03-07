@@ -134,21 +134,12 @@ fun IconThemeScreen(
                             modifier = Modifier.size(40.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            if (iconTheme == IconTheme.COLORFUL) {
-                                // Show colorful brand icon preview
-                                Text(
-                                    text = "🛒",
-                                    style = MaterialTheme.typography.headlineMedium
-                                )
-                            } else {
-                                // Show monochrome icon preview
-                                Icon(
-                                    imageVector = Icons.Filled.LocalGroceryStore,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurface,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
+                            Icon(
+                                imageVector = com.receiptkeeper.core.util.IconHelper.getIconWithTheme("Walmart"),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(24.dp)
+                            )
                         }
                         Column {
                             Text(

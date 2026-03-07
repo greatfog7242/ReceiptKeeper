@@ -21,9 +21,9 @@ data class BottomNavItem(
 }
 
 /**
- * Bottom navigation items configuration
+ * Bottom navigation items configuration for colorful theme (WebP icons)
  */
-val bottomNavItems = listOf(
+val bottomNavItemsColorful = listOf(
     BottomNavItem(
         route = Routes.Books,
         iconResId = com.receiptkeeper.R.drawable.ic_bottom_books,
@@ -47,6 +47,37 @@ val bottomNavItems = listOf(
     BottomNavItem(
         route = Routes.Settings,
         iconResId = com.receiptkeeper.R.drawable.ic_bottom_settings,
+        label = "Settings"
+    )
+)
+
+/**
+ * Bottom navigation items configuration for monochrome theme (Material Icons)
+ */
+val bottomNavItemsMonochrome = listOf(
+    BottomNavItem(
+        route = Routes.Books,
+        iconVector = Icons.Filled.Book,
+        label = "Books"
+    ),
+    BottomNavItem(
+        route = Routes.Receipts,
+        iconVector = Icons.Filled.Receipt,
+        label = "Receipts"
+    ),
+    BottomNavItem(
+        route = Routes.Scan,
+        iconVector = Icons.Filled.CameraAlt,
+        label = "Scan"
+    ),
+    BottomNavItem(
+        route = Routes.Analytics,
+        iconVector = Icons.Filled.Analytics,
+        label = "Analytics"
+    ),
+    BottomNavItem(
+        route = Routes.Settings,
+        iconVector = Icons.Filled.Settings,
         label = "Settings"
     )
 )
