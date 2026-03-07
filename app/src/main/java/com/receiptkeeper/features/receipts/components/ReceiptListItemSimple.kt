@@ -111,7 +111,7 @@ fun ReceiptListItemSimple(
                         )
                     } else {
                         Icon(
-                            imageVector = IconHelper.getIcon(vendorIconName),
+                            imageVector = IconHelper.getIconWithTheme(vendorIconName),
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(18.dp)
@@ -149,7 +149,7 @@ fun ReceiptListItemSimple(
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Icon(
-                            imageVector = IconHelper.getIcon(categoryIconName),
+                            imageVector = IconHelper.getIconWithTheme(categoryIconName),
                             contentDescription = null,
                             tint = Color(android.graphics.Color.parseColor(categoryColor)),
                             modifier = Modifier.size(14.dp)

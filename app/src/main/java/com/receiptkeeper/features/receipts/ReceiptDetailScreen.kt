@@ -324,7 +324,7 @@ private fun VendorDetailRow(
                 )
             } else {
                 Icon(
-                    imageVector = IconHelper.getIcon(vendorIconName),
+                    imageVector = IconHelper.getIconWithTheme(vendorIconName),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp)
@@ -366,7 +366,7 @@ private fun CategoryDetailRow(
                 MaterialTheme.colorScheme.primary
             }
             Icon(
-                imageVector = IconHelper.getIcon(categoryIconName),
+                imageVector = IconHelper.getIconWithTheme(categoryIconName),
                 contentDescription = null,
                 tint = categoryColor,
                 modifier = Modifier.size(24.dp)

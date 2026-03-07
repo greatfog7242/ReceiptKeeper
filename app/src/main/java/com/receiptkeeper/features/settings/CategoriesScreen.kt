@@ -200,7 +200,7 @@ private fun CategoryListItem(
         ) {
             // Icon
             Icon(
-                imageVector = IconHelper.getIcon(category.iconName),
+                imageVector = IconHelper.getIconWithTheme(category.iconName),
                 contentDescription = null,
                 tint = Color(android.graphics.Color.parseColor(category.colorHex)),
                 modifier = Modifier.size(32.dp)
@@ -302,7 +302,7 @@ private fun CategoryDialog(
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = IconHelper.getIcon(selectedIcon),
+                                imageVector = IconHelper.getIconWithTheme(selectedIcon),
                                 contentDescription = "Select icon",
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(28.dp)

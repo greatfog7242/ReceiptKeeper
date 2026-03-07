@@ -195,7 +195,7 @@ private fun VendorListItem(
                 )
             } else {
                 Icon(
-                    imageVector = IconHelper.getIcon(vendor.iconName),
+                    imageVector = IconHelper.getIconWithTheme(vendor.iconName),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(32.dp)
@@ -304,7 +304,7 @@ private fun VendorDialog(
                                 )
                             } else {
                                 Icon(
-                                    imageVector = IconHelper.getIcon(selectedIcon),
+                                    imageVector = IconHelper.getIconWithTheme(selectedIcon),
                                     contentDescription = "Select icon",
                                     tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(28.dp)

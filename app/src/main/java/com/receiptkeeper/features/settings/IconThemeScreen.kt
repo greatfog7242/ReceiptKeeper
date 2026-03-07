@@ -18,9 +18,12 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
 import com.receiptkeeper.core.preferences.IconTheme
 import com.receiptkeeper.core.preferences.IconThemeManager
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * Screen for selecting icon theme (colorful vs monochrome)
@@ -31,8 +34,8 @@ fun IconThemeScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val themeManager: IconThemeManager = hiltViewModel()
-    val iconTheme by themeManager.iconTheme.collectAsState(initial = IconTheme.COLORFUL)
+    val viewModel: IconThemeViewModel = hiltViewModel()
+    val iconTheme by viewModel.iconTheme.collectAsState(initial = IconTheme.COLORFUL)
     val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
@@ -83,7 +86,7 @@ fun IconThemeScreen(
                     isSelected = iconTheme == IconTheme.COLORFUL,
                     onClick = {
                         coroutineScope.launch {
-                            themeManager.updateIconTheme(IconTheme.COLORFUL)
+                            viewModel.updateIconTheme(IconTheme.COLORFUL)
                         }
                     }
                 )
@@ -96,7 +99,7 @@ fun IconThemeScreen(
                     isSelected = iconTheme == IconTheme.MONOCHROME,
                     onClick = {
                         coroutineScope.launch {
-                            themeManager.updateIconTheme(IconTheme.MONOCHROME)
+                            viewModel.updateIconTheme(IconTheme.MONOCHROME)
                         }
                     }
                 )

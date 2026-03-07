@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.Dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.receiptkeeper.core.preferences.IconTheme
-import com.receiptkeeper.core.preferences.rememberIconTheme
+import com.receiptkeeper.core.preferences.LocalIconTheme
 import java.io.File
 
 /**
@@ -279,11 +279,11 @@ object IconHelper {
     /**
      * Get ImageVector from icon name with theme support
      * Returns default icon if not found
-     * Uses current theme from IconThemeManager
+     * Uses current theme from LocalIconTheme
      */
     @Composable
     fun getIconWithTheme(iconName: String): ImageVector {
-        val iconTheme = rememberIconTheme().value
+        val iconTheme = LocalIconTheme.current
         return getIconWithTheme(iconName, iconTheme)
     }
 
@@ -414,7 +414,7 @@ object IconHelper {
         modifier: Modifier = Modifier
     ) {
         val context = LocalContext.current
-        val iconTheme = rememberIconTheme().value
+        val iconTheme = LocalIconTheme.current
 
         if (iconTheme == IconTheme.MONOCHROME || !isBrandIcon(iconName)) {
             // For monochrome theme or non-brand icons, use Material Icons

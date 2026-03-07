@@ -10,11 +10,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.receiptkeeper.core.preferences.IconThemeManager
+import com.receiptkeeper.core.preferences.LocalIconTheme
+import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.EntryPointAccessors
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.navigation.compose.rememberNavController
@@ -22,7 +28,6 @@ import coil.compose.rememberAsyncImagePainter
 import com.receiptkeeper.app.navigation.BottomNavigationBar
 import com.receiptkeeper.app.navigation.NavGraph
 import com.receiptkeeper.ui.theme.ReceiptKeeperTheme
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 
 /**
@@ -76,20 +81,41 @@ fun SplashScreen(onSplashComplete: () -> Unit) {
 fun MainApp() {
     var showSplash by remember { mutableStateOf(true) }
     val navController = rememberNavController()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val iconThemeManager = remember {
+        EntryPointAccessors.fromApplication(
+            context.applicationContext,
+            IconThemeManagerEntryPoint::class.java
+        ).iconThemeManager()
+    }
+    val iconTheme by iconThemeManager.iconTheme.collectAsState(initial = com.receiptkeeper.core.preferences.IconTheme.COLORFUL)
 
     if (showSplash) {
         SplashScreen(onSplashComplete = { showSplash = false })
     } else {
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            bottomBar = {
-                BottomNavigationBar(navController = navController)
+        CompositionLocalProvider(
+            LocalIconTheme provides iconTheme
+        ) {
+            Scaffold(
+                modifier = Modifier.fillMaxSize(),
+                bottomBar = {
+                    BottomNavigationBar(navController = navController)
+                }
+            ) { innerPadding ->
+                NavGraph(
+                    navController = navController,
+                    modifier = Modifier.padding(innerPadding)
+                )
             }
-        ) { innerPadding ->
-            NavGraph(
-                navController = navController,
-                modifier = Modifier.padding(innerPadding)
-            )
         }
     }
+}
+
+/**
+ * Hilt entry point for accessing IconThemeManager
+ */
+@dagger.hilt.EntryPoint
+@dagger.hilt.InstallIn(dagger.hilt.components.SingletonComponent::class)
+interface IconThemeManagerEntryPoint {
+    fun iconThemeManager(): IconThemeManager
 }
