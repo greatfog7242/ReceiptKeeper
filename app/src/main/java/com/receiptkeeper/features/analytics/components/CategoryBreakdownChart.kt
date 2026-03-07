@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -92,8 +93,11 @@ private fun TreeMapChart(
         return
     }
 
+    // Aggregate small categories (<10%) into "Other" for tree view only
+    val aggregatedData = aggregateSmallCategoriesForTreeView(categorySpending, total)
+    
     // Simple treemap layout algorithm
-    val rectangles = calculateTreemap(categorySpending, categories, total)
+    val rectangles = calculateTreemap(aggregatedData, categories, total)
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Box(
@@ -116,43 +120,56 @@ private fun TreeMapChart(
 
         // Legend
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            categorySpending.forEach { spending ->
-                val category = categories.find { it.id == spending.categoryId }
-                if (category != null) {
-                    val percentage = if (totalSpending > 0) (spending.total / totalSpending * 100).toInt() else 0
-                    val categoryColor = try {
+            aggregatedData.forEach { spending ->
+                val isOtherCategory = spending.categoryId == -1L
+                val category = if (!isOtherCategory) categories.find { it.id == spending.categoryId } else null
+                val percentage = if (totalSpending > 0) (spending.total / totalSpending * 100).toInt() else 0
+                val categoryColor = if (!isOtherCategory && category != null) {
+                    try {
                         Color(android.graphics.Color.parseColor(category.colorHex))
                     } catch (e: Exception) {
                         MaterialTheme.colorScheme.primary
                     }
+                } else {
+                    // Gray color for "Other" category
+                    MaterialTheme.colorScheme.outline
+                }
 
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = IconHelper.getIcon(category.iconName),
-                                contentDescription = null,
-                                tint = categoryColor,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = category.name,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                        Icon(
+                            imageVector = if (!isOtherCategory && category != null) {
+                                IconHelper.getIcon(category.iconName)
+                            } else {
+                                // MoreHoriz icon for "Other" category
+                                Icons.Default.MoreHoriz
+                            },
+                            contentDescription = null,
+                            tint = categoryColor,
+                            modifier = Modifier.size(16.dp)
+                        )
                         Text(
-                            text = "$percentage%",
+                            text = if (!isOtherCategory && category != null) {
+                                category.name
+                            } else {
+                                "Other"
+                            },
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                    Text(
+                        text = "$percentage%",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    )
                 }
             }
         }
@@ -167,6 +184,53 @@ private data class TreemapRect(
     val color: Int,
     val label: String
 )
+
+/**
+ * Aggregates categories with less than 10% of total spending into "Other" category
+ * "Other" category ID is -1 to distinguish it from real categories
+ * Only for tree view - other chart types show individual categories
+ */
+private fun aggregateSmallCategoriesForTreeView(
+    categorySpendingList: List<CategorySpending>,
+    totalSpending: Double
+): List<CategorySpending> {
+    if (categorySpendingList.isEmpty()) return emptyList()
+    
+    if (totalSpending == 0.0) return emptyList()
+    
+    // Calculate percentage for each category
+    val categoriesWithPercentage = categorySpendingList.map { spending ->
+        val percentage = (spending.total / totalSpending) * 100
+        spending to percentage
+    }
+    
+    // Separate categories above and below 10%
+    val (majorCategories, minorCategories) = categoriesWithPercentage.partition { (_, percentage) -> 
+        percentage >= 10.0 
+    }
+    
+    // If no minor categories, return original list
+    if (minorCategories.isEmpty()) {
+        return categorySpendingList
+    }
+    
+    // Calculate total for major categories
+    val majorTotal = majorCategories.sumOf { (spending, _) -> spending.total }
+    
+    // Create "Other" category with remaining total
+    val otherTotal = totalSpending - majorTotal
+    
+    // Build result list with major categories and "Other"
+    val result = mutableListOf<CategorySpending>()
+    result.addAll(majorCategories.map { (spending, _) -> spending })
+    
+    if (otherTotal > 0.0) {
+        // Use -1 as ID for "Other" category
+        result.add(CategorySpending(categoryId = -1, total = otherTotal))
+    }
+    
+    return result
+}
 
 private fun calculateTreemap(
     categorySpending: List<CategorySpending>,
@@ -190,14 +254,18 @@ private fun calculateTreemap(
 
     sorted.forEachIndexed { index, spending ->
         val ratio = (spending.total / total).toFloat()
-        val category = categories.find { it.id == spending.categoryId }
-        val color = category?.let {
+        val isOtherCategory = spending.categoryId == -1L
+        val category = if (!isOtherCategory) categories.find { it.id == spending.categoryId } else null
+        val color = if (!isOtherCategory && category != null) {
             try {
-                android.graphics.Color.parseColor(it.colorHex)
+                android.graphics.Color.parseColor(category.colorHex)
             } catch (e: Exception) {
                 android.graphics.Color.GRAY
             }
-        } ?: android.graphics.Color.GRAY
+        } else {
+            // Gray color for "Other" category
+            android.graphics.Color.GRAY
+        }
 
         val rectWidth: Float
         val rectHeight: Float
@@ -205,14 +273,16 @@ private fun calculateTreemap(
         if (isHorizontal) {
             rectWidth = remainingWidth * ratio
             rectHeight = height
-            rectangles.add(TreemapRect(currentX, currentY, rectWidth, rectHeight, color, category?.name ?: ""))
+            rectangles.add(TreemapRect(currentX, currentY, rectWidth, rectHeight, color, 
+                if (!isOtherCategory && category != null) category.name else "Other"))
 
             currentX += rectWidth
             remainingWidth -= rectWidth
         } else {
             rectWidth = width
             rectHeight = remainingHeight * ratio
-            rectangles.add(TreemapRect(currentX, currentY, rectWidth, rectHeight, color, category?.name ?: ""))
+            rectangles.add(TreemapRect(currentX, currentY, rectWidth, rectHeight, color, 
+                if (!isOtherCategory && category != null) category.name else "Other"))
 
             currentY += rectHeight
             remainingHeight -= rectHeight
