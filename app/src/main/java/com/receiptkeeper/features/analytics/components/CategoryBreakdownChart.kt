@@ -298,8 +298,8 @@ private fun calculateTreemap(
 
     var currentX = 0f
     var currentY = 0f
-    var remainingWidth = width
-    var remainingHeight = height
+    var rowHeight = height  // Height of current row
+    var columnWidth = width // Width of current column
     var isHorizontal = true
 
     sorted.forEachIndexed { index, spending ->
@@ -321,25 +321,44 @@ private fun calculateTreemap(
         val rectHeight: Float
 
         if (isHorizontal) {
-            rectWidth = remainingWidth * ratio
-            rectHeight = remainingHeight
+            // Horizontal slice in current row
+            rectWidth = columnWidth * ratio
+            rectHeight = rowHeight
             rectangles.add(TreemapRect(currentX, currentY, rectWidth, rectHeight, color, 
                 if (!isOtherCategory && category != null) category.name else "Other"))
 
             currentX += rectWidth
-            remainingWidth -= rectWidth
+            columnWidth -= rectWidth
         } else {
-            rectWidth = remainingWidth
-            rectHeight = remainingHeight * ratio
+            // Vertical slice in current column
+            rectWidth = columnWidth
+            rectHeight = rowHeight * ratio
             rectangles.add(TreemapRect(currentX, currentY, rectWidth, rectHeight, color, 
                 if (!isOtherCategory && category != null) category.name else "Other"))
 
             currentY += rectHeight
-            remainingHeight -= rectHeight
+            rowHeight -= rectHeight
         }
 
-        // Alternate direction
-        if (index % 2 == 1) isHorizontal = !isHorizontal
+        // Alternate direction and reset position when switching
+        if (index % 2 == 1) {
+            isHorizontal = !isHorizontal
+            if (isHorizontal) {
+                // Switching from vertical to horizontal
+                // Move to next row
+                currentY += rowHeight  // Move down by remaining row height
+                currentX = 0f  // Reset to left edge
+                rowHeight = height - currentY  // New row height is remaining space
+                columnWidth = width  // Reset column width for new row
+            } else {
+                // Switching from horizontal to vertical
+                // Move to next column
+                currentX += columnWidth  // Move right by remaining column width
+                currentY = 0f  // Reset to top edge
+                columnWidth = width - currentX  // New column width is remaining space
+                rowHeight = height  // Reset row height for new column
+            }
+        }
     }
 
     return rectangles
