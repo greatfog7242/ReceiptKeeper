@@ -23,6 +23,13 @@ import com.receiptkeeper.domain.model.Category
 import kotlin.math.max
 import android.graphics.RectF
 
+// Default colors for category treemap (same as vendor treemap)
+private val categoryTreemapColors = listOf(
+    "#4285F4", "#DB4437", "#F4B400", "#0F9D58",
+    "#AB47BC", "#00ACC1", "#FF7043", "#8D6E63",
+    "#78909C", "#5C6BC0", "#26A69A", "#EC407A"
+)
+
 enum class ChartType {
     TREEMAP,
     PIE,
@@ -309,13 +316,14 @@ private fun calculateTreemap(
     val width = canvasWidth - 2 * padding
     val height = canvasHeight - 2 * padding
     
-    // Create treemap nodes with colors
-    val nodes = categorySpending.map { spending ->
+    // Create treemap nodes with colors (same random color scheme as vendor treemap)
+    val nodes = categorySpending.mapIndexed { index, spending ->
         val isOtherCategory = spending.categoryId == -1L
         val category = if (!isOtherCategory) categories.find { it.id == spending.categoryId } else null
-        val color = if (!isOtherCategory && category != null) {
+        val colorIndex = index % categoryTreemapColors.size
+        val color = if (!isOtherCategory) {
             try {
-                android.graphics.Color.parseColor(category.colorHex)
+                android.graphics.Color.parseColor(categoryTreemapColors[colorIndex])
             } catch (e: Exception) {
                 android.graphics.Color.GRAY
             }
