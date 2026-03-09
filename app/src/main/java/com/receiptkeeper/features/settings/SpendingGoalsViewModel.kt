@@ -2,6 +2,7 @@ package com.receiptkeeper.features.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.receiptkeeper.core.preferences.PreferencesManager
 import com.receiptkeeper.data.local.entity.GoalPeriod
 import com.receiptkeeper.data.repository.CategoryRepository
 import com.receiptkeeper.data.repository.SpendingGoalRepository
@@ -19,7 +20,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SpendingGoalsViewModel @Inject constructor(
     private val spendingGoalRepository: SpendingGoalRepository,
-    private val categoryRepository: CategoryRepository
+    private val categoryRepository: CategoryRepository,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SpendingGoalsUiState())
@@ -30,6 +32,9 @@ class SpendingGoalsViewModel @Inject constructor(
 
     val categories: StateFlow<List<Category>> = categoryRepository.getAllCategories()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val treemapThreshold: StateFlow<Double> = preferencesManager.treemapThreshold
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 5.0)
 
     /**
      * Create a new spending goal
@@ -82,6 +87,34 @@ class SpendingGoalsViewModel @Inject constructor(
     }
 
     /**
+     * Show threshold dialog
+     */
+    fun showThresholdDialog() {
+        _uiState.update { it.copy(showThresholdDialog = true) }
+    }
+
+    /**
+     * Hide threshold dialog
+     */
+    fun hideThresholdDialog() {
+        _uiState.update { it.copy(showThresholdDialog = false) }
+    }
+
+    /**
+     * Update treemap threshold
+     */
+    fun updateTreemapThreshold(threshold: Double) {
+        viewModelScope.launch {
+            try {
+                preferencesManager.updateTreemapThreshold(threshold)
+                hideThresholdDialog()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = "Failed to update threshold: ${e.message}") }
+            }
+        }
+    }
+
+    /**
      * Clear error message
      */
     fun clearError() {
@@ -93,5 +126,6 @@ class SpendingGoalsViewModel @Inject constructor(
  * UI state for spending goals screen
  */
 data class SpendingGoalsUiState(
-    val error: String? = null
+    val error: String? = null,
+    val showThresholdDialog: Boolean = false
 )

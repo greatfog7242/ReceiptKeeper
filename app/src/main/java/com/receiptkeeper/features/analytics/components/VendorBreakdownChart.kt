@@ -38,6 +38,7 @@ fun VendorBreakdownChart(
     vendors: List<Vendor>,
     totalSpending: Double,
     chartType: ChartType = ChartType.TREEMAP,
+    treemapThreshold: Double = 5.0,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -67,7 +68,7 @@ fun VendorBreakdownChart(
                 )
             } else {
                 when (chartType) {
-                    ChartType.TREEMAP -> VendorTreeMapChart(vendorSpending, vendors, totalSpending)
+                    ChartType.TREEMAP -> VendorTreeMapChart(vendorSpending, vendors, totalSpending, treemapThreshold)
                     ChartType.PIE -> VendorPieChart(vendorSpending, vendors, totalSpending)
                     ChartType.STACKED_BAR -> VendorStackedBarChart(vendorSpending, vendors, totalSpending)
                 }
@@ -80,7 +81,8 @@ fun VendorBreakdownChart(
 private fun VendorTreeMapChart(
     vendorSpending: List<VendorSpending>,
     vendors: List<Vendor>,
-    totalSpending: Double
+    totalSpending: Double,
+    threshold: Double = 5.0
 ) {
     val total = vendorSpending.sumOf { it.total }
     if (total == 0.0) {
@@ -99,8 +101,8 @@ private fun VendorTreeMapChart(
         return
     }
 
-    // Aggregate small vendors (<10%) into "Other" for tree view only
-    val aggregatedData = aggregateSmallVendorsForTreeView(vendorSpending, total)
+    // Aggregate small vendors (<threshold%) into "Other" for tree view only
+    val aggregatedData = aggregateSmallVendorsForTreeView(vendorSpending, total, threshold)
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Box(
@@ -200,13 +202,14 @@ private data class VendorTreemapRect(
 )
 
 /**
- * Aggregates vendors with less than 10% of total spending into "Other" vendor
+ * Aggregates vendors with less than threshold% of total spending into "Other" vendor
  * "Other" vendor ID is -1 to distinguish it from real vendors
  * Only for tree view - other chart types show individual vendors
  */
 private fun aggregateSmallVendorsForTreeView(
     vendorSpendingList: List<VendorSpending>,
-    totalSpending: Double
+    totalSpending: Double,
+    threshold: Double = 5.0
 ): List<VendorSpending> {
     if (vendorSpendingList.isEmpty()) return emptyList()
     
@@ -218,9 +221,9 @@ private fun aggregateSmallVendorsForTreeView(
         spending to percentage
     }
     
-    // Separate vendors above and below 10%
+    // Separate vendors above and below threshold%
     val (majorVendors, minorVendors) = vendorsWithPercentage.partition { (_, percentage) -> 
-        percentage >= 10.0 
+        percentage >= threshold 
     }
     
     // If no minor vendors, return original list

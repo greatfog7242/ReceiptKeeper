@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.receiptkeeper.data.local.entity.GoalPeriod
@@ -29,11 +30,13 @@ fun SpendingGoalsScreen(
 ) {
     val spendingGoals by viewModel.spendingGoals.collectAsState()
     val categories by viewModel.categories.collectAsState()
+    val treemapThreshold by viewModel.treemapThreshold.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
 
     var showDialog by remember { mutableStateOf(false) }
     var editingGoal by remember { mutableStateOf<SpendingGoal?>(null) }
     var deleteConfirmGoal by remember { mutableStateOf<SpendingGoal?>(null) }
+    var thresholdInput by remember { mutableStateOf(treemapThreshold.toString()) }
 
     Scaffold(
         topBar = {
@@ -108,6 +111,16 @@ fun SpendingGoalsScreen(
                             }
                         )
                     }
+
+                    // Treemap threshold setting
+                    item {
+                        TreemapThresholdCard(
+                            currentThreshold = treemapThreshold,
+                            onThresholdClick = {
+                                viewModel.showThresholdDialog()
+                            }
+                        )
+                    }
                 }
             }
 
@@ -174,6 +187,71 @@ fun SpendingGoalsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { deleteConfirmGoal = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // Treemap threshold dialog
+    if (uiState.showThresholdDialog) {
+        LaunchedEffect(uiState.showThresholdDialog) {
+            // Reset threshold input when dialog opens
+            thresholdInput = treemapThreshold.toString()
+        }
+        
+        AlertDialog(
+            onDismissRequest = { viewModel.hideThresholdDialog() },
+            title = { Text("Treemap Threshold") },
+            text = {
+                Column {
+                    Text(
+                        text = "Set the minimum percentage for a category to appear individually in treemap charts.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedTextField(
+                        value = thresholdInput,
+                        onValueChange = { thresholdInput = it },
+                        label = { Text("Threshold (%)") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth(),
+                        suffix = { Text("%") },
+                        isError = thresholdInput.toDoubleOrNull()?.let { it !in 1.0..50.0 } ?: true
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Categories below this percentage will be combined into 'Other'",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    if (thresholdInput.toDoubleOrNull()?.let { it !in 1.0..50.0 } ?: true) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Please enter a value between 1 and 50",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val threshold = thresholdInput.toDoubleOrNull()
+                        if (threshold != null && threshold in 1.0..50.0) {
+                            viewModel.updateTreemapThreshold(threshold)
+                        }
+                    },
+                    enabled = thresholdInput.toDoubleOrNull()?.let { it in 1.0..50.0 } ?: false
+                ) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.hideThresholdDialog() }) {
                     Text("Cancel")
                 }
             }
@@ -362,4 +440,48 @@ private fun SpendingGoalDialog(
             }
         }
     )
+}
+
+/**
+ * Card for displaying and editing treemap threshold setting
+ */
+@Composable
+private fun TreemapThresholdCard(
+    currentThreshold: Double,
+    onThresholdClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = "Treemap Threshold",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Categories below ${"%.1f".format(currentThreshold)}% are combined into 'Other'",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            
+            IconButton(onClick = onThresholdClick) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Edit threshold"
+                )
+            }
+        }
+    }
 }

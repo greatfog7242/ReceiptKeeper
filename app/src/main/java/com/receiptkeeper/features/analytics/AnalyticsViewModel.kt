@@ -2,6 +2,7 @@ package com.receiptkeeper.features.analytics
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.receiptkeeper.core.preferences.PreferencesManager
 import com.receiptkeeper.data.local.entity.CategorySpending
 import com.receiptkeeper.data.local.entity.VendorSpending
 import com.receiptkeeper.data.local.entity.DailySpending
@@ -24,7 +25,8 @@ class AnalyticsViewModel @Inject constructor(
     private val spendingGoalRepository: SpendingGoalRepository,
     private val vendorRepository: VendorRepository,
     private val bookRepository: BookRepository,
-    private val paymentMethodRepository: PaymentMethodRepository
+    private val paymentMethodRepository: PaymentMethodRepository,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AnalyticsUiState())
@@ -101,6 +103,10 @@ class AnalyticsViewModel @Inject constructor(
 
     val paymentMethods: StateFlow<List<PaymentMethod>> = paymentMethodRepository.getAllPaymentMethods()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // Treemap threshold from preferences
+    val treemapThreshold: StateFlow<Double> = preferencesManager.treemapThreshold
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 5.0)
 
     // Daily accumulated spending for trend chart
     val dailyAccumulatedSpending: StateFlow<List<DailySpending>> = combine(

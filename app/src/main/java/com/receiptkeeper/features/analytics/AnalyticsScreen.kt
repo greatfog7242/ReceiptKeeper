@@ -53,6 +53,7 @@ fun AnalyticsScreen(
     val books by viewModel.books.collectAsState()
     val paymentMethods by viewModel.paymentMethods.collectAsState()
     val dailyAccumulatedSpending by viewModel.dailyAccumulatedSpending.collectAsState()
+    val treemapThreshold by viewModel.treemapThreshold.collectAsState()
 
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -422,7 +423,8 @@ fun AnalyticsScreen(
                 categorySpending = categoryBreakdown,
                 categories = categories,
                 totalSpending = totalSpending,
-                chartType = selectedCategoryChartType
+                chartType = selectedCategoryChartType,
+                treemapThreshold = treemapThreshold
             )
 
             // Vendor Breakdown Chart
@@ -485,7 +487,8 @@ fun AnalyticsScreen(
                 vendorSpending = vendorBreakdown,
                 vendors = vendors,
                 totalSpending = totalSpending,
-                chartType = selectedVendorChartType
+                chartType = selectedVendorChartType,
+                treemapThreshold = treemapThreshold
             )
         }
     }

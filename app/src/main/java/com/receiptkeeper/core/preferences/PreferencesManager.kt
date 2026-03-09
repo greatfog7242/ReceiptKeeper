@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
@@ -19,6 +20,7 @@ class PreferencesManager @Inject constructor(
 ) {
     private companion object {
         val ICON_THEME_KEY = stringPreferencesKey("icon_theme")
+        val TREEMAP_THRESHOLD_KEY = doublePreferencesKey("treemap_threshold")
     }
 
     /**
@@ -36,6 +38,23 @@ class PreferencesManager @Inject constructor(
     suspend fun updateIconTheme(theme: IconTheme) {
         context.dataStore.edit { preferences ->
             preferences[ICON_THEME_KEY] = theme.name
+        }
+    }
+
+    /**
+     * Get the treemap threshold percentage
+     */
+    val treemapThreshold: Flow<Double> = context.dataStore.data
+        .map { preferences ->
+            preferences[TREEMAP_THRESHOLD_KEY] ?: 5.0 // Default: 5%
+        }
+
+    /**
+     * Update the treemap threshold percentage
+     */
+    suspend fun updateTreemapThreshold(threshold: Double) {
+        context.dataStore.edit { preferences ->
+            preferences[TREEMAP_THRESHOLD_KEY] = threshold
         }
     }
 }

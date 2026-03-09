@@ -38,6 +38,7 @@ fun CategoryBreakdownChart(
     categories: List<Category>,
     totalSpending: Double,
     chartType: ChartType = ChartType.TREEMAP,
+    treemapThreshold: Double = 5.0,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -67,7 +68,7 @@ fun CategoryBreakdownChart(
                 )
             } else {
                 when (chartType) {
-                    ChartType.TREEMAP -> TreeMapChart(categorySpending, categories, totalSpending)
+                    ChartType.TREEMAP -> TreeMapChart(categorySpending, categories, totalSpending, treemapThreshold)
                     ChartType.PIE -> PieChart(categorySpending, categories, totalSpending)
                     ChartType.STACKED_BAR -> StackedBarChart(categorySpending, categories, totalSpending)
                 }
@@ -80,7 +81,8 @@ fun CategoryBreakdownChart(
 private fun TreeMapChart(
     categorySpending: List<CategorySpending>,
     categories: List<Category>,
-    totalSpending: Double
+    totalSpending: Double,
+    treemapThreshold: Double
 ) {
     val total = categorySpending.sumOf { it.total }
     if (total == 0.0) {
@@ -99,8 +101,8 @@ private fun TreeMapChart(
         return
     }
 
-    // Aggregate small categories (<10%) into "Other" for tree view only
-    val aggregatedData = aggregateSmallCategoriesForTreeView(categorySpending, totalSpending)
+    // Aggregate small categories into "Other" for tree view only
+    val aggregatedData = aggregateSmallCategoriesForTreeView(categorySpending, totalSpending, treemapThreshold)
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Box(
@@ -195,13 +197,14 @@ private data class TreemapRect(
 )
 
 /**
- * Aggregates categories with less than 10% of total spending into "Other" category
+ * Aggregates categories with less than threshold% of total spending into "Other" category
  * "Other" category ID is -1 to distinguish it from real categories
  * Only for tree view - other chart types show individual categories
  */
 private fun aggregateSmallCategoriesForTreeView(
     categorySpendingList: List<CategorySpending>,
-    totalSpending: Double
+    totalSpending: Double,
+    threshold: Double
 ): List<CategorySpending> {
     if (categorySpendingList.isEmpty()) return emptyList()
     
@@ -213,9 +216,9 @@ private fun aggregateSmallCategoriesForTreeView(
         spending to percentage
     }
     
-    // Separate categories above and below 10%
+    // Separate categories above and below threshold
     val (majorCategories, minorCategories) = categoriesWithPercentage.partition { (_, percentage) -> 
-        percentage >= 10.0 
+        percentage >= threshold
     }
     
     // If no minor categories, return original list
