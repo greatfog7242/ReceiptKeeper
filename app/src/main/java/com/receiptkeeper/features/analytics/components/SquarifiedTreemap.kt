@@ -33,7 +33,7 @@ class SquarifiedTreemap {
         if (totalValue == 0.0) return
         
         // 2. Normalize values to the area of the bounds
-        val areaScale = (bounds.width() * bounds.height()) / totalValue
+        val areaScale = (bounds.width() * bounds.height()) / totalValue.toFloat()
         val areas = sortedItems.map { it.value * areaScale }
         
         // 3. Start squarification
@@ -134,25 +134,25 @@ class SquarifiedTreemap {
             if (isHorizontal) {
                 // Horizontal layout
                 val height = bounds.height()
-                val width = (area / totalArea) * bounds.width()
+                val width = (area / totalArea) * bounds.width().toDouble()
                 node.rect = RectF(
                     bounds.left + currentPos,
                     bounds.top,
-                    bounds.left + currentPos + width,
+                    bounds.left + currentPos + width.toFloat(),
                     bounds.top + height
                 )
-                currentPos += width
+                currentPos += width.toFloat()
             } else {
                 // Vertical layout
                 val width = bounds.width()
-                val height = (area / totalArea) * bounds.height()
+                val height = (area / totalArea) * bounds.height().toDouble()
                 node.rect = RectF(
                     bounds.left,
                     bounds.top + currentPos,
                     bounds.left + width,
-                    bounds.top + currentPos + height
+                    bounds.top + currentPos + height.toFloat()
                 )
-                currentPos += height
+                currentPos += height.toFloat()
             }
         }
     }

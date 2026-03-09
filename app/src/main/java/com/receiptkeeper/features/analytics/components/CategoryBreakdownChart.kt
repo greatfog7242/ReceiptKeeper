@@ -21,6 +21,7 @@ import com.receiptkeeper.core.util.IconHelper
 import com.receiptkeeper.data.local.entity.CategorySpending
 import com.receiptkeeper.domain.model.Category
 import kotlin.math.max
+import android.graphics.RectF
 
 enum class ChartType {
     TREEMAP,
