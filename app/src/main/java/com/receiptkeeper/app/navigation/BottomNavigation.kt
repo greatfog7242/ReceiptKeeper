@@ -42,7 +42,7 @@ fun BottomNavigationBar(
         navItems.forEach { item ->
             NavigationBarItem(
                 icon = {
-                    val iconSize = if (item.route == Routes.Scan) 42.dp else 18.dp
+                    val iconSize = if (item.route == Routes.Scan) 42.dp else 24.dp
                     if (item.iconResId != null) {
                         // Colorful theme: WebP images with original colors
                         Icon(
