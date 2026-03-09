@@ -318,7 +318,7 @@ private fun VendorDetailRow(
                     model = imageModel,
                     contentDescription = vendorName,
                     modifier = Modifier
-                        .size(24.dp)
+                        .size(48.dp)
                         .clip(CircleShape),
                     contentScale = ContentScale.Crop
                 )
@@ -327,7 +327,7 @@ private fun VendorDetailRow(
                     imageVector = IconHelper.getIconWithTheme(vendorIconName),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(48.dp)
                 )
             }
             Text(

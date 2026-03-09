@@ -105,7 +105,7 @@ fun ReceiptListItem(
                             model = imageModel,
                             contentDescription = vendorName,
                             modifier = Modifier
-                                .size(20.dp)
+                                .size(40.dp)
                                 .clip(CircleShape),
                             contentScale = ContentScale.Crop
                         )
@@ -114,7 +114,7 @@ fun ReceiptListItem(
                             imageVector = IconHelper.getIconWithTheme(vendorIconName),
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(36.dp)
                         )
                     }
                     Text(
