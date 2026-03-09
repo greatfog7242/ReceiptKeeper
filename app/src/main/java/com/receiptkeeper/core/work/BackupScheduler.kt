@@ -32,16 +32,10 @@ class BackupScheduler @Inject constructor(
                 val batteryOptimizationStatus = BatteryOptimizationHelper.checkBatteryOptimizationStatus(context)
                 Log.d(TAG, batteryOptimizationStatus)
                 
-                // Cancel any existing backup work
-                WorkManager.getInstance(context).cancelUniqueWork(BackupWorker.WORK_NAME)
-
                 // Create constraints for the backup work
                 // Use minimal constraints to ensure backup runs reliably
                 val constraints = Constraints.Builder()
                     .setRequiredNetworkType(NetworkType.NOT_REQUIRED) // Backup doesn't need network
-                    // Remove battery and storage constraints to ensure backup runs
-                    // .setRequiresBatteryNotLow(true) // Removed: prevents backup when battery is low
-                    // .setRequiresStorageNotLow(true) // Removed: prevents backup when storage is low
                     .build()
 
                 // Create a PeriodicWorkRequest that runs daily at 5:00 AM
@@ -59,10 +53,12 @@ class BackupScheduler @Inject constructor(
                     .addTag("backup")
                     .build()
 
-                // Enqueue the work with a unique name
+                // Use KEEP so re-scheduling on app restart doesn't reset the 24-hour timer.
+                // REPLACE was cancelling any pending work and restarting the delay on every
+                // app process start, which meant the backup never had a chance to fire.
                 WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                     BackupWorker.WORK_NAME,
-                    ExistingPeriodicWorkPolicy.REPLACE, // Replace existing schedule to ensure it's updated
+                    ExistingPeriodicWorkPolicy.KEEP,
                     backupRequest
                 )
                 

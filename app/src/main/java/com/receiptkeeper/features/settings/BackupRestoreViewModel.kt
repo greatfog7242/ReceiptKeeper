@@ -92,8 +92,9 @@ class BackupRestoreViewModel @Inject constructor(
         _uiState.update { it.copy(isAutoBackupEnabled = enabled) }
         
         if (enabled) {
-            // Reschedule backup if enabling
             backupScheduler.scheduleDailyBackup()
+        } else {
+            backupScheduler.cancelDailyBackup()
         }
     }
 
