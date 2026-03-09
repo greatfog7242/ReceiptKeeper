@@ -44,21 +44,22 @@ fun BottomNavigationBar(
                 icon = {
                     val iconSize = if (item.route == Routes.Scan) 48.dp else 24.dp
                     if (item.iconResId != null) {
-                        // Colorful theme: WebP images with tint
+                        // Colorful theme: WebP images
                         val isSelected = currentDestination?.hierarchy?.any { it.route == item.route.route } == true
-                        val tintColor = if (isSelected) Color(0xFF4CAF50) else Color(0xFF9E9E9E)
                         Icon(
                             painter = painterResource(id = item.iconResId),
                             contentDescription = item.label,
                             modifier = Modifier.size(iconSize),
-                            tint = tintColor // Apply gray/green tint
+                            tint = if (isSelected) Color.Unspecified else Color(0xFF9E9E9E) // Original color when selected, gray when unselected
                         )
                     } else if (item.iconVector != null) {
-                        // Monochrome theme: Material Icons with theme tint
+                        // Monochrome theme: Material Icons
+                        val isSelected = currentDestination?.hierarchy?.any { it.route == item.route.route } == true
                         Icon(
                             imageVector = item.iconVector,
                             contentDescription = item.label,
-                            modifier = Modifier.size(iconSize)
+                            modifier = Modifier.size(iconSize),
+                            tint = if (isSelected) MaterialTheme.colorScheme.primary else Color(0xFF9E9E9E) // Theme primary color when selected, gray when unselected
                         )
                     }
                 },
@@ -77,8 +78,8 @@ fun BottomNavigationBar(
                     }
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color(0xFF4CAF50), // Green for selected
-                    selectedTextColor = Color(0xFF4CAF50), // Green text for selected
+                    selectedIconColor = MaterialTheme.colorScheme.primary, // Theme primary color for selected
+                    selectedTextColor = MaterialTheme.colorScheme.primary, // Theme primary color text for selected
                     indicatorColor = Color.Transparent, // Remove indicator background
                     unselectedIconColor = Color(0xFF9E9E9E), // Gray for unselected
                     unselectedTextColor = Color(0xFF9E9E9E) // Gray text for unselected
