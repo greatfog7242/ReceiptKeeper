@@ -145,9 +145,10 @@ private fun TreeMapChart(
                 val isOtherCategory = spending.categoryId == -1L
                 val category = if (!isOtherCategory) categories.find { it.id == spending.categoryId } else null
                 val percentage = adjustedPercentages[index]
-                val categoryColor = if (!isOtherCategory && category != null) {
+                val colorIndex = index % categoryTreemapColors.size
+                val categoryColor = if (!isOtherCategory) {
                     try {
-                        Color(android.graphics.Color.parseColor(category.colorHex))
+                        Color(android.graphics.Color.parseColor(categoryTreemapColors[colorIndex]))
                     } catch (e: Exception) {
                         MaterialTheme.colorScheme.primary
                     }
