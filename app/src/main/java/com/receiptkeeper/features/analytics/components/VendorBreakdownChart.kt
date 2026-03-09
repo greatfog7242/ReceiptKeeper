@@ -20,6 +20,7 @@ import com.receiptkeeper.core.util.IconHelper
 import com.receiptkeeper.data.local.entity.VendorSpending
 import com.receiptkeeper.domain.model.Vendor
 import kotlin.math.max
+import android.graphics.RectF
 
 // Default colors for vendors without brand icons
 private val vendorColors = listOf(
@@ -309,25 +310,9 @@ private fun calculateVendorTreemap(
     val padding = 8f
     val width = canvasWidth - 2 * padding
     val height = canvasHeight - 2 * padding
-    val totalArea = width * height
-
-    val sorted = vendorSpending.sortedByDescending { it.total }
-    val rectangles = mutableListOf<VendorTreemapRect>()
-
-    // Calculate percentages and target areas
-    val itemsWithPercentages = sorted.mapIndexed { index, spending ->
-        val percentage = spending.total / total
-        val targetArea = totalArea * percentage.toFloat()
-        Triple(spending, percentage, targetArea)
-    }
-
-    // Simple algorithm: always use full dimensions for each slice
-    var currentX = padding
-    var currentY = padding
-    var remainingWidth = width
-    var remainingHeight = height
-
-    itemsWithPercentages.forEachIndexed { index, (spending, percentage, targetArea) ->
+    
+    // Create treemap nodes with colors
+    val nodes = vendorSpending.mapIndexed { index, spending ->
         val isOtherVendor = spending.vendorId == -1L
         val vendor = if (!isOtherVendor) vendors.find { it.id == spending.vendorId } else null
         val colorIndex = index % vendorColors.size
@@ -341,46 +326,34 @@ private fun calculateVendorTreemap(
             // Gray color for "Other" vendor
             android.graphics.Color.GRAY
         }
-
-        val rectWidth: Float
-        val rectHeight: Float
-
-        // Decide direction based on which dimension gives better aspect ratio
-        // For horizontal slice: width = targetArea / remainingHeight
-        val horizontalWidth = targetArea / remainingHeight
-        val horizontalAspectRatio = max(horizontalWidth / remainingHeight, remainingHeight / horizontalWidth)
         
-        // For vertical slice: height = targetArea / remainingWidth  
-        val verticalHeight = targetArea / remainingWidth
-        val verticalAspectRatio = max(remainingWidth / verticalHeight, verticalHeight / remainingWidth)
+        val label = if (!isOtherVendor && vendor != null) vendor.name else "Other"
         
-        // Choose the direction that gives more square-like rectangle (lower aspect ratio)
-        val useHorizontal = horizontalAspectRatio <= verticalAspectRatio
-
-        if (useHorizontal) {
-            // Horizontal slice: full remaining height, calculated width
-            rectHeight = remainingHeight
-            rectWidth = targetArea / rectHeight
-            rectangles.add(VendorTreemapRect(currentX, currentY, rectWidth, rectHeight, color, 
-                if (!isOtherVendor && vendor != null) vendor.name else "Other"))
-
-            // Update for next item
-            currentX += rectWidth
-            remainingWidth -= rectWidth
-        } else {
-            // Vertical slice: full remaining width, calculated height
-            rectWidth = remainingWidth
-            rectHeight = targetArea / rectWidth
-            rectangles.add(VendorTreemapRect(currentX, currentY, rectWidth, rectHeight, color, 
-                if (!isOtherVendor && vendor != null) vendor.name else "Other"))
-
-            // Update for next item
-            currentY += rectHeight
-            remainingHeight -= rectHeight
-        }
+        TreemapNode(
+            name = label,
+            value = spending.total,
+            color = color
+        )
     }
 
-    return rectangles
+    // Create bounds with padding
+    val bounds = RectF(padding, padding, padding + width, padding + height)
+    
+    // Use squarified treemap algorithm
+    val treemap = SquarifiedTreemap()
+    treemap.layout(nodes, bounds)
+    
+    // Convert nodes to VendorTreemapRect objects
+    return nodes.map { node ->
+        VendorTreemapRect(
+            x = node.rect.left,
+            y = node.rect.top,
+            width = node.rect.width(),
+            height = node.rect.height(),
+            color = node.color,
+            label = node.name
+        )
+    }
 }
 
 @Composable

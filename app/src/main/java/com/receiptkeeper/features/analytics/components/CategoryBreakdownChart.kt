@@ -304,26 +304,9 @@ private fun calculateTreemap(
     val padding = 8f
     val width = canvasWidth - 2 * padding
     val height = canvasHeight - 2 * padding
-    val totalArea = width * height
-
-    // Sort by amount descending
-    val sorted = categorySpending.sortedByDescending { it.total }
-    val rectangles = mutableListOf<TreemapRect>()
-
-    // Calculate percentages and target areas
-    val itemsWithPercentages = sorted.map { spending ->
-        val percentage = spending.total / total
-        val targetArea = totalArea * percentage.toFloat()
-        Triple(spending, percentage, targetArea)
-    }
-
-    // Simple algorithm: always use full dimensions for each slice
-    var currentX = padding
-    var currentY = padding
-    var remainingWidth = width
-    var remainingHeight = height
-
-    itemsWithPercentages.forEachIndexed { index, (spending, percentage, targetArea) ->
+    
+    // Create treemap nodes with colors
+    val nodes = categorySpending.map { spending ->
         val isOtherCategory = spending.categoryId == -1L
         val category = if (!isOtherCategory) categories.find { it.id == spending.categoryId } else null
         val color = if (!isOtherCategory && category != null) {
@@ -336,46 +319,34 @@ private fun calculateTreemap(
             // Gray color for "Other" category
             android.graphics.Color.GRAY
         }
-
-        val rectWidth: Float
-        val rectHeight: Float
-
-        // Decide direction based on which dimension gives better aspect ratio
-        // For horizontal slice: width = targetArea / remainingHeight
-        val horizontalWidth = targetArea / remainingHeight
-        val horizontalAspectRatio = max(horizontalWidth / remainingHeight, remainingHeight / horizontalWidth)
         
-        // For vertical slice: height = targetArea / remainingWidth  
-        val verticalHeight = targetArea / remainingWidth
-        val verticalAspectRatio = max(remainingWidth / verticalHeight, verticalHeight / remainingWidth)
+        val label = if (!isOtherCategory && category != null) category.name else "Other"
         
-        // Choose the direction that gives more square-like rectangle (lower aspect ratio)
-        val useHorizontal = horizontalAspectRatio <= verticalAspectRatio
-
-        if (useHorizontal) {
-            // Horizontal slice: full remaining height, calculated width
-            rectHeight = remainingHeight
-            rectWidth = targetArea / rectHeight
-            rectangles.add(TreemapRect(currentX, currentY, rectWidth, rectHeight, color, 
-                if (!isOtherCategory && category != null) category.name else "Other"))
-
-            // Update for next item
-            currentX += rectWidth
-            remainingWidth -= rectWidth
-        } else {
-            // Vertical slice: full remaining width, calculated height
-            rectWidth = remainingWidth
-            rectHeight = targetArea / rectWidth
-            rectangles.add(TreemapRect(currentX, currentY, rectWidth, rectHeight, color, 
-                if (!isOtherCategory && category != null) category.name else "Other"))
-
-            // Update for next item
-            currentY += rectHeight
-            remainingHeight -= rectHeight
-        }
+        TreemapNode(
+            name = label,
+            value = spending.total,
+            color = color
+        )
     }
 
-    return rectangles
+    // Create bounds with padding
+    val bounds = RectF(padding, padding, padding + width, padding + height)
+    
+    // Use squarified treemap algorithm
+    val treemap = SquarifiedTreemap()
+    treemap.layout(nodes, bounds)
+    
+    // Convert nodes to TreemapRect objects
+    return nodes.map { node ->
+        TreemapRect(
+            x = node.rect.left,
+            y = node.rect.top,
+            width = node.rect.width(),
+            height = node.rect.height(),
+            color = node.color,
+            label = node.name
+        )
+    }
 }
 
 @Composable
