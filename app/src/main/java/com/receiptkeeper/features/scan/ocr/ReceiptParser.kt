@@ -37,8 +37,12 @@ object ReceiptParser {
         val usDatePattern = Regex("""(\d{1,2})/(\d{1,2})/(\d{4})""")
         usDatePattern.find(text)?.let { match ->
             try {
-                val (month, day, year) = match.destructured
-                return LocalDate.of(year.toInt(), month.toInt(), day.toInt())
+                val (month, day, yearStr) = match.destructured
+                val year = yearStr.toInt()
+                // Validate year is reasonable for receipts (2000-2100)
+                if (year in 2000..2100) {
+                    return LocalDate.of(year, month.toInt(), day.toInt())
+                }
             } catch (e: Exception) {
                 // Invalid date, continue
             }
@@ -48,8 +52,12 @@ object ReceiptParser {
         val euDatePattern = Regex("""(\d{1,2})-(\d{1,2})-(\d{4})""")
         euDatePattern.find(text)?.let { match ->
             try {
-                val (day, month, year) = match.destructured
-                return LocalDate.of(year.toInt(), month.toInt(), day.toInt())
+                val (day, month, yearStr) = match.destructured
+                val year = yearStr.toInt()
+                // Validate year is reasonable for receipts (2000-2100)
+                if (year in 2000..2100) {
+                    return LocalDate.of(year, month.toInt(), day.toInt())
+                }
             } catch (e: Exception) {
                 // Invalid date, continue
             }
@@ -59,8 +67,12 @@ object ReceiptParser {
         val isoDatePattern = Regex("""(\d{4})-(\d{2})-(\d{2})""")
         isoDatePattern.find(text)?.let { match ->
             try {
-                val (year, month, day) = match.destructured
-                return LocalDate.of(year.toInt(), month.toInt(), day.toInt())
+                val (yearStr, month, day) = match.destructured
+                val year = yearStr.toInt()
+                // Validate year is reasonable for receipts (2000-2100)
+                if (year in 2000..2100) {
+                    return LocalDate.of(year, month.toInt(), day.toInt())
+                }
             } catch (e: Exception) {
                 // Invalid date, continue
             }

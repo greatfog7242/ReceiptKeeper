@@ -377,8 +377,15 @@ private fun ExtractedDataForm(
         }
         val datePickerState = rememberDatePickerState(
             initialSelectedDateMillis = try {
-                // Use UTC to avoid timezone shifts
-                LocalDate.parse(dateText).atStartOfDay(java.time.ZoneId.of("UTC")).toInstant().toEpochMilli()
+                val parsedDate = LocalDate.parse(dateText)
+                // Validate year is within Material 3 DatePicker range (1900-2100)
+                if (parsedDate.year in 1900..2100) {
+                    // Use UTC to avoid timezone shifts
+                    parsedDate.atStartOfDay(java.time.ZoneId.of("UTC")).toInstant().toEpochMilli()
+                } else {
+                    // Fallback to current date if year is invalid
+                    LocalDate.now().atStartOfDay(java.time.ZoneId.of("UTC")).toInstant().toEpochMilli()
+                }
             } catch (e: Exception) {
                 LocalDate.now().atStartOfDay(java.time.ZoneId.of("UTC")).toInstant().toEpochMilli()
             }
@@ -390,7 +397,10 @@ private fun ExtractedDataForm(
                 dateText = newText
                 try {
                     val parsedDate = LocalDate.parse(newText, dateFormatter)
-                    onDateChange(parsedDate)
+                    // Validate year is within reasonable range (2000-2100 for receipts)
+                    if (parsedDate.year in 2000..2100) {
+                        onDateChange(parsedDate)
+                    }
                 } catch (e: Exception) {
                     // Invalid date format - ignore
                 }
