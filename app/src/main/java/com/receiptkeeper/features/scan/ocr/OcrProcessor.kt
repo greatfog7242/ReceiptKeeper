@@ -27,8 +27,15 @@ class OcrProcessor @Inject constructor(
     suspend fun processImage(imageUri: Uri, context: Context): OcrResult {
         return withContext(ioDispatcher) {
             try {
-                // Convert URI to file path and load as bitmap
-                val imagePath = imageUri.toString()
+                // Get file path from URI
+                val imagePath = imageUri.path ?: throw IllegalArgumentException("Invalid image URI")
+                val file = File(imagePath)
+                
+                if (!file.exists()) {
+                    throw IllegalArgumentException("Image file does not exist: $imagePath")
+                }
+
+                // Load bitmap from file
                 val bitmap = BitmapFactory.decodeFile(imagePath)
                     ?: throw IllegalArgumentException("Could not decode image file")
 
