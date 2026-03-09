@@ -40,6 +40,7 @@ fun VendorBreakdownChart(
     totalSpending: Double,
     chartType: ChartType = ChartType.TREEMAP,
     treemapThreshold: Double = 5.0,
+    treemapAspectRatio: Double = 1.0,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -340,7 +341,7 @@ private fun calculateVendorTreemap(
     val bounds = RectF(padding, padding, padding + width, padding + height)
     
     // Use squarified treemap algorithm
-    val treemap = SquarifiedTreemap()
+    val treemap = SquarifiedTreemap(targetRatio = treemapAspectRatio)
     treemap.layout(nodes, bounds)
     
     // Convert nodes to VendorTreemapRect objects

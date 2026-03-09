@@ -108,6 +108,10 @@ class AnalyticsViewModel @Inject constructor(
     val treemapThreshold: StateFlow<Double> = preferencesManager.treemapThreshold
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 5.0)
 
+    // Treemap target aspect ratio from preferences
+    val treemapAspectRatio: StateFlow<Double> = preferencesManager.treemapAspectRatio
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 1.0)
+
     // Daily accumulated spending for trend chart
     val dailyAccumulatedSpending: StateFlow<List<DailySpending>> = combine(
         _startDate,

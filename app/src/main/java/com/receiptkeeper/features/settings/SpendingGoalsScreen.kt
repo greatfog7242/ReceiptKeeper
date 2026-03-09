@@ -31,12 +31,14 @@ fun SpendingGoalsScreen(
     val spendingGoals by viewModel.spendingGoals.collectAsState()
     val categories by viewModel.categories.collectAsState()
     val treemapThreshold by viewModel.treemapThreshold.collectAsState()
+    val treemapAspectRatio by viewModel.treemapAspectRatio.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
 
     var showDialog by remember { mutableStateOf(false) }
     var editingGoal by remember { mutableStateOf<SpendingGoal?>(null) }
     var deleteConfirmGoal by remember { mutableStateOf<SpendingGoal?>(null) }
     var thresholdInput by remember { mutableStateOf(treemapThreshold.toString()) }
+    var aspectRatioInput by remember { mutableStateOf(treemapAspectRatio.toString()) }
 
     Scaffold(
         topBar = {
@@ -118,6 +120,16 @@ fun SpendingGoalsScreen(
                             currentThreshold = treemapThreshold,
                             onThresholdClick = {
                                 viewModel.showThresholdDialog()
+                            }
+                        )
+                    }
+
+                    // Treemap aspect ratio setting
+                    item {
+                        TreemapAspectRatioCard(
+                            currentRatio = treemapAspectRatio,
+                            onRatioClick = {
+                                viewModel.showAspectRatioDialog()
                             }
                         )
                     }
@@ -252,6 +264,71 @@ fun SpendingGoalsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { viewModel.hideThresholdDialog() }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // Treemap aspect ratio dialog
+    if (uiState.showAspectRatioDialog) {
+        LaunchedEffect(uiState.showAspectRatioDialog) {
+            // Reset aspect ratio input when dialog opens
+            aspectRatioInput = treemapAspectRatio.toString()
+        }
+        
+        AlertDialog(
+            onDismissRequest = { viewModel.hideAspectRatioDialog() },
+            title = { Text("Treemap Aspect Ratio") },
+            text = {
+                Column {
+                    Text(
+                        text = "Set the target width:height ratio for treemap rectangles.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedTextField(
+                        value = aspectRatioInput,
+                        onValueChange = { aspectRatioInput = it },
+                        label = { Text("Target Ratio") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.fillMaxWidth(),
+                        suffix = { Text(":1") },
+                        isError = aspectRatioInput.toDoubleOrNull()?.let { it !in 0.2..5.0 } ?: true
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Examples: 1.0 = squares, 2.0 = wide rectangles, 0.5 = tall rectangles",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    if (aspectRatioInput.toDoubleOrNull()?.let { it !in 0.2..5.0 } ?: true) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Please enter a value between 0.2 and 5.0",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val ratio = aspectRatioInput.toDoubleOrNull()
+                        if (ratio != null && ratio in 0.2..5.0) {
+                            viewModel.updateTreemapAspectRatio(ratio)
+                        }
+                    },
+                    enabled = aspectRatioInput.toDoubleOrNull()?.let { it in 0.2..5.0 } ?: false
+                ) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.hideAspectRatioDialog() }) {
                     Text("Cancel")
                 }
             }
@@ -480,6 +557,60 @@ private fun TreemapThresholdCard(
                 Icon(
                     imageVector = Icons.Default.Edit,
                     contentDescription = "Edit threshold"
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Card for displaying and editing treemap aspect ratio setting
+ */
+@Composable
+private fun TreemapAspectRatioCard(
+    currentRatio: Double,
+    onRatioClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = "Treemap Aspect Ratio",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Target rectangle shape: ${"%.1f".format(currentRatio)}:1 (width:height)",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = when {
+                        currentRatio < 0.8 -> "Tall rectangles"
+                        currentRatio > 1.2 -> "Wide rectangles"
+                        else -> "Square-like rectangles"
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                )
+            }
+            
+            IconButton(onClick = onRatioClick) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Edit aspect ratio"
                 )
             }
         }

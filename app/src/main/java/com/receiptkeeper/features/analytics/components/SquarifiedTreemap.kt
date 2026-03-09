@@ -15,8 +15,15 @@ data class TreemapNode(
 /**
  * Squarified treemap layout algorithm implementation
  * Based on the algorithm by Bruls, Huizing, and van Wijk (2000)
+ * 
+ * @param targetRatio The desired width/height ratio. 
+ * 1.0 = Squares (default)
+ * 2.0 = Rectangles twice as wide as they are tall
+ * 0.5 = Rectangles twice as tall as they are wide
  */
-class SquarifiedTreemap {
+class SquarifiedTreemap(
+    private val targetRatio: Double = 1.0
+) {
     
     /**
      * Layout items within the given bounds using squarified algorithm
@@ -43,16 +50,24 @@ class SquarifiedTreemap {
     /**
      * Calculate worst aspect ratio for a row of items
      * @param row List of areas in the current row
-     * @param width Width available for the row
-     * @return Worst aspect ratio in the row
+     * @param length Length available for the row
+     * @return Distance from target aspect ratio
      */
-    private fun worstAspectRatio(row: List<Double>, width: Float): Double {
+    private fun worstAspectRatio(row: List<Double>, length: Double): Double {
         if (row.isEmpty()) return Double.MAX_VALUE
-        val sum = row.sum()
-        val max = row.maxOrNull() ?: 0.0
-        val min = row.minOrNull() ?: 0.0
-        // Formula: max(w^2 * r_max / s^2, s^2 / (w^2 * r_min))
-        return maxOf((width * width * max) / (sum * sum), (sum * sum) / (width * width * min))
+        
+        val s = row.sum()
+        val rMax = row.maxOrNull() ?: 0.0
+        val rMin = row.minOrNull() ?: 0.0
+        
+        // Standard Squarified formulas for the bounds of the current row
+        val aspect1 = (length * length * rMax) / (s * s)
+        val aspect2 = (s * s) / (length * length * rMin)
+        
+        val currentWorst = maxOf(aspect1, aspect2)
+        
+        // We measure the distance from our TARGET ratio instead of 1.0
+        return Math.abs(currentWorst - targetRatio)
     }
 
     /**

@@ -21,6 +21,7 @@ class PreferencesManager @Inject constructor(
     private companion object {
         val ICON_THEME_KEY = stringPreferencesKey("icon_theme")
         val TREEMAP_THRESHOLD_KEY = doublePreferencesKey("treemap_threshold")
+        val TREEMAP_ASPECT_RATIO_KEY = doublePreferencesKey("treemap_aspect_ratio")
     }
 
     /**
@@ -55,6 +56,23 @@ class PreferencesManager @Inject constructor(
     suspend fun updateTreemapThreshold(threshold: Double) {
         context.dataStore.edit { preferences ->
             preferences[TREEMAP_THRESHOLD_KEY] = threshold
+        }
+    }
+
+    /**
+     * Get the treemap target aspect ratio (width/height)
+     */
+    val treemapAspectRatio: Flow<Double> = context.dataStore.data
+        .map { preferences ->
+            preferences[TREEMAP_ASPECT_RATIO_KEY] ?: 1.0 // Default: squares (1.0)
+        }
+
+    /**
+     * Update the treemap target aspect ratio
+     */
+    suspend fun updateTreemapAspectRatio(ratio: Double) {
+        context.dataStore.edit { preferences ->
+            preferences[TREEMAP_ASPECT_RATIO_KEY] = ratio
         }
     }
 }

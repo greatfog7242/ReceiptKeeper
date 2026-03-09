@@ -54,6 +54,7 @@ fun AnalyticsScreen(
     val paymentMethods by viewModel.paymentMethods.collectAsState()
     val dailyAccumulatedSpending by viewModel.dailyAccumulatedSpending.collectAsState()
     val treemapThreshold by viewModel.treemapThreshold.collectAsState()
+    val treemapAspectRatio by viewModel.treemapAspectRatio.collectAsState()
 
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -424,7 +425,8 @@ fun AnalyticsScreen(
                 categories = categories,
                 totalSpending = totalSpending,
                 chartType = selectedCategoryChartType,
-                treemapThreshold = treemapThreshold
+                treemapThreshold = treemapThreshold,
+                treemapAspectRatio = treemapAspectRatio
             )
 
             // Vendor Breakdown Chart
@@ -488,7 +490,8 @@ fun AnalyticsScreen(
                 vendors = vendors,
                 totalSpending = totalSpending,
                 chartType = selectedVendorChartType,
-                treemapThreshold = treemapThreshold
+                treemapThreshold = treemapThreshold,
+                treemapAspectRatio = treemapAspectRatio
             )
         }
     }

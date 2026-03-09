@@ -36,6 +36,9 @@ class SpendingGoalsViewModel @Inject constructor(
     val treemapThreshold: StateFlow<Double> = preferencesManager.treemapThreshold
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 5.0)
 
+    val treemapAspectRatio: StateFlow<Double> = preferencesManager.treemapAspectRatio
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 1.0)
+
     /**
      * Create a new spending goal
      */
@@ -115,6 +118,34 @@ class SpendingGoalsViewModel @Inject constructor(
     }
 
     /**
+     * Show aspect ratio dialog
+     */
+    fun showAspectRatioDialog() {
+        _uiState.update { it.copy(showAspectRatioDialog = true) }
+    }
+
+    /**
+     * Hide aspect ratio dialog
+     */
+    fun hideAspectRatioDialog() {
+        _uiState.update { it.copy(showAspectRatioDialog = false) }
+    }
+
+    /**
+     * Update treemap aspect ratio
+     */
+    fun updateTreemapAspectRatio(ratio: Double) {
+        viewModelScope.launch {
+            try {
+                preferencesManager.updateTreemapAspectRatio(ratio)
+                hideAspectRatioDialog()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = "Failed to update aspect ratio: ${e.message}") }
+            }
+        }
+    }
+
+    /**
      * Clear error message
      */
     fun clearError() {
@@ -127,5 +158,6 @@ class SpendingGoalsViewModel @Inject constructor(
  */
 data class SpendingGoalsUiState(
     val error: String? = null,
-    val showThresholdDialog: Boolean = false
+    val showThresholdDialog: Boolean = false,
+    val showAspectRatioDialog: Boolean = false
 )
