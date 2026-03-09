@@ -33,9 +33,12 @@ class BackupScheduler @Inject constructor(
                 Log.d(TAG, batteryOptimizationStatus)
                 
                 // Create constraints for the backup work
-                // Use minimal constraints to ensure backup runs reliably
+                // Allow execution during Doze mode and low battery conditions
                 val constraints = Constraints.Builder()
                     .setRequiredNetworkType(NetworkType.NOT_REQUIRED) // Backup doesn't need network
+                    .setRequiresDeviceIdle(false)    // Allow during Doze mode
+                    .setRequiresBatteryNotLow(false) // Allow when battery is low
+                    .setRequiresStorageNotLow(false) // Allow when storage is low
                     .build()
 
                 // Create a PeriodicWorkRequest that runs daily at 5:00 AM
@@ -141,6 +144,9 @@ class BackupScheduler @Inject constructor(
         Log.d(TAG, "Triggering immediate backup")
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
+            .setRequiresDeviceIdle(false)
+            .setRequiresBatteryNotLow(false)
+            .setRequiresStorageNotLow(false)
             .build()
 
         val backupRequest = OneTimeWorkRequestBuilder<BackupWorker>()
