@@ -42,10 +42,15 @@ fun BottomNavigationBar(
         navItems.forEach { item ->
             NavigationBarItem(
                 icon = {
-                    val iconSize = if (item.route == Routes.Scan) 48.dp else 24.dp
+                    val isSelected = currentDestination?.hierarchy?.any { it.route == item.route.route } == true
+                    // Scan icon is always 48dp, other selected icons are 48dp, unselected icons are 24dp
+                    val iconSize = when {
+                        item.route == Routes.Scan -> 48.dp
+                        isSelected -> 48.dp
+                        else -> 24.dp
+                    }
                     if (item.iconResId != null) {
                         // Colorful theme: WebP images
-                        val isSelected = currentDestination?.hierarchy?.any { it.route == item.route.route } == true
                         Icon(
                             painter = painterResource(id = item.iconResId),
                             contentDescription = item.label,
@@ -54,7 +59,6 @@ fun BottomNavigationBar(
                         )
                     } else if (item.iconVector != null) {
                         // Monochrome theme: Material Icons
-                        val isSelected = currentDestination?.hierarchy?.any { it.route == item.route.route } == true
                         Icon(
                             imageVector = item.iconVector,
                             contentDescription = item.label,
