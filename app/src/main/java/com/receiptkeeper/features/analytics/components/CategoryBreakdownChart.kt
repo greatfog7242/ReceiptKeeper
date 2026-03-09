@@ -70,7 +70,7 @@ fun CategoryBreakdownChart(
                 )
             } else {
                 when (chartType) {
-                    ChartType.TREEMAP -> TreeMapChart(categorySpending, categories, totalSpending, treemapThreshold)
+                    ChartType.TREEMAP -> TreeMapChart(categorySpending, categories, totalSpending, treemapThreshold, treemapAspectRatio)
                     ChartType.PIE -> PieChart(categorySpending, categories, totalSpending)
                     ChartType.STACKED_BAR -> StackedBarChart(categorySpending, categories, totalSpending)
                 }
@@ -84,7 +84,8 @@ private fun TreeMapChart(
     categorySpending: List<CategorySpending>,
     categories: List<Category>,
     totalSpending: Double,
-    treemapThreshold: Double
+    treemapThreshold: Double,
+    treemapAspectRatio: Double
 ) {
     val total = categorySpending.sumOf { it.total }
     if (total == 0.0) {
@@ -114,7 +115,7 @@ private fun TreeMapChart(
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
                 // Calculate tree map with actual canvas dimensions
-                val rectangles = calculateTreemap(aggregatedData, categories, total, size.width, size.height)
+                val rectangles = calculateTreemap(aggregatedData, categories, total, size.width, size.height, treemapAspectRatio)
                 
                 rectangles.forEach { rect ->
                     drawRect(
@@ -298,7 +299,8 @@ private fun calculateTreemap(
     categories: List<Category>,
     total: Double,
     canvasWidth: Float,
-    canvasHeight: Float
+    canvasHeight: Float,
+    treemapAspectRatio: Double
 ): List<TreemapRect> {
     if (categorySpending.isEmpty() || total == 0.0) return emptyList()
 
@@ -325,7 +327,7 @@ private fun calculateTreemap(
         val label = if (!isOtherCategory && category != null) category.name else "Other"
         
         TreemapNode(
-            name = label,
+            label = label,
             value = spending.total,
             color = color
         )
@@ -335,18 +337,18 @@ private fun calculateTreemap(
     val bounds = RectF(padding, padding, padding + width, padding + height)
     
     // Use squarified treemap algorithm
-    val treemap = SquarifiedTreemap(targetRatio = treemapAspectRatio)
-    treemap.layout(nodes, bounds)
+    val generator = SquarifiedTreemapGenerator(targetRatio = treemapAspectRatio)
+    val laidOutNodes = generator.calculateLayout(nodes, bounds)
     
     // Convert nodes to TreemapRect objects
-    return nodes.map { node ->
+    return laidOutNodes.map { node ->
         TreemapRect(
             x = node.rect.left,
             y = node.rect.top,
             width = node.rect.width(),
             height = node.rect.height(),
             color = node.color,
-            label = node.name
+            label = node.label
         )
     }
 }

@@ -70,7 +70,7 @@ fun VendorBreakdownChart(
                 )
             } else {
                 when (chartType) {
-                    ChartType.TREEMAP -> VendorTreeMapChart(vendorSpending, vendors, totalSpending, treemapThreshold)
+                    ChartType.TREEMAP -> VendorTreeMapChart(vendorSpending, vendors, totalSpending, treemapThreshold, treemapAspectRatio)
                     ChartType.PIE -> VendorPieChart(vendorSpending, vendors, totalSpending)
                     ChartType.STACKED_BAR -> VendorStackedBarChart(vendorSpending, vendors, totalSpending)
                 }
@@ -84,7 +84,8 @@ private fun VendorTreeMapChart(
     vendorSpending: List<VendorSpending>,
     vendors: List<Vendor>,
     totalSpending: Double,
-    threshold: Double = 5.0
+    threshold: Double = 5.0,
+    treemapAspectRatio: Double = 1.0
 ) {
     val total = vendorSpending.sumOf { it.total }
     if (total == 0.0) {
@@ -114,7 +115,7 @@ private fun VendorTreeMapChart(
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
                 // Calculate tree map with actual canvas dimensions
-                val rectangles = calculateVendorTreemap(aggregatedData, vendors, total, size.width, size.height)
+                val rectangles = calculateVendorTreemap(aggregatedData, vendors, total, size.width, size.height, treemapAspectRatio)
                 
                 rectangles.forEach { rect ->
                     drawRect(
@@ -303,7 +304,8 @@ private fun calculateVendorTreemap(
     vendors: List<Vendor>,
     total: Double,
     canvasWidth: Float,
-    canvasHeight: Float
+    canvasHeight: Float,
+    treemapAspectRatio: Double
 ): List<VendorTreemapRect> {
     if (vendorSpending.isEmpty() || total == 0.0) return emptyList()
 
@@ -331,7 +333,7 @@ private fun calculateVendorTreemap(
         val label = if (!isOtherVendor && vendor != null) vendor.name else "Other"
         
         TreemapNode(
-            name = label,
+            label = label,
             value = spending.total,
             color = color
         )
@@ -341,18 +343,18 @@ private fun calculateVendorTreemap(
     val bounds = RectF(padding, padding, padding + width, padding + height)
     
     // Use squarified treemap algorithm
-    val treemap = SquarifiedTreemap(targetRatio = treemapAspectRatio)
-    treemap.layout(nodes, bounds)
+    val generator = SquarifiedTreemapGenerator(targetRatio = treemapAspectRatio)
+    val laidOutNodes = generator.calculateLayout(nodes, bounds)
     
     // Convert nodes to VendorTreemapRect objects
-    return nodes.map { node ->
+    return laidOutNodes.map { node ->
         VendorTreemapRect(
             x = node.rect.left,
             y = node.rect.top,
             width = node.rect.width(),
             height = node.rect.height(),
             color = node.color,
-            label = node.name
+            label = node.label
         )
     }
 }
