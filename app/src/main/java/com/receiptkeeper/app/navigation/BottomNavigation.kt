@@ -44,12 +44,14 @@ fun BottomNavigationBar(
                 icon = {
                     val iconSize = if (item.route == Routes.Scan) 48.dp else 24.dp
                     if (item.iconResId != null) {
-                        // Colorful theme: WebP images with original colors
+                        // Colorful theme: WebP images with tint
+                        val isSelected = currentDestination?.hierarchy?.any { it.route == item.route.route } == true
+                        val tintColor = if (isSelected) Color(0xFF4CAF50) else Color(0xFF9E9E9E)
                         Icon(
                             painter = painterResource(id = item.iconResId),
                             contentDescription = item.label,
                             modifier = Modifier.size(iconSize),
-                            tint = Color.Unspecified // Disable tint to show WebP original colors
+                            tint = tintColor // Apply gray/green tint
                         )
                     } else if (item.iconVector != null) {
                         // Monochrome theme: Material Icons with theme tint
@@ -75,11 +77,11 @@ fun BottomNavigationBar(
                     }
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    selectedTextColor = MaterialTheme.colorScheme.onSurface,
-                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    selectedIconColor = Color(0xFF4CAF50), // Green for selected
+                    selectedTextColor = Color(0xFF4CAF50), // Green text for selected
+                    indicatorColor = Color.Transparent, // Remove indicator background
+                    unselectedIconColor = Color(0xFF9E9E9E), // Gray for unselected
+                    unselectedTextColor = Color(0xFF9E9E9E) // Gray text for unselected
                 )
             )
         }
