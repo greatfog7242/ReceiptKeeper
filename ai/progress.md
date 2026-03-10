@@ -2136,3 +2136,31 @@ app/build.gradle.kts (UPDATED - added DataStore dependency)
 
 ---
 
+
+---
+
+## 2026-03-10 - UI Tweak: Bottom Nav Selected Icon State
+
+**Agent:** Codex
+**Feature:** Persist selected bottom nav icon size/color until another tab selected
+**Status:** ? Complete (release build + device deploy verified)
+
+### Work Completed
+- Persisted selected bottom nav route so icons stay large/colorful when navigating to non-bottom screens
+- Scan icon remains fixed size and unaffected
+- Cleaned unused imports in BottomNavigation
+
+### Build & Deploy
+- **Build:** `./gradlew.bat clean assembleRelease` (SUCCESS)
+- **Deploy:** `adb install -r app/build/outputs/apk/release/app-release.apk` (SUCCESS)
+- **Launch:** `adb shell am start -n com.receiptkeeper/com.receiptkeeper.app.MainActivity` (SUCCESS)
+- **Logcat:** No ReceiptKeeper-specific crashes observed
+
+### Notes
+- `ai/init.sh` could not be executed from PowerShell because `bash` is unavailable in this environment.
+
+### Files Modified
+- `app/src/main/java/com/receiptkeeper/app/navigation/BottomNavigation.kt`
+
+### Commit
+- `feat: keep bottom nav selected state`
