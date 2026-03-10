@@ -2,16 +2,17 @@ package com.receiptkeeper.app.navigation
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.receiptkeeper.core.preferences.IconTheme
@@ -32,7 +33,16 @@ fun BottomNavigationBar(
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination
         val iconTheme = LocalIconTheme.current
-        
+        val bottomRoutes = Routes.bottomNavRoutes.map { it.route }
+        var selectedRoute by rememberSaveable { mutableStateOf(Routes.Books.route) }
+
+        LaunchedEffect(currentDestination?.route) {
+            val currentRoute = currentDestination?.route
+            if (currentRoute != null && bottomRoutes.contains(currentRoute)) {
+                selectedRoute = currentRoute
+            }
+        }
+
         val navItems = if (iconTheme == IconTheme.COLORFUL) {
             bottomNavItemsColorful
         } else {
@@ -40,9 +50,9 @@ fun BottomNavigationBar(
         }
 
         navItems.forEach { item ->
+            val isSelected = selectedRoute == item.route.route
             NavigationBarItem(
                 icon = {
-                    val isSelected = currentDestination?.hierarchy?.any { it.route == item.route.route } == true
                     // Scan icon is always 48dp, other selected icons are 48dp, unselected icons are 24dp
                     val iconSize = when {
                         item.route == Routes.Scan -> 48.dp
@@ -68,7 +78,7 @@ fun BottomNavigationBar(
                     }
                 },
                 label = { Text(item.label) },
-                selected = currentDestination?.hierarchy?.any { it.route == item.route.route } == true,
+                selected = isSelected,
                 onClick = {
                     navController.navigate(item.route.route) {
                         // Pop up to the start destination to avoid building up a large back stack
