@@ -2,6 +2,8 @@ package com.receiptkeeper.core.util
 
 import android.content.ContentValues
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -12,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
+import java.io.InputStream
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -28,6 +31,11 @@ import javax.inject.Singleton
 class ImageHandler @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
+    companion object {
+        private const val RECEIPT_IMAGE_QUALITY = 75
+        private const val RECEIPT_IMAGE_EXTENSION = "webp"
+    }
+
     private val receiptsDir: File by lazy {
         File(context.filesDir, "receipts").apply {
             if (!exists()) mkdirs()
@@ -41,17 +49,19 @@ class ImageHandler @Inject constructor(
      */
     suspend fun saveImage(sourceUri: Uri): String? = withContext(Dispatchers.IO) {
         try {
-            val inputStream = context.contentResolver.openInputStream(sourceUri)
-                ?: return@withContext null
-
             // Generate unique filename
-            val filename = "receipt_${UUID.randomUUID()}.jpg"
+            val filename = "receipt_${UUID.randomUUID()}.$RECEIPT_IMAGE_EXTENSION"
             val destinationFile = File(receiptsDir, filename)
 
-            // Copy file
-            inputStream.use { input ->
-                destinationFile.outputStream().use { output ->
-                    input.copyTo(output)
+            val compressed = context.contentResolver.openInputStream(sourceUri)?.use { input ->
+                compressImage(input, destinationFile)
+            } ?: return@withContext null
+            if (!compressed) {
+                // Fallback: copy original bytes if compression fails
+                context.contentResolver.openInputStream(sourceUri)?.use { input ->
+                    destinationFile.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
                 }
             }
 
@@ -118,11 +128,12 @@ class ImageHandler @Inject constructor(
             if (!sourceFile.exists()) return@withContext null
 
             val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))
-            val displayName = "Receipt_$timestamp.jpg"
+            val extension = sourceFile.extension.ifEmpty { "jpg" }
+            val displayName = "Receipt_$timestamp.$extension"
 
             val contentValues = ContentValues().apply {
                 put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
-                put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+                put(MediaStore.MediaColumns.MIME_TYPE, mimeTypeForExtension(extension))
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
                 }
@@ -144,4 +155,41 @@ class ImageHandler @Inject constructor(
             null
         }
     }
+
+    private fun compressImage(inputStream: InputStream, destinationFile: File): Boolean {
+        val options = BitmapFactory.Options().apply {
+            inMutable = true
+        }
+
+        val bitmap = BitmapFactory.decodeStream(inputStream, null, options) ?: return false
+        return try {
+            destinationFile.outputStream().use { output ->
+                val format = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    Bitmap.CompressFormat.WEBP_LOSSY
+                } else {
+                    @Suppress("DEPRECATION")
+                    Bitmap.CompressFormat.WEBP
+                }
+                bitmap.compress(format, RECEIPT_IMAGE_QUALITY, output)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        } finally {
+            if (!bitmap.isRecycled) {
+                bitmap.recycle()
+            }
+        }
+    }
+
+    private fun mimeTypeForExtension(extension: String): String {
+        return when (extension.lowercase()) {
+            "webp" -> "image/webp"
+            "png" -> "image/png"
+            else -> "image/jpeg"
+        }
+    }
 }
+
+
+

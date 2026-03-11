@@ -332,7 +332,7 @@ Books are collections that help organize receipts (e.g., "Personal Expenses", "B
 
 **Backup Contents:**
 1. **Database Export**: Uses SQLite `VACUUM INTO` for clean copy
-2. **Images**: All `.jpg`, `.jpeg`, `.png` files from receipts
+2. **Images**: All `.jpg`, `.jpeg`, `.png`, `.webp` files from receipts
 3. **Metadata**: Backup timestamp, file counts, sizes
 
 **Restore Process:**
@@ -963,3 +963,4 @@ private fun SettingsItem(
 fun SettingsScreenPreview() {
     SettingsScreen()
 }
+

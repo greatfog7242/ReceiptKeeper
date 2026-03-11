@@ -492,7 +492,7 @@ class BackupRestoreService @Inject constructor(
             }
             
             receiptsDir.listFiles()?.forEach { imageFile ->
-                if (imageFile.isFile && (imageFile.name.endsWith(".jpg") || imageFile.name.endsWith(".jpeg") || imageFile.name.endsWith(".png"))) {
+                if (imageFile.isFile && (imageFile.name.endsWith(".jpg") || imageFile.name.endsWith(".jpeg") || imageFile.name.endsWith(".png") || imageFile.name.endsWith(".webp"))) {
                     val destFile = File(destinationDir, imageFile.name)
                     imageFile.copyTo(destFile, overwrite = true)
                 }
