@@ -2164,3 +2164,39 @@ app/build.gradle.kts (UPDATED - added DataStore dependency)
 
 ### Commit
 - `feat: keep bottom nav selected state`
+
+## 2026-03-10 - Maintenance Tool: Recompress Receipt Images
+
+**Agent:** Codex
+**Feature:** One-time recompress tool for existing receipt images
+**Status:** ? Complete
+
+### Work Completed
+- Added one-time recompress tool to Backup & Restore screen
+- Recompresses existing receipt images to WebP (quality 75) and updates receipt records
+- Added confirmation dialog and progress indicator
+- Backup copy now includes .webp (already updated previously)
+
+### Build & Deploy
+- **Build:** `./gradlew clean assembleRelease` (SUCCESS)
+- **Deploy:** `adb install -r app/build/outputs/apk/release/app-release.apk` (SUCCESS)
+- **Launch:** `adb shell am start -n com.receiptkeeper/com.receiptkeeper.app.MainActivity` (SUCCESS)
+- **Logcat:** No ReceiptKeeper crashes
+
+### Files Modified
+- `app/src/main/java/com/receiptkeeper/core/util/ImageHandler.kt`
+- `app/src/main/java/com/receiptkeeper/features/settings/BackupRestoreViewModel.kt`
+- `app/src/main/java/com/receiptkeeper/features/settings/BackupRestoreScreen.kt`
+- `ai/feature_list.json`
+- `ai/progress.md`
+
+### Notes
+- Tool is one-time and destructive: original image is replaced by WebP
+
+### Update
+- **Deploy:** FAILED - no devices/emulators found (verification pending)
+
+### Verification Update
+- **Deploy:** `adb install -r app/build/outputs/apk/release/app-release.apk` (SUCCESS)
+- **Launch:** `adb shell am start -n com.receiptkeeper/com.receiptkeeper.app.MainActivity` (SUCCESS)
+- **Logcat:** No ReceiptKeeper crashes

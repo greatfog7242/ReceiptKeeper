@@ -4,11 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.receiptkeeper.core.util.BackupPreferences
 import com.receiptkeeper.core.util.BackupRestoreService
+import com.receiptkeeper.core.util.ImageHandler
 import com.receiptkeeper.core.work.BackupScheduler
+import com.receiptkeeper.data.repository.ReceiptRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -20,7 +23,9 @@ import javax.inject.Inject
 class BackupRestoreViewModel @Inject constructor(
     private val backupRestoreService: BackupRestoreService,
     private val backupScheduler: BackupScheduler,
-    private val backupPreferences: BackupPreferences
+    private val backupPreferences: BackupPreferences,
+    private val receiptRepository: ReceiptRepository,
+    private val imageHandler: ImageHandler
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BackupRestoreUiState())
@@ -66,7 +71,7 @@ class BackupRestoreViewModel @Inject constructor(
                 val isEnabled = backupPreferences.isAutoBackupEnabled
                 val lastBackupTime = backupPreferences.lastBackupTime
                 val isScheduled = backupScheduler.isBackupScheduled()
-                
+
                 _uiState.update {
                     it.copy(
                         isAutoBackupEnabled = isEnabled,
@@ -90,7 +95,7 @@ class BackupRestoreViewModel @Inject constructor(
     fun toggleAutoBackup(enabled: Boolean) {
         backupPreferences.isAutoBackupEnabled = enabled
         _uiState.update { it.copy(isAutoBackupEnabled = enabled) }
-        
+
         if (enabled) {
             backupScheduler.scheduleDailyBackup()
         } else {
@@ -135,7 +140,7 @@ class BackupRestoreViewModel @Inject constructor(
             }
         }
     }
-    
+
     /**
      * Creates a backup via WorkManager (for testing automatic backup)
      */
@@ -171,7 +176,7 @@ class BackupRestoreViewModel @Inject constructor(
                 val isIgnoring = backupScheduler.isIgnoringBatteryOptimizations()
                 val statusMessage = backupScheduler.checkBatteryOptimizationStatus()
                 val isScheduled = backupScheduler.isBackupScheduled()
-                
+
                 _uiState.update {
                     it.copy(
                         isIgnoringBatteryOptimizations = isIgnoring,
@@ -271,6 +276,54 @@ class BackupRestoreViewModel @Inject constructor(
     }
 
     /**
+     * Recompress existing receipt images to WebP
+     */
+    fun recompressReceiptImages() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isRecompressing = true, error = null) }
+            try {
+                val receipts = receiptRepository.getAllReceipts().first()
+                var recompressed = 0
+                var skipped = 0
+                var failed = 0
+
+                receipts.forEach { receipt ->
+                    val imagePath = receipt.imageUri
+                    if (imagePath.isNullOrBlank()) {
+                        skipped++
+                        return@forEach
+                    }
+
+                    val newPath = imageHandler.recompressImageFile(imagePath)
+                    when {
+                        newPath == null -> failed++
+                        newPath == imagePath -> skipped++
+                        else -> {
+                            receiptRepository.updateReceipt(receipt.copy(imageUri = newPath))
+                            recompressed++
+                        }
+                    }
+                }
+
+                _uiState.update {
+                    it.copy(
+                        isRecompressing = false,
+                        showSuccessMessage = true,
+                        successMessage = "Recompressed $recompressed images (skipped $skipped, failed $failed)."
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isRecompressing = false,
+                        error = "Recompress failed: ${e.message}"
+                    )
+                }
+            }
+        }
+    }
+
+    /**
      * Dismisses the error message
      */
     fun dismissError() {
@@ -328,6 +381,20 @@ class BackupRestoreViewModel @Inject constructor(
     fun hideDeleteConfirmation() {
         _uiState.update { it.copy(showDeleteConfirmation = false) }
     }
+
+    /**
+     * Shows the recompress confirmation dialog
+     */
+    fun showRecompressConfirmation() {
+        _uiState.update { it.copy(showRecompressConfirmation = true) }
+    }
+
+    /**
+     * Hides the recompress confirmation dialog
+     */
+    fun hideRecompressConfirmation() {
+        _uiState.update { it.copy(showRecompressConfirmation = false) }
+    }
 }
 
 /**
@@ -338,6 +405,7 @@ data class BackupRestoreUiState(
     val isLoading: Boolean = false,
     val isCreatingBackup: Boolean = false,
     val isRestoringBackup: Boolean = false,
+    val isRecompressing: Boolean = false,
     val error: String? = null,
     val showSuccessMessage: Boolean = false,
     val successMessage: String? = null,
@@ -345,6 +413,7 @@ data class BackupRestoreUiState(
     val backupToDelete: String? = null,
     val showRestoreConfirmation: Boolean = false,
     val showDeleteConfirmation: Boolean = false,
+    val showRecompressConfirmation: Boolean = false,
     val lastBackupPath: String? = null,
     // Battery optimization status
     val isIgnoringBatteryOptimizations: Boolean = false,

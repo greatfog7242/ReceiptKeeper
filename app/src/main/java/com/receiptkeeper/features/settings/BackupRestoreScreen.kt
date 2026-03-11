@@ -152,6 +152,46 @@ fun BackupRestoreScreen(
         )
     }
 
+    // Recompress confirmation dialog
+    if (uiState.showRecompressConfirmation) {
+        AlertDialog(
+            onDismissRequest = { viewModel.hideRecompressConfirmation() },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error
+                )
+            },
+            title = {
+                Text("Recompress Images")
+            },
+            text = {
+                Text(
+                    "This will convert existing receipt images to WebP to reduce storage. " +
+                    "This is a one-time maintenance tool and cannot be undone. Continue?"
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.recompressReceiptImages()
+                        viewModel.hideRecompressConfirmation()
+                    }
+                ) {
+                    Text("Recompress")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { viewModel.hideRecompressConfirmation() }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -293,6 +333,49 @@ fun BackupRestoreScreen(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+                    Text(
+                        text = "Maintenance",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Recompress existing receipt images to reduce storage (one-time tool).",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    OutlinedButton(
+                        onClick = { viewModel.showRecompressConfirmation() },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !uiState.isRecompressing
+                    ) {
+                        if (uiState.isRecompressing) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Recompressing Images...")
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Image,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Recompress Receipt Images")
+                        }
                     }
                 }
             }
@@ -589,3 +672,4 @@ fun BackupRestoreScreenPreview() {
         BackupRestoreScreen(onNavigateBack = {})
     }
 }
+

@@ -56,6 +56,7 @@ class ImageHandler @Inject constructor(
             val compressed = context.contentResolver.openInputStream(sourceUri)?.use { input ->
                 compressImage(input, destinationFile)
             } ?: return@withContext null
+
             if (!compressed) {
                 // Fallback: copy original bytes if compression fails
                 context.contentResolver.openInputStream(sourceUri)?.use { input ->
@@ -68,6 +69,47 @@ class ImageHandler @Inject constructor(
             // Return file URI
             destinationFile.absolutePath
         } catch (e: IOException) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    /**
+     * Recompress an existing image file to WebP.
+     * @param imagePath Absolute file path
+     * @return New file path, original path if already WebP, or null on failure
+     */
+    suspend fun recompressImageFile(imagePath: String): String? = withContext(Dispatchers.IO) {
+        try {
+            val sourceFile = File(imagePath)
+            if (!sourceFile.exists()) return@withContext null
+
+            val extension = sourceFile.extension.lowercase()
+            if (extension == RECEIPT_IMAGE_EXTENSION) {
+                return@withContext sourceFile.absolutePath
+            }
+
+            val targetFile = File(sourceFile.parentFile, "${sourceFile.nameWithoutExtension}.$RECEIPT_IMAGE_EXTENSION")
+
+            if (targetFile.exists()) {
+                // If target already exists, remove old file and return target
+                if (sourceFile.absolutePath != targetFile.absolutePath) {
+                    sourceFile.delete()
+                }
+                return@withContext targetFile.absolutePath
+            }
+
+            val compressed = sourceFile.inputStream().use { input ->
+                compressImage(input, targetFile)
+            }
+
+            if (compressed) {
+                sourceFile.delete()
+                return@withContext targetFile.absolutePath
+            }
+
+            null
+        } catch (e: Exception) {
             e.printStackTrace()
             null
         }
@@ -190,6 +232,3 @@ class ImageHandler @Inject constructor(
         }
     }
 }
-
-
-

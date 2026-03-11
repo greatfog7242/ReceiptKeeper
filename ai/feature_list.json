@@ -511,6 +511,11 @@
                                               "id":  "7.16",
                                               "task":  "Bottom nav selected state persists until another tab selected",
                                               "status":  "Complete"
+                                          },
+                                          {
+                                              "id":  "7.17",
+                                              "task":  "Add one-time recompress receipt images tool",
+                                              "status":  "Complete"
                                           }
                                       ]
                      }
