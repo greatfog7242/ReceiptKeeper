@@ -4,11 +4,13 @@ import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import androidx.core.content.FileProvider
+import androidx.exifinterface.media.ExifInterface
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -53,8 +55,12 @@ class ImageHandler @Inject constructor(
             val filename = "receipt_${UUID.randomUUID()}.$RECEIPT_IMAGE_EXTENSION"
             val destinationFile = File(receiptsDir, filename)
 
+            val orientationDegrees = context.contentResolver.openInputStream(sourceUri)?.use { input ->
+                exifOrientationDegrees(input)
+            } ?: 0f
+
             val compressed = context.contentResolver.openInputStream(sourceUri)?.use { input ->
-                compressImage(input, destinationFile)
+                compressImage(input, destinationFile, orientationDegrees)
             } ?: return@withContext null
 
             if (!compressed) {
@@ -99,8 +105,12 @@ class ImageHandler @Inject constructor(
                 return@withContext targetFile.absolutePath
             }
 
+            val orientationDegrees = try {
+                exifOrientationDegrees(ExifInterface(imagePath))
+            } catch (_: Exception) { 0f }
+
             val compressed = sourceFile.inputStream().use { input ->
-                compressImage(input, targetFile)
+                compressImage(input, targetFile, orientationDegrees)
             }
 
             if (compressed) {
@@ -198,12 +208,22 @@ class ImageHandler @Inject constructor(
         }
     }
 
-    private fun compressImage(inputStream: InputStream, destinationFile: File): Boolean {
+    private fun compressImage(inputStream: InputStream, destinationFile: File, orientationDegrees: Float = 0f): Boolean {
         val options = BitmapFactory.Options().apply {
             inMutable = true
         }
 
-        val bitmap = BitmapFactory.decodeStream(inputStream, null, options) ?: return false
+        val raw = BitmapFactory.decodeStream(inputStream, null, options) ?: return false
+
+        val bitmap = if (orientationDegrees != 0f) {
+            val matrix = Matrix().apply { postRotate(orientationDegrees) }
+            val rotated = Bitmap.createBitmap(raw, 0, 0, raw.width, raw.height, matrix, true)
+            if (rotated !== raw) raw.recycle()
+            rotated
+        } else {
+            raw
+        }
+
         return try {
             destinationFile.outputStream().use { output ->
                 val format = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -221,6 +241,21 @@ class ImageHandler @Inject constructor(
             if (!bitmap.isRecycled) {
                 bitmap.recycle()
             }
+        }
+    }
+
+    private fun exifOrientationDegrees(inputStream: InputStream): Float {
+        return try {
+            exifOrientationDegrees(ExifInterface(inputStream))
+        } catch (_: Exception) { 0f }
+    }
+
+    private fun exifOrientationDegrees(exif: ExifInterface): Float {
+        return when (exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)) {
+            ExifInterface.ORIENTATION_ROTATE_90 -> 90f
+            ExifInterface.ORIENTATION_ROTATE_180 -> 180f
+            ExifInterface.ORIENTATION_ROTATE_270 -> 270f
+            else -> 0f
         }
     }
 

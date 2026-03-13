@@ -127,6 +127,9 @@ dependencies {
     // DataStore for preferences
     implementation("androidx.datastore:datastore-preferences:1.1.1")
 
+    // EXIF orientation handling for image compression
+    implementation("androidx.exifinterface:exifinterface:1.3.7")
+
     // Testing
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
