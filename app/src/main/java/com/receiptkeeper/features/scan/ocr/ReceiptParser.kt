@@ -128,13 +128,15 @@ object ReceiptParser {
      */
     private fun extractAmount(text: String): Double? {
         val patterns = listOf(
-            Regex("""total.*?\$?\\s*(\\d+\\.\\d{2})""", RegexOption.IGNORE_CASE),
-            Regex("""amount.*?\$?\\s*(\\d+\\.\\d{2})""", RegexOption.IGNORE_CASE),
-            Regex("""\$\\s*(\\d+\\.\\d{2})""") // Just find any dollar amount
+            Regex("""total.*?\$?\s*-?([0-9][0-9,]*\.\d{2})-?""", RegexOption.IGNORE_CASE),
+            Regex("""amount.*?\$?\s*-?([0-9][0-9,]*\.\d{2})-?""", RegexOption.IGNORE_CASE),
+            Regex("""\$\s*-?([0-9][0-9,]*\.\d{2})-?""") // Just find any dollar amount
         )
 
         for (pattern in patterns) {
-            pattern.find(text)?.groupValues?.get(1)?.toDoubleOrNull()?.let { return it }
+            val match = pattern.find(text)
+            val amountText = match?.groupValues?.get(1)?.replace(",", "")
+            amountText?.toDoubleOrNull()?.let { return it }
         }
 
         return null
@@ -155,7 +157,7 @@ object ReceiptParser {
             findKnownLast4WithBoundary(normalizedText, normalizedKnown)?.let { return it }
 
             val maskedPattern = Regex(
-                """(?:card|ending|x{4,})\\s*(\\d{4})""",
+                """(?:card|ending|x{4,})\s*(\d{4})""",
                 RegexOption.IGNORE_CASE
             )
             for (match in maskedPattern.findAll(normalizedText)) {
@@ -165,7 +167,7 @@ object ReceiptParser {
                 }
             }
 
-            val compactMaskedPattern = Regex("""x{4,}(\\d{4})""", RegexOption.IGNORE_CASE)
+            val compactMaskedPattern = Regex("""x{4,}(\d{4})""", RegexOption.IGNORE_CASE)
             for (match in compactMaskedPattern.findAll(normalizedText)) {
                 val last4 = match.groupValues.getOrNull(1)
                 if (last4 != null && normalizedKnown.contains(last4)) {
@@ -173,7 +175,7 @@ object ReceiptParser {
                 }
             }
 
-            val digitChunks = Regex("""\\d{4,}""")
+            val digitChunks = Regex("""\d{4,}""")
             for (match in digitChunks.findAll(normalizedText)) {
                 val digits = match.value
                 val last4 = digits.takeLast(4)
@@ -182,7 +184,7 @@ object ReceiptParser {
                 }
             }
 
-            val spacedDigits = Regex("""(?:\\d[\\s-]?){4,}""")
+            val spacedDigits = Regex("""(?:\d[\s-]?){4,}""")
             for (match in spacedDigits.findAll(normalizedText)) {
                 val digits = match.value.filter(Char::isDigit)
                 if (digits.length >= 4) {
@@ -195,9 +197,9 @@ object ReceiptParser {
         }
 
         val patterns = listOf(
-            Regex("""(?:card|x{4,})\\s*(\\d{4})""", RegexOption.IGNORE_CASE),
-            Regex("""ending\\s+in\\s+(\\d{4})""", RegexOption.IGNORE_CASE),
-            Regex("""x{4,}(\\d{4})""", RegexOption.IGNORE_CASE)
+            Regex("""(?:card|x{4,})\s*(\d{4})""", RegexOption.IGNORE_CASE),
+            Regex("""ending\s+in\s+(\d{4})""", RegexOption.IGNORE_CASE),
+            Regex("""x{4,}(\d{4})""", RegexOption.IGNORE_CASE)
         )
 
         for (pattern in patterns) {
@@ -294,6 +296,11 @@ object ReceiptParser {
 
     private data class NormalizedVendor(val original: String, val normalized: String)
 }
+
+
+
+
+
 
 
 
