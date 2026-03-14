@@ -615,7 +615,7 @@ private fun ReceiptDialog(
                                                     bitmap.recycle()
 
                                                     if (result.text.isNotBlank()) {
-                                                        val parsedData = ReceiptParser.parseReceipt(result.text, vendors.map { it.name })
+                                                        val parsedData = ReceiptParser.parseReceipt(result.text, vendors.map { it.name }, paymentMethods.mapNotNull { it.lastFourDigits })
                                                         parsedData.vendor?.let { vendorName = it }
                                                         parsedData.amount?.let { amount = it.toString() }
                                                         parsedData.date?.let { date = it.toString() }
@@ -988,4 +988,5 @@ private fun FullScreenImageDialog(
         }
     }
 }
+
 

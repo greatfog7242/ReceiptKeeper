@@ -2223,3 +2223,26 @@ app/build.gradle.kts (UPDATED - added DataStore dependency)
 - `app/src/main/java/com/receiptkeeper/features/receipts/ReceiptsScreen.kt`
 - `ai/feature_list.json`
 - `ai/progress.md`
+
+## 2026-03-14 - OCR Payment Method Extraction Improvement
+
+**Agent:** Codex
+**Feature:** Use stored payment methods (last 4 digits) to improve OCR card detection
+**Status:** ? Complete
+
+### Work Completed
+- Enhanced OCR card last4 extraction using known payment methods list
+- Wired payment last4 list into OCR parsing in ScanReceiptViewModel and manual OCR in ReceiptsScreen
+
+### Build & Deploy
+- **Build:** `./gradlew clean assembleRelease` (SUCCESS)
+- **Deploy:** `adb install -r app/build/outputs/apk/release/app-release.apk` (SUCCESS)
+- **Launch:** `adb shell am start -n com.receiptkeeper/com.receiptkeeper.app.MainActivity` (SUCCESS)
+- **Logcat:** No ReceiptKeeper crashes
+
+### Files Modified
+- `app/src/main/java/com/receiptkeeper/features/scan/ocr/ReceiptParser.kt`
+- `app/src/main/java/com/receiptkeeper/features/scan/ScanReceiptViewModel.kt`
+- `app/src/main/java/com/receiptkeeper/features/receipts/ReceiptsScreen.kt`
+- `ai/feature_list.json`
+- `ai/progress.md`

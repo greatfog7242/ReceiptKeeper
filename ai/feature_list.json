@@ -347,6 +347,11 @@
                                               "id":  "5.12",
                                               "task":  "Improve vendor extraction with known vendors",
                                               "status":  "Complete"
+                                          },
+                                          {
+                                              "id":  "5.13",
+                                              "task":  "Improve payment method extraction with known card last4",
+                                              "status":  "Complete"
                                           }
                                       ]
                      },

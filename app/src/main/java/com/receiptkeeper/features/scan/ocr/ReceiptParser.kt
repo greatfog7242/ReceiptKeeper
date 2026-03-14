@@ -7,14 +7,18 @@ import java.time.LocalDate
  */
 object ReceiptParser {
 
-    fun parseReceipt(rawText: String, knownVendors: List<String> = emptyList()): ExtractedReceiptData {
+    fun parseReceipt(
+        rawText: String,
+        knownVendors: List<String> = emptyList(),
+        knownCardLast4s: List<String> = emptyList()
+    ): ExtractedReceiptData {
         val lines = rawText.lines().map { it.trim() }.filter { it.isNotBlank() }
 
         return ExtractedReceiptData(
             vendor = extractVendor(lines, knownVendors),
             date = extractDate(rawText),
             amount = extractAmount(rawText),
-            cardLast4 = extractCardNumber(rawText),
+            cardLast4 = extractCardNumber(rawText, knownCardLast4s),
             fullText = rawText
         )
     }
@@ -137,9 +141,9 @@ object ReceiptParser {
     }
 
     /**
-     * Extract last 4 digits of card number
+     * Extract last 4 digits of card number, enhanced with known card last-4 list
      */
-    private fun extractCardNumber(text: String): String? {
+    private fun extractCardNumber(text: String, knownCardLast4s: List<String>): String? {
         val patterns = listOf(
             Regex("""(?:card|xxxx|\*{4})\\s*(\\d{4})""", RegexOption.IGNORE_CASE),
             Regex("""ending\\s+in\\s+(\\d{4})""", RegexOption.IGNORE_CASE),
@@ -147,7 +151,24 @@ object ReceiptParser {
         )
 
         for (pattern in patterns) {
-            pattern.find(text)?.groupValues?.get(1)?.let { return it }
+            pattern.find(text)?.groupValues?.get(1)?.let { found ->
+                if (knownCardLast4s.isEmpty() || knownCardLast4s.contains(found)) {
+                    return found
+                }
+            }
+        }
+
+        if (knownCardLast4s.isNotEmpty()) {
+            val matches = knownCardLast4s
+                .mapNotNull { last4 ->
+                    val match = Regex("\\b$last4\\b").find(text)
+                    match?.let { last4 to it.range.first }
+                }
+                .sortedBy { it.second }
+
+            if (matches.isNotEmpty()) {
+                return matches.first().first
+            }
         }
 
         return null
