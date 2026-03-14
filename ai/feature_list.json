@@ -342,6 +342,11 @@
                                               "id":  "5.11",
                                               "task":  "Add loading indicator during OCR processing",
                                               "status":  "Complete"
+                                          },
+                                          {
+                                              "id":  "5.12",
+                                              "task":  "Improve vendor extraction with known vendors",
+                                              "status":  "Complete"
                                           }
                                       ]
                      },

@@ -103,7 +103,7 @@ class ScanReceiptViewModel @Inject constructor(
             val result = ocrProcessor.processImage(imageUri, application)
 
             if (result.success) {
-                val extracted = ReceiptParser.parseReceipt(result.fullText)
+                val extracted = ReceiptParser.parseReceipt(result.fullText, vendors.value.map { it.name })
                 _uiState.update {
                     it.copy(
                         extractedData = extracted,
@@ -259,3 +259,4 @@ data class ScanReceiptUiState(
     val extractedData: ExtractedReceiptData? = null,
     val error: String? = null
 )
+

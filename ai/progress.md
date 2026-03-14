@@ -2200,3 +2200,26 @@ app/build.gradle.kts (UPDATED - added DataStore dependency)
 - **Deploy:** `adb install -r app/build/outputs/apk/release/app-release.apk` (SUCCESS)
 - **Launch:** `adb shell am start -n com.receiptkeeper/com.receiptkeeper.app.MainActivity` (SUCCESS)
 - **Logcat:** No ReceiptKeeper crashes
+
+## 2026-03-14 - OCR Vendor Extraction Improvement
+
+**Agent:** Codex
+**Feature:** Use known vendors list to improve OCR vendor extraction
+**Status:** ? Complete
+
+### Work Completed
+- Added vendor-aware matching using known vendor names (heuristic + similarity score)
+- Wired vendor list into OCR parsing in ScanReceiptViewModel and manual OCR in ReceiptsScreen
+
+### Build & Deploy
+- **Build:** `./gradlew clean assembleRelease` (SUCCESS)
+- **Deploy:** `adb install -r app/build/outputs/apk/release/app-release.apk` (SUCCESS)
+- **Launch:** `adb shell am start -n com.receiptkeeper/com.receiptkeeper.app.MainActivity` (SUCCESS)
+- **Logcat:** No ReceiptKeeper crashes
+
+### Files Modified
+- `app/src/main/java/com/receiptkeeper/features/scan/ocr/ReceiptParser.kt`
+- `app/src/main/java/com/receiptkeeper/features/scan/ScanReceiptViewModel.kt`
+- `app/src/main/java/com/receiptkeeper/features/receipts/ReceiptsScreen.kt`
+- `ai/feature_list.json`
+- `ai/progress.md`
