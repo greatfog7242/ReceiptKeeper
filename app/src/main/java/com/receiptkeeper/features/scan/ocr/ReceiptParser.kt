@@ -149,20 +149,24 @@ object ReceiptParser {
             .filter { it.length == 4 }
             .toSet()
 
+        val normalizedText = normalizeCardText(text)
+
         if (normalizedKnown.isNotEmpty()) {
+            findKnownLast4WithBoundary(normalizedText, normalizedKnown)?.let { return it }
+
             val maskedPattern = Regex(
-                """(?:card|ending|x{4,}|\*{4,})\\s*(\\d{4})""",
+                """(?:card|ending|x{4,})\\s*(\\d{4})""",
                 RegexOption.IGNORE_CASE
             )
-            for (match in maskedPattern.findAll(text)) {
+            for (match in maskedPattern.findAll(normalizedText)) {
                 val last4 = match.groupValues.getOrNull(1)
                 if (last4 != null && normalizedKnown.contains(last4)) {
                     return last4
                 }
             }
 
-            val compactMaskedPattern = Regex("""[xX\*]{4,}(\\d{4})""")
-            for (match in compactMaskedPattern.findAll(text)) {
+            val compactMaskedPattern = Regex("""x{4,}(\\d{4})""", RegexOption.IGNORE_CASE)
+            for (match in compactMaskedPattern.findAll(normalizedText)) {
                 val last4 = match.groupValues.getOrNull(1)
                 if (last4 != null && normalizedKnown.contains(last4)) {
                     return last4
@@ -170,7 +174,7 @@ object ReceiptParser {
             }
 
             val digitChunks = Regex("""\\d{4,}""")
-            for (match in digitChunks.findAll(text)) {
+            for (match in digitChunks.findAll(normalizedText)) {
                 val digits = match.value
                 val last4 = digits.takeLast(4)
                 if (normalizedKnown.contains(last4)) {
@@ -179,7 +183,7 @@ object ReceiptParser {
             }
 
             val spacedDigits = Regex("""(?:\\d[\\s-]?){4,}""")
-            for (match in spacedDigits.findAll(text)) {
+            for (match in spacedDigits.findAll(normalizedText)) {
                 val digits = match.value.filter(Char::isDigit)
                 if (digits.length >= 4) {
                     val last4 = digits.takeLast(4)
@@ -191,13 +195,13 @@ object ReceiptParser {
         }
 
         val patterns = listOf(
-            Regex("""(?:card|x{4,}|\*{4,})\\s*(\\d{4})""", RegexOption.IGNORE_CASE),
+            Regex("""(?:card|x{4,})\\s*(\\d{4})""", RegexOption.IGNORE_CASE),
             Regex("""ending\\s+in\\s+(\\d{4})""", RegexOption.IGNORE_CASE),
             Regex("""x{4,}(\\d{4})""", RegexOption.IGNORE_CASE)
         )
 
         for (pattern in patterns) {
-            pattern.find(text)?.groupValues?.get(1)?.let { found ->
+            pattern.find(normalizedText)?.groupValues?.get(1)?.let { found ->
                 if (normalizedKnown.isEmpty() || normalizedKnown.contains(found)) {
                     return found
                 }
@@ -207,7 +211,7 @@ object ReceiptParser {
         if (normalizedKnown.isNotEmpty()) {
             val matches = normalizedKnown
                 .mapNotNull { last4 ->
-                    val match = Regex("\\b$last4\\b").find(text)
+                    val match = Regex("\\b$last4\\b").find(normalizedText)
                     match?.let { last4 to it.range.first }
                 }
                 .sortedBy { it.second }
@@ -218,6 +222,41 @@ object ReceiptParser {
         }
 
         return null
+    }
+
+    private fun findKnownLast4WithBoundary(text: String, knownLast4s: Set<String>): String? {
+        for (last4 in knownLast4s) {
+            var index = text.indexOf(last4)
+            while (index >= 0) {
+                val before = if (index > 0) text[index - 1] else null
+                val afterIndex = index + last4.length
+                val after = if (afterIndex < text.length) text[afterIndex] else null
+                val beforeIsDigit = before != null && before.isDigit()
+                val afterIsDigit = after != null && after.isDigit()
+
+                if (!beforeIsDigit && !afterIsDigit) {
+                    return last4
+                }
+
+                index = text.indexOf(last4, index + 1)
+            }
+        }
+
+        return null
+    }
+
+    private fun normalizeCardText(text: String): String {
+        val builder = StringBuilder(text.length)
+        for (ch in text) {
+            val normalized = when (ch) {
+                in '０'..'９' -> (ch.code - '０'.code + '0'.code).toChar()
+                'x', 'X', '*', '#', '•', '·', '×', '●', '■', '□', '▪', '▫' -> 'x'
+                '\u200B', '\u200C', '\u200D', '\uFEFF' -> ' '
+                else -> ch
+            }
+            builder.append(normalized)
+        }
+        return builder.toString()
     }
 
     private fun normalize(text: String): String {
