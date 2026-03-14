@@ -1,4 +1,4 @@
-package com.receiptkeeper.features.receipts
+﻿package com.receiptkeeper.features.receipts
 
 import android.net.Uri
 import android.widget.Toast
@@ -77,6 +77,13 @@ fun ReceiptsScreen(
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 ),
                 actions = {
+                    IconButton(onClick = { viewModel.showAddDialog() }) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add receipt",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
                     // Book filter dropdown
                     if (uiState.books.isNotEmpty()) {
                         IconButton(onClick = { showFilterMenu = true }) {
@@ -130,11 +137,6 @@ fun ReceiptsScreen(
                     }
                 }
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { viewModel.showAddDialog() }) {
-                Icon(Icons.Default.Add, contentDescription = "Add receipt")
-            }
         },
         modifier = modifier
     ) { innerPadding ->
@@ -988,5 +990,6 @@ private fun FullScreenImageDialog(
         }
     }
 }
+
 
 
