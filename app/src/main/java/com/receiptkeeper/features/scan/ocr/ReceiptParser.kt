@@ -1,4 +1,4 @@
-package com.receiptkeeper.features.scan.ocr
+﻿package com.receiptkeeper.features.scan.ocr
 
 import java.time.LocalDate
 
@@ -144,22 +144,68 @@ object ReceiptParser {
      * Extract last 4 digits of card number, enhanced with known card last-4 list
      */
     private fun extractCardNumber(text: String, knownCardLast4s: List<String>): String? {
+        val normalizedKnown = knownCardLast4s
+            .map { it.filter(Char::isDigit) }
+            .filter { it.length == 4 }
+            .toSet()
+
+        if (normalizedKnown.isNotEmpty()) {
+            val maskedPattern = Regex(
+                """(?:card|ending|x{4,}|\*{4,})\\s*(\\d{4})""",
+                RegexOption.IGNORE_CASE
+            )
+            for (match in maskedPattern.findAll(text)) {
+                val last4 = match.groupValues.getOrNull(1)
+                if (last4 != null && normalizedKnown.contains(last4)) {
+                    return last4
+                }
+            }
+
+            val compactMaskedPattern = Regex("""[xX\*]{4,}(\\d{4})""")
+            for (match in compactMaskedPattern.findAll(text)) {
+                val last4 = match.groupValues.getOrNull(1)
+                if (last4 != null && normalizedKnown.contains(last4)) {
+                    return last4
+                }
+            }
+
+            val digitChunks = Regex("""\\d{4,}""")
+            for (match in digitChunks.findAll(text)) {
+                val digits = match.value
+                val last4 = digits.takeLast(4)
+                if (normalizedKnown.contains(last4)) {
+                    return last4
+                }
+            }
+
+            val spacedDigits = Regex("""(?:\\d[\\s-]?){4,}""")
+            for (match in spacedDigits.findAll(text)) {
+                val digits = match.value.filter(Char::isDigit)
+                if (digits.length >= 4) {
+                    val last4 = digits.takeLast(4)
+                    if (normalizedKnown.contains(last4)) {
+                        return last4
+                    }
+                }
+            }
+        }
+
         val patterns = listOf(
-            Regex("""(?:card|xxxx|\*{4})\\s*(\\d{4})""", RegexOption.IGNORE_CASE),
+            Regex("""(?:card|x{4,}|\*{4,})\\s*(\\d{4})""", RegexOption.IGNORE_CASE),
             Regex("""ending\\s+in\\s+(\\d{4})""", RegexOption.IGNORE_CASE),
-            Regex("""x{4}(\\d{4})""", RegexOption.IGNORE_CASE)
+            Regex("""x{4,}(\\d{4})""", RegexOption.IGNORE_CASE)
         )
 
         for (pattern in patterns) {
             pattern.find(text)?.groupValues?.get(1)?.let { found ->
-                if (knownCardLast4s.isEmpty() || knownCardLast4s.contains(found)) {
+                if (normalizedKnown.isEmpty() || normalizedKnown.contains(found)) {
                     return found
                 }
             }
         }
 
-        if (knownCardLast4s.isNotEmpty()) {
-            val matches = knownCardLast4s
+        if (normalizedKnown.isNotEmpty()) {
+            val matches = normalizedKnown
                 .mapNotNull { last4 ->
                     val match = Regex("\\b$last4\\b").find(text)
                     match?.let { last4 to it.range.first }
