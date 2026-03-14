@@ -76,11 +76,14 @@ object ReceiptParser {
      */
     private fun extractDate(text: String): LocalDate? {
         // Try MM/DD/YYYY format
-        val usDatePattern = Regex("""(\d{1,2})[\\/\\-\\\\](\d{1,2})[\\/\\-\\\\](\d{4})""")
+        val usDatePattern = Regex("""(\d{1,2})[\/\-\\](\d{1,2})[\/\-\\](\d{2,4})""")
         usDatePattern.find(text)?.let { match ->
             try {
                 val (month, day, yearStr) = match.destructured
-                val year = yearStr.toInt()
+                var year = yearStr.toInt()
+                if (year < 100) {
+                    year += 2000
+                }
                 // Validate year is reasonable for receipts (2000-2100)
                 if (year in 2000..2100) {
                     return LocalDate.of(year, month.toInt(), day.toInt())
@@ -91,11 +94,14 @@ object ReceiptParser {
         }
 
         // Try DD-MM-YYYY format
-        val euDatePattern = Regex("""(\d{1,2})[\\/\\-\\\\](\d{1,2})[\\/\\-\\\\](\d{4})""")
+        val euDatePattern = Regex("""(\d{1,2})[\/\-\\](\d{1,2})[\/\-\\](\d{2,4})""")
         euDatePattern.find(text)?.let { match ->
             try {
                 val (day, month, yearStr) = match.destructured
-                val year = yearStr.toInt()
+                var year = yearStr.toInt()
+                if (year < 100) {
+                    year += 2000
+                }
                 // Validate year is reasonable for receipts (2000-2100)
                 if (year in 2000..2100) {
                     return LocalDate.of(year, month.toInt(), day.toInt())
@@ -106,11 +112,14 @@ object ReceiptParser {
         }
 
         // Try YYYY-MM-DD format (ISO)
-        val isoDatePattern = Regex("""(\d{4})[\\/\\-\\\\](\d{2})[\\/\\-\\\\](\d{2})""")
+        val isoDatePattern = Regex("""(\d{2,4})[\/\-\\](\d{2})[\/\-\\](\d{2})""")
         isoDatePattern.find(text)?.let { match ->
             try {
                 val (yearStr, month, day) = match.destructured
-                val year = yearStr.toInt()
+                var year = yearStr.toInt()
+                if (year < 100) {
+                    year += 2000
+                }
                 // Validate year is reasonable for receipts (2000-2100)
                 if (year in 2000..2100) {
                     return LocalDate.of(year, month.toInt(), day.toInt())
@@ -296,6 +305,7 @@ object ReceiptParser {
 
     private data class NormalizedVendor(val original: String, val normalized: String)
 }
+
 
 
 
