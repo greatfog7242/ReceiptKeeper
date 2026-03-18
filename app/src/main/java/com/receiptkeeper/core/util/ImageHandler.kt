@@ -55,9 +55,7 @@ class ImageHandler @Inject constructor(
             val filename = "receipt_${UUID.randomUUID()}.$RECEIPT_IMAGE_EXTENSION"
             val destinationFile = File(receiptsDir, filename)
 
-            val orientationDegrees = context.contentResolver.openInputStream(sourceUri)?.use { input ->
-                exifOrientationDegrees(input)
-            } ?: 0f
+            val orientationDegrees = readExifOrientationFromUri(sourceUri)
 
             val compressed = context.contentResolver.openInputStream(sourceUri)?.use { input ->
                 compressImage(input, destinationFile, orientationDegrees)
@@ -242,6 +240,24 @@ class ImageHandler @Inject constructor(
                 bitmap.recycle()
             }
         }
+    }
+
+    // Prefer file-descriptor path for content:// URIs — ExifInterface(InputStream) is unreliable
+    // because media providers often strip EXIF data from the byte stream they return.
+    private fun readExifOrientationFromUri(uri: Uri): Float {
+        // Try file descriptor first (works for content:// URIs on Android 7+)
+        try {
+            context.contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
+                return exifOrientationDegrees(ExifInterface(pfd.fileDescriptor))
+            }
+        } catch (_: Exception) {}
+        // Fallback to stream (e.g. file:// URIs)
+        try {
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                return exifOrientationDegrees(ExifInterface(input))
+            }
+        } catch (_: Exception) {}
+        return 0f
     }
 
     private fun exifOrientationDegrees(inputStream: InputStream): Float {
