@@ -212,7 +212,14 @@ class BackupRestoreService @Inject constructor(
             if (!backupZipFile.exists()) {
                 return@withContext Pair(false, "Backup file not found")
             }
-            
+
+            // Create emergency backup before overwriting any data
+            val (emergencyOk, emergencyMsg) = createBackup()
+            if (!emergencyOk) {
+                return@withContext Pair(false, "Emergency backup failed before restore: $emergencyMsg")
+            }
+            println("Emergency backup created: $emergencyMsg")
+
             // Extract backup to temp directory
             val tempDir = File(context.cacheDir, "restore_temp_${System.currentTimeMillis()}")
             tempDir.mkdirs()
@@ -246,7 +253,8 @@ class BackupRestoreService @Inject constructor(
             // Clean up temp directory
             tempDir.deleteRecursively()
             
-            Pair(true, "Restore completed successfully")
+            val emergencyFilename = emergencyMsg.substringAfterLast("/")
+            Pair(true, "Restore completed successfully. Emergency backup saved as $emergencyFilename")
         } catch (e: Exception) {
             e.printStackTrace()
             Pair(false, "Restore failed: ${e.message}")
