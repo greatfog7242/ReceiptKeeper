@@ -66,26 +66,17 @@ class ReceiptsViewModel @Inject constructor(
                     }
                 }
                 .collect { data ->
-                    val filteredReceipts = if (_uiState.value.selectedBookFilter != null) {
-                        data.receipts.filter { it.bookId == _uiState.value.selectedBookFilter }
-                    } else {
-                        data.receipts
-                    }
-
-                    val totalSpending = filteredReceipts.sumOf { it.totalAmount }
-
-                    _uiState.update {
-                        it.copy(
-                            receipts = filteredReceipts,
+                    _uiState.update { currentState ->
+                        val newState = currentState.copy(
                             allReceipts = data.receipts,
                             books = data.books,
                             vendors = data.vendors,
                             categories = data.categories,
                             paymentMethods = data.paymentMethods,
-                            totalSpending = totalSpending,
                             isLoading = false,
                             error = null
                         )
+                        applyFilters(newState)
                     }
                 }
         }
@@ -247,23 +238,41 @@ class ReceiptsViewModel @Inject constructor(
     }
 
     fun setBookFilter(bookId: Long?) {
-        viewModelScope.launch {
-            _uiState.update { state ->
-                val filteredReceipts = if (bookId != null) {
-                    state.allReceipts.filter { it.bookId == bookId }
-                } else {
-                    state.allReceipts
-                }
+        _uiState.update { state -> applyFilters(state.copy(selectedBookFilter = bookId)) }
+    }
 
-                val totalSpending = filteredReceipts.sumOf { it.totalAmount }
+    fun setSearchQuery(query: String) {
+        _uiState.update { state -> applyFilters(state.copy(searchQuery = query)) }
+    }
 
-                state.copy(
-                    selectedBookFilter = bookId,
-                    receipts = filteredReceipts,
-                    totalSpending = totalSpending
-                )
+    private fun applyFilters(state: ReceiptsUiState): ReceiptsUiState {
+        val bookFiltered = if (state.selectedBookFilter != null) {
+            state.allReceipts.filter { it.bookId == state.selectedBookFilter }
+        } else {
+            state.allReceipts
+        }
+        val query = state.searchQuery.trim().lowercase()
+        val result = if (query.isEmpty()) {
+            bookFiltered
+        } else {
+            bookFiltered.filter { receipt ->
+                val vendor = state.vendors.find { it.id == receipt.vendorId }
+                val category = state.categories.find { it.id == receipt.categoryId }
+                val book = state.books.find { it.id == receipt.bookId }
+                val paymentMethod = state.paymentMethods.find { it.id == receipt.paymentMethodId }
+                listOfNotNull(
+                    vendor?.name,
+                    category?.name,
+                    book?.name,
+                    paymentMethod?.name,
+                    receipt.notes,
+                    receipt.extractedText,
+                    receipt.totalAmount.toString(),
+                    receipt.transactionDate.toString()
+                ).any { it.lowercase().contains(query) }
             }
         }
+        return state.copy(receipts = result, totalSpending = result.sumOf { it.totalAmount })
     }
 
     fun clearError() {
@@ -283,7 +292,8 @@ data class ReceiptsUiState(
     val error: String? = null,
     val showAddDialog: Boolean = false,
     val editingReceipt: Receipt? = null,
-    val selectedBookFilter: Long? = null
+    val selectedBookFilter: Long? = null,
+    val searchQuery: String = ""
 )
 
 private data class ReceiptsData(

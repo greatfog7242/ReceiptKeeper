@@ -13,7 +13,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -57,6 +62,18 @@ fun ReceiptsScreen(
     var receiptToDelete by remember { mutableStateOf<Receipt?>(null) }
     var showFilterMenu by remember { mutableStateOf(false) }
     var fullScreenImageUri by remember { mutableStateOf<String?>(null) }
+    var showSearch by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+    val searchFocusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(showSearch) {
+        if (showSearch) {
+            searchFocusRequester.requestFocus()
+        } else {
+            searchQuery = ""
+            viewModel.setSearchQuery("")
+        }
+    }
 
     // Group receipts by date and track expanded/collapsed state
     val receiptsByDate = uiState.receipts
@@ -70,6 +87,7 @@ fun ReceiptsScreen(
 
     Scaffold(
         topBar = {
+            Column {
             TopAppBar(
                 title = { Text("Receipts") },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -77,6 +95,14 @@ fun ReceiptsScreen(
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 ),
                 actions = {
+                    IconButton(onClick = { showSearch = !showSearch }) {
+                        Icon(
+                            imageVector = if (showSearch) Icons.Default.Close else Icons.Default.Search,
+                            contentDescription = if (showSearch) "Close search" else "Search",
+                            tint = if (showSearch) MaterialTheme.colorScheme.primary
+                                   else MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
                     IconButton(onClick = { viewModel.showAddDialog() }) {
                         Icon(
                             imageVector = Icons.Default.Add,
@@ -137,6 +163,34 @@ fun ReceiptsScreen(
                     }
                 }
             )
+            AnimatedVisibility(visible = showSearch) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it; viewModel.setSearchQuery(it) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .focusRequester(searchFocusRequester),
+                    placeholder = { Text("Search receipts…") },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { searchQuery = ""; viewModel.setSearchQuery("") }) {
+                                Icon(Icons.Default.Clear, contentDescription = "Clear search")
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { searchFocusRequester.freeFocus() }),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                    )
+                )
+            }
+            } // end Column
         },
         modifier = modifier
     ) { innerPadding ->
@@ -166,10 +220,10 @@ fun ReceiptsScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = if (uiState.selectedBookFilter != null) {
-                                "No receipts in this book"
-                            } else {
-                                "No receipts yet"
+                            text = when {
+                                uiState.searchQuery.isNotEmpty() -> "No receipts match your search"
+                                uiState.selectedBookFilter != null -> "No receipts in this book"
+                                else -> "No receipts yet"
                             },
                             style = MaterialTheme.typography.headlineSmall,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
@@ -177,7 +231,7 @@ fun ReceiptsScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Tap + to add a receipt",
+                            text = if (uiState.searchQuery.isNotEmpty()) "Try a different search term" else "Tap + to add a receipt",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                             textAlign = TextAlign.Center
