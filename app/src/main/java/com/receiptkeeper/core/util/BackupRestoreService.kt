@@ -137,7 +137,7 @@ class BackupRestoreService @Inject constructor(
      * Used for manual backups (creates timestamped zip file)
      * @return Pair of success status and backup file path (or error message)
      */
-    suspend fun createBackup(): Pair<Boolean, String> = withContext(Dispatchers.IO) {
+    suspend fun createBackup(label: String = ""): Pair<Boolean, String> = withContext(Dispatchers.IO) {
         try {
             println("=== Starting backup creation ===")
             
@@ -176,7 +176,8 @@ class BackupRestoreService @Inject constructor(
             println("Created backup metadata")
             
             // Create zip archive of the backup
-            val zipFile = File(backupDir.parentFile, "receipt_keeper_backup_$timestamp.zip")
+            val zipSuffix = if (label.isNotEmpty()) "${label}_$timestamp" else timestamp
+            val zipFile = File(backupDir.parentFile, "receipt_keeper_backup_$zipSuffix.zip")
             println("Creating zip archive: $zipFile")
             
             val zipSuccess = createZipArchive(backupDir, zipFile)
@@ -214,7 +215,7 @@ class BackupRestoreService @Inject constructor(
             }
 
             // Create emergency backup before overwriting any data
-            val (emergencyOk, emergencyMsg) = createBackup()
+            val (emergencyOk, emergencyMsg) = createBackup("emergency")
             if (!emergencyOk) {
                 return@withContext Pair(false, "Emergency backup failed before restore: $emergencyMsg")
             }
@@ -619,7 +620,7 @@ class BackupRestoreService @Inject constructor(
      * Extracts timestamp from backup filename
      */
     private fun extractTimestampFromFilename(filename: String): String {
-        val pattern = "receipt_keeper_backup_(\\d{8}_\\d{6})\\.zip".toRegex()
+        val pattern = "receipt_keeper_backup_(?:[^_]+_)?(\\d{8}_\\d{6})\\.zip".toRegex()
         val match = pattern.find(filename)
         return match?.groupValues?.get(1) ?: "Unknown"
     }
