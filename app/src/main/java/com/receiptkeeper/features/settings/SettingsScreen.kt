@@ -22,641 +22,434 @@ import com.receiptkeeper.BuildConfig
 import androidx.navigation.NavController
 
 private val userManualContent = """
-📱 RECEIPTKEEPER - COMPLETE USER MANUAL
-
-Version: 2.0.0 | Last Updated: March 2026
-
-ReceiptKeeper is a comprehensive mobile application for scanning, organizing, analyzing, and backing up receipts. It uses advanced OCR (Optical Character Recognition) with ML Kit to automatically extract information from receipt images, helping you track spending across different categories, vendors, books, and time periods.
-
-🔧 **KEY FEATURES**
-• 📸 Smart OCR scanning with camera
-• 📚 Book-based organization
-• 📊 Advanced analytics with charts
-• 💾 Automatic daily backups
-• 🔄 CSV export functionality
-• 🎯 Spending goal tracking
-• 🏪 Vendor management with brand icons
-• 🏷️ Custom category system
-
----
-
-🚀 **GETTING STARTED**
-
-**First Launch:**
-✅ Database created automatically
-✅ 8 default categories pre-loaded
-✅ Daily backup scheduled for 5:00 AM
-✅ Camera permissions requested (for scanning)
-
-**Quick Start Guide:**
-1. **Create your first book** (Books tab → + button)
-2. **Add vendors** (Settings → Vendors → + button)
-3. **Scan your first receipt** (Scan tab → camera)
-4. **Set up spending goals** (Settings → Spending Goals)
-
----
-
-📱 **NAVIGATION OVERVIEW**
-
-**Bottom Navigation (5 Tabs):**
-
-1. **📚 BOOKS**
-   • Organize receipts into collections
-   • Create books for different purposes
-   • View receipts grouped by date within each book
-
-2. **🧾 RECEIPTS**
-   • View all receipts across all books
-   • Filter by book using dropdown
-   • Date-based grouping with expandable headers
-
-3. **📸 SCAN**
-   • Camera-based receipt scanning
-   • OCR auto-extraction (vendor, amount, date, card)
-   • Manual override for all fields
-
-4. **📊 ANALYTICS**
-   • Spending trends with charts
-   • Category/vendor breakdowns
-   • Book-specific analytics filtering
-   • CSV export functionality
-
-5. **⚙️ SETTINGS**
-   • App configuration
-   • Data management
-   • Backup & restore
-   • User manual (this document)
-
----
-
-📚 **BOOKS - ORGANIZING RECEIPTS**
-
-**What are Books?**
-Books are collections that help organize receipts (e.g., "Personal Expenses", "Business Trips", "Home Renovation").
-
-**Creating a Book:**
-1. Navigate to **Books** tab
-2. Tap **+** (Floating Action Button)
-3. Enter:
-   • Name (required)
-   • Description (optional)
-4. Tap **Save**
-
-**Book Management:**
-• **View book details**: Tap any book card
-• **Edit book**: Tap pencil icon on book card
-• **Delete book**: Tap trash icon (⚠️ deletes all receipts in book)
-• **Sort books**: By name or receipt count
-
-**Book Detail View:**
-• Shows all receipts in the book
-• **Date-based grouping** (like Receipts tab)
-• **Total spending** for the book
-• **No edit/delete buttons** on receipts (read-only view)
-• Tap receipt to view full details
-
----
-
-🧾 **RECEIPTS MANAGEMENT**
-
-**Main Receipts Screen:**
-• **Date-based grouping** with expandable headers
-• **Book filter dropdown** in top app bar
-• **Total spending card** at top
-• **+ button** for manual entry
-
-**Adding a Receipt (Manual):**
-1. Tap **+** button on Receipts screen
-2. Fill form:
-   • **Vendor**: Select from dropdown or type new
-    • **Amount**: $12.34 format (use decimal format)
-   • **Date**: YYYY-MM-DD format
-   • **Book**: Required (dropdown)
-   • **Category**: Required (dropdown)
-   • **Payment Method**: Optional (dropdown)
-   • **Notes**: Optional multi-line
-   • **Image**: Optional (from gallery)
-3. Tap **Save**
-
-**Receipt List Item:**
-• Vendor name with icon/brand logo
-• Amount in bold primary color
-• Category with colored icon
-• Book name
-• Date (MMM dd, yyyy format)
-• Image thumbnail (if available)
-
-**Receipt Actions:**
-• **View details**: Tap receipt card
-• **Edit**: Tap pencil icon on receipt card
-• **Delete**: Tap trash icon on receipt card
-• **View image**: Tap image thumbnail
-
-**Receipt Detail Screen:**
-• Full-size image (tap to enlarge)
-• All receipt metadata
-• Category color indicator
-• OCR extracted text (if scanned)
-• Edit/Delete buttons
-
----
-
-📸 **SCANNING RECEIPTS WITH OCR**
-
-**Three-Step Scanning Workflow:**
-
-**Step 1: Camera Mode**
-• Point camera at receipt
-• Ensure good lighting
-• Keep receipt flat and in focus
-• Tap **capture button** (large circle)
-
-**Step 2: Preview Mode**
-• Review captured image
-• Options:
-   ✅ **Process with OCR** (recommended)
-   ⏭️ **Skip OCR - Enter Manually**
-   🔄 **Retake Photo**
-
-**Step 3: Edit Mode**
-• **Auto-extracted fields** (editable):
-   - Vendor name (with dropdown selection)
-   - Total amount
-   - Transaction date
-   - Card last 4 digits (if found)
-• **Required fields**:
-   - Book selection (dropdown)
-   - Category selection (dropdown)
-• **Optional fields**:
-   - Payment method (dropdown)
-   - Notes (multi-line)
-• **OCR debug view**: Expand to see raw extracted text
-• **Image preview**: Tap to view full-size
-
-**OCR Extraction Patterns:**
-• **Vendor**: First non-date line of text
-• **Date**: MM/DD/YYYY, DD-MM-YYYY, YYYY-MM-DD
-• **Amount**: "total" followed by $12.34 (e.g., $12.34)
-• **Card**: "xxxx", "****", "card" patterns
-
-**Scanning Tips:**
-✅ Good, even lighting
-✅ Receipt flat on surface
-✅ Fill camera frame with receipt
-✅ Hold device steady
-✅ Clean lens for clear images
-
----
-
-📊 **ANALYTICS & REPORTING**
-
-**Date Range Selection:**
-• **Quick ranges**: This Month, Last 30 Days, Last 90 Days, This Year
-• **Custom range**: Tap calendar icon
-
-**Book Filtering:**
-• **Dropdown at top** of analytics screen
-• "All Books" or select specific book
-• All charts update based on selection
-
-**Analytics Components:**
-
-1. **📈 Spending Trend Chart**
-   • Line chart showing accumulated spending over time
-   • **Red line**: Actual spending
-   • **Green dashed line**: Goal projection (if set)
-   • **Legends on right side**
-   • Y-axis: Dollar amounts
-   • X-axis: Dates (MM/DD format)
-
-2. **💰 Total Spending Card**
-   • Total amount for selected period
-   • Receipt count
-   • Compared to spending goals
-
-3. **🎯 Spending Goals Progress**
-   • Visual progress bars
-   • **Green**: Under budget
-   • **Red**: Over budget
-   • Percentage completion
-   • Goal amount vs. actual spending
-
-4. **📊 Category Breakdown**
-   • Visual chart by category
-   • Color-coded by category colors
-   • Percentage distribution
-   • Amount per category
-
-**CSV Export:**
-1. Select date range and book filter
-2. Tap **Export** button (share icon)
-3. System share sheet opens
-4. Choose destination (Email, Drive, etc.)
-5. **Files included**:
-   • `receipts_export_YYYYMMDD.csv`
-   • All receipt data in CSV format
-   • Properly formatted fields with quotes
-
----
-
-⚙️ **SETTINGS & CONFIGURATION**
-
-**Settings Menu Items:**
-
-1. **🏪 VENDORS**
-   • Add/edit/delete vendors
-   • **Brand icons**: Auto-detected for major chains
-   • **Custom icons**: Upload your own
-   • Vendor names used in dropdowns throughout app
-
-2. **🏷️ CATEGORIES**
-   • **8 default categories** (cannot be deleted):
-     - Food 🍕, Grocery 🛒, Hardware 🔨
-     - Entertainment 🎬, Transportation 🚗
-     - Utilities 💡, Healthcare 🏥, Other 📦
-   • **Add custom categories**:
-     - Name, color selection, icon
-   • Color-coded throughout app
-
-3. **💳 PAYMENT METHODS**
-   • Types: Cash, Credit Card, Debit Card, Other
-   • Add last 4 digits for cards
-   • Icons based on payment type
-
-4. **🎯 SPENDING GOALS**
-   • **Periods**: Daily, Weekly, Monthly, Yearly
-   • **Scope**: Overall or category-specific
-   • **Amount**: Target spending limit
-   • **Progress tracking**: Real-time in Analytics
-
-5. **💾 BACKUP & RESTORE** ⭐ **NEW**
-   • **Automatic Daily Backup**:
-     - Runs at 5:00 AM daily
-     - Saves to: `Downloads/雪松堡账本/DailyBackup/`
-     - Includes: Database + all images
-     - Creates: `daily_backup.zip`
-   • **Manual Backup**:
-     - Tap "Create Backup Now"
-     - Timestamped folder in `Downloads/雪松堡账本/`
-   • **Restore**:
-     - Select from backup list
-     - Confirmation dialog
-     - ⚠️ Requires app restart
-   • **Test WorkManager Backup**:
-     - Immediate test of backup system
-     - Verifies WorkManager scheduling
-
-6. **📖 USER MANUAL**
-   • This document
-   • Always accessible
-   • Updated with new features
-
----
-
-💾 **BACKUP SYSTEM - DETAILED GUIDE**
-
-**Automatic Daily Backup:**
-• **Schedule**: 5:00 AM daily
-• **Location**: `Downloads/雪松堡账本/DailyBackup/daily_backup.zip`
-• **Contents**:
-   - `receipt_keeper_backup.db` (database export)
-   - `images/` folder (all receipt images)
-   - `backup_info.txt` (metadata)
-• **Overwrites**: Previous daily backup
-• **Requirements**: No network needed
-
-**Manual Backup:**
-• **Location**: `Downloads/雪松堡账本/YYYYMMDD_HHMMSS/`
-• **File**: `receipt_keeper_backup_YYYYMMDD_HHMMSS.zip`
-• **Same contents** as automatic backup
-
-**Backup Contents:**
-1. **Database Export**: Uses SQLite `VACUUM INTO` for clean copy
-2. **Images**: All `.jpg`, `.jpeg`, `.png`, `.webp` files from receipts
-3. **Metadata**: Backup timestamp, file counts, sizes
-
-**Restore Process:**
-1. Select backup from list
-2. Confirm restoration (⚠️ replaces current data)
-3. App closes automatically
-4. **Restart app** to complete restoration
-5. Verify data integrity
-
-**Testing Backups:**
-• **Test WorkManager Backup** button
-• Triggers immediate backup via WorkManager
-• Check logs for status
-• Verify `daily_backup.zip` creation
-
-**Backup Locations:**
-• **Primary**: External storage (Downloads folder)
-• **Fallback**: App-specific storage (if external unavailable)
-• **Android 11+**: May require permission grant
-
----
-
-📈 **ADVANCED FEATURES**
-
-**Book-Specific Analytics:**
-• Filter analytics by book
-• Compare spending across books
-• Track project/program budgets separately
-
-**Vendor Dropdowns:**
-• Consistent vendor selection across app
-• Prevents duplicates (Walmart vs WALMART vs walmart)
-• Brand icon display in lists
-
-**Date-Based Grouping:**
-• Consistent across Books and Receipts tabs
-• Expandable/collapsible date headers
-• Date totals shown in headers
-• Sorted newest-first
-
-**Image Management:**
-• Thumbnail generation
-• Full-screen viewer with tap-to-close
-• Efficient caching with Coil
-• Storage in app-specific directory
-
-**Form Validation:**
-• Required fields highlighted
-• Amount format validation
-• Date format validation
-• Vendor auto-creation
-
----
-
-🔧 **TROUBLESHOOTING**
-
-**Common Issues & Solutions:**
-
-1. **OCR Not Extracting Data**
-   • Ensure good lighting
-   • Receipt should be flat
-   • Text should be clear and legible
-   • Use manual entry as fallback
-
-2. **Backup Not Running**
-   • Check "Automatic Daily Backup" is enabled
-   • Verify storage permissions
-   • Test with "Test WorkManager Backup"
-   • Check battery optimization settings
-
-3. **App Crashes**
-   • Restart app
-   • Check available storage
-   • Update to latest version
-   • Restore from backup if needed
-
-4. **Images Not Loading**
-   • Check storage permissions
-   • Verify image files exist
-   • Restart app
-   • Check Coil cache settings
-
-5. **Database Issues**
-   • Use backup/restore
-   • Export CSV as backup
-   • Clear app data (last resort)
-
-**Performance Tips:**
-• Keep receipt count under 10,000 for optimal performance
-• Regularly export CSV backups
-• Use books to organize large collections
-• Clear image cache if app slows down
-
----
-
-🔒 **PRIVACY & SECURITY**
-
-**Data Storage:**
-• All data stored locally on device
-• No cloud synchronization
-• No external servers
-• You control all data
-
-**Permissions:**
-• **Camera**: For scanning receipts
-• **Storage**: For saving backups and images
-• **No network permissions required**
-
-**Backup Security:**
-• Backups stored on device
-• Optional manual export to cloud services
-• No automatic cloud uploads
-• You choose backup destinations
-
-**Data Ownership:**
-• You own 100% of your data
-• Export anytime via CSV
-• Delete anytime via app
-• No data mining or sharing
-
----
-
-🔄 **DATA EXPORT & MIGRATION**
-
-**CSV Export:**
-• Full data export from Analytics tab
-• Compatible with Excel, Google Sheets, etc.
-• Includes all receipt fields
-• Image filenames included
-
-**Backup Files:**
-• Standard ZIP format
-• Can be extracted on any device
-• Database in SQLite format
-• Images in original format
-
-**Migration to New Device:**
-1. Create manual backup on old device
-2. Transfer backup file to new device
-3. Install ReceiptKeeper on new device
-4. Restore from backup
-5. Verify data integrity
-
----
-
-📞 **SUPPORT & FEEDBACK**
-
-**Getting Help:**
-• **User Manual**: This document (Settings → User Manual)
-• **GitHub Repository**: Issue tracking and feature requests
-• **In-app feedback**: Coming soon
-
-**Feature Requests:**
-• Submit via GitHub issues
-• Include use case description
-• Priority given to most requested features
-
-**Bug Reports:**
-• Describe steps to reproduce
-• Include device information
-• Screenshots if possible
-• Error messages if any
-
----
-
-📋 **QUICK REFERENCE**
-
-**Keyboard Shortcuts (Web Version):**
-• `Ctrl + N`: New receipt
-• `Ctrl + F`: Filter receipts
-• `Ctrl + E`: Export data
-• `Ctrl + S`: Save receipt
-
-**Icon Meanings:**
-• 📚 Books: Collection of receipts
-• 🧾 Receipt: Individual transaction
-• 📸 Camera: Scan receipt
-• 📊 Chart: Analytics
-• ⚙️ Gear: Settings
-• 💾 Floppy disk: Backup
-• 🔄 Arrows: Restore
-• 📤 Box with arrow: Export
-
-**Color Coding:**
-• **Primary**: Main actions, totals
-• **Success**: Under budget, completed
-• **Error**: Over budget, warnings
-• **Surface**: Background elements
-• **Variant**: Secondary elements
-
----
-
-🎯 **BEST PRACTICES**
-
-**Receipt Management:**
-1. **Scan immediately** after purchase
-2. **Categorize consistently** for accurate analytics
-3. **Use books** for different expense types
-4. **Review monthly** using Analytics tab
-5. **Export quarterly** for external records
-
-**Backup Strategy:**
-1. **Enable automatic daily backups**
-2. **Monthly manual backups** for archives
-3. **Export CSV quarterly** for spreadsheet analysis
-4. **Store backups** in multiple locations
-
-**Analytics Review:**
-1. **Weekly**: Check spending vs goals
-2. **Monthly**: Category breakdown review
-3. **Quarterly**: Vendor spending analysis
-4. **Yearly**: Annual spending trends
-
----
-
-🆕 **VERSION 2.0 HIGHLIGHTS**
-
-**New in This Version:**
-✅ **Automatic daily backups** with WorkManager
-✅ **Book-specific analytics** filtering
-✅ **Spending trend charts** with right-side legends
-✅ **Enhanced BookDetailScreen** with date grouping
-✅ **Test WorkManager Backup** button
-✅ **Updated User Manual** (this document)
-✅ **Improved backup/restore UI**
-✅ **Better error handling** throughout app
-
-**Coming Soon:**
-• Multi-device sync
-• Receipt search functionality
-• Custom report generation
-• Receipt sharing options
-• Advanced OCR models
-
----
-
-📄 **LICENSE & ATTRIBUTIONS**
-
-**Open Source Components:**
-• Jetpack Compose (UI framework)
-• Room Database (local storage)
-• ML Kit (OCR functionality)
-• CameraX (camera integration)
-• Coil (image loading)
-• WorkManager (background tasks)
-
-**License:**
-• MIT License
-• Free for personal and commercial use
-• Source code available on GitHub
-
-**Attributions:**
-• Icons: Material Design Icons
-• OCR: Google ML Kit
-• Database: Android Room
-• UI: Jetpack Compose
-
----
-
-❓ **FREQUENTLY ASKED QUESTIONS**
-
-**Q: Is my data backed up automatically?**
-A: Yes, if "Automatic Daily Backup" is enabled (default). Backups run at 5:00 AM daily.
-
-**Q: Can I use the app offline?**
-A: Yes! All features work offline except for initial brand icon downloads.
-
-**Q: How do I transfer data to a new phone?**
-A: Create a manual backup, transfer the ZIP file, install app on new phone, then restore.
-
-**Q: Are receipt images stored securely?**
-A: Yes, images are stored in app-specific directory and included in encrypted backups.
-
-**Q: Can I export data to Excel?**
-A: Yes, use CSV export from Analytics tab. Files are compatible with Excel/Sheets.
-
-**Q: What happens if I delete the app?**
-A: All local data is deleted. Restore from backup after reinstalling.
-
-**Q: Is there a web version?**
-A: Not currently. Mobile-only for now.
-
----
-
-🎉 **GETTING THE MOST FROM RECEIPTKEEPER**
-
-**Pro Tips:**
-1. **Consistency is key** - Scan receipts daily
-2. **Use books wisely** - Separate personal/business
-3. **Set realistic goals** - Start with monthly targets
-4. **Regular reviews** - Weekly analytics check
-5. **Multiple backups** - Local + cloud storage
-
-**Success Stories:**
-• Users save 15% annually by tracking spending
-• Small businesses track deductible expenses
-• Travelers organize trip receipts
-• Homeowners track renovation costs
-
-**Community:**
-• Share tips on GitHub
-• Request features
-• Report bugs
-• Help improve the app
-
----
-
-📱 **APP INFORMATION**
-
-**Version:** 2.0.0
-**Minimum Android:** 8.0 (API 26)
-**Target Android:** 15 (API 35)
-**Package:** com.receiptkeeper
-**Release Date:** March 2026
-**Developer:** ReceiptKeeper Team
-**Support:** GitHub Issues
-
-**Thank you for using ReceiptKeeper!** 🎉
-
-Your financial organization journey starts here. Scan, track, analyze, and save with confidence.
-
----
-*This manual is always available in Settings → User Manual*
-*Last updated: March 6, 2026*
+RECEIPTKEEPER USER MANUAL
+═══════════════════════════════════════
+Version 2.1  |  Updated March 2026
+
+ReceiptKeeper is a fully offline receipt management app. Capture receipts with your camera, let OCR extract the key details automatically, organize them into books, track spending across categories, and keep everything backed up — all without any cloud account or network connection.
+
+───────────────────────────────────────
+QUICK START
+───────────────────────────────────────
+
+1. Open the Books tab and tap + to create your first book
+   (e.g., "Groceries", "Business", "Home")
+2. Go to the Scan tab to photograph a receipt
+3. Review the auto-extracted fields and tap Save
+4. Open the Receipts tab to see your receipt, or Analytics to see spending charts
+
+That's the core loop. Everything else builds on it.
+
+───────────────────────────────────────
+BOTTOM NAVIGATION — 5 TABS
+───────────────────────────────────────
+
+📚 BOOKS
+   Organize receipts into named collections.
+
+🧾 RECEIPTS
+   See every receipt across all books in one list.
+
+📸 SCAN
+   Photograph a receipt and let OCR fill in the fields.
+
+📊 ANALYTICS
+   Charts, category breakdowns, and spending goal tracking.
+
+⚙️ SETTINGS
+   Vendors, categories, payment methods, backup, and this manual.
+
+───────────────────────────────────────
+📚  BOOKS
+───────────────────────────────────────
+
+Books let you group receipts by purpose — a work trip, a home project, monthly household expenses, etc.
+
+CREATING A BOOK
+  1. Tap + (floating button, bottom-right)
+  2. Enter a name (required) and optional description
+  3. Tap Save
+
+MANAGING BOOKS
+  • Edit — tap the pencil icon on a book card
+  • Delete — tap the trash icon
+    ⚠ Deleting a book permanently deletes all its receipts
+  • Sort — tap the sort icon in the top bar to toggle between
+    sort by name and sort by receipt count
+
+BOOK DETAIL VIEW
+  • All receipts in the book, grouped by date
+  • Tap a date header to expand / collapse that day
+  • Date headers show the daily total on the right
+  • Tap any receipt row to open its full detail screen
+
+───────────────────────────────────────
+🧾  RECEIPTS
+───────────────────────────────────────
+
+The Receipts tab shows every receipt in the database, newest first.
+
+DATE GROUPING
+  Receipts are grouped under date headers. Tap a header to
+  expand or collapse that day's receipts. The header shows
+  the day's total spending on the right.
+
+TOTAL SPENDING CARD
+  A card at the top shows the running total for the currently
+  visible (filtered / searched) receipts.
+
+SEARCHING  (🔍 icon in top bar)
+  Tap the magnifying glass to open the search field.
+  The search runs instantly across ALL receipt fields:
+    • Vendor name
+    • Category name
+    • Book name
+    • Payment method name
+    • Notes
+    • OCR extracted text
+    • Amount (e.g. type "12.5" to find $12.50)
+    • Date (e.g. type "2026-02")
+  Tap ✕ inside the field to clear the query.
+  Tap the icon again (now shows ✕) to close search entirely.
+  Search and the book filter work together simultaneously.
+
+BOOK FILTER  (funnel icon in top bar)
+  Tap the funnel to filter by a specific book.
+  A filled / colored funnel means a filter is active.
+
+ADDING A RECEIPT MANUALLY  (+ icon in top bar)
+  Fill in:
+    • Vendor — choose from dropdown or type a new name
+    • Amount — decimal format, e.g. 12.34
+    • Date — tap to open date picker
+    • Book — required, choose from dropdown
+    • Category — required, choose from dropdown
+    • Payment Method — optional
+    • Notes — optional free-form text
+    • Image — optional, pick from gallery
+  Tap Save.
+
+RECEIPT ACTIONS
+  • Tap card → open detail screen
+  • Pencil icon → edit
+  • Trash icon → delete (with confirmation)
+  • Image thumbnail → full-screen image viewer
+
+RECEIPT DETAIL SCREEN
+  • Full-size image at the top — tap it to open the full-screen viewer
+  • All metadata: vendor, category, book, payment method, date
+  • Notes and raw OCR text (if scanned)
+  • Download button saves the image to your Downloads folder
+  • Back arrow returns to the list
+
+FULL-SCREEN IMAGE VIEWER
+  • Pinch with two fingers to zoom in (up to 8×)
+  • Drag to pan when zoomed in
+  • Pinch back out to return to fit-screen view
+  • Tap the download icon (top-right) to save the image to gallery
+  • Tap ✕ to close
+
+───────────────────────────────────────
+📸  SCAN (OCR)
+───────────────────────────────────────
+
+STEP 1 — CAMERA
+  Point the camera at the receipt, ensure it is flat and
+  well-lit, then tap the large circular shutter button.
+
+STEP 2 — PREVIEW
+  Review the captured image. Choose one of:
+    ✅ Process with OCR — recommended
+    ✏️  Skip OCR, enter manually
+    🔄 Retake photo
+
+STEP 3 — EDIT & SAVE
+  OCR pre-fills these fields (all editable):
+    • Vendor name
+    • Total amount
+    • Transaction date
+    • Card last 4 digits (if visible on receipt)
+  You must also select:
+    • Book (required)
+    • Category (required)
+  Optionally add:
+    • Payment method
+    • Notes
+  Expand "Raw OCR Text" to see exactly what was extracted.
+  Tap Save. You are taken directly to the new receipt's detail screen.
+
+WHAT OCR LOOKS FOR
+  • Vendor  — prominent text in the top section of the receipt
+  • Date    — patterns: MM/DD/YYYY · DD-MM-YYYY · YYYY-MM-DD
+              also 2-digit years (MM/DD/YY)
+  • Amount  — lines containing "total" followed by a dollar amount
+              also handles trailing-dash negatives (e.g. 12.34-)
+  • Card    — text containing "xxxx", "****", or "card" near 4 digits
+
+TIPS FOR BEST OCR RESULTS
+  ✅ Even, bright lighting — avoid shadows across the text
+  ✅ Lay the receipt flat; creases cause blur
+  ✅ Fill the camera frame with the receipt
+  ✅ Keep the phone steady while shooting
+  ✅ Always review and correct the extracted fields before saving
+
+───────────────────────────────────────
+📊  ANALYTICS
+───────────────────────────────────────
+
+DATE RANGE
+  Choose a quick range: This Month · Last 30 Days ·
+  Last 90 Days · This Year
+  Or tap the calendar icon for a custom start and end date.
+
+BOOK FILTER
+  The dropdown at the top of the screen limits all charts and
+  totals to a single book, or shows all books combined.
+
+SPENDING TREND CHART
+  A line chart of cumulative spending over the selected period.
+  Red solid line = actual spending.
+  Green dashed line = goal projection (when a goal is set).
+
+TOTAL SPENDING SUMMARY
+  Total amount and receipt count for the selected period and book.
+
+SPENDING GOALS
+  Progress bars for each goal you have set.
+  Green = under budget. Red = over budget.
+  Shows amount spent vs. goal amount and percentage used.
+
+CATEGORY BREAKDOWN
+  Switch between Pie, Bar, and Treemap views using the icons.
+  Each slice / bar / tile is color-coded to match the category color
+  you assigned in Settings → Categories.
+
+VENDOR BREAKDOWN
+  Same chart options (Pie / Bar / Treemap) for top vendors.
+
+CSV EXPORT
+  1. Set your desired date range and book filter
+  2. Tap the share icon (top-right of Analytics screen)
+  3. The system share sheet opens — choose email, Drive, etc.
+  The exported file is named receipts_export_YYYYMMDD.csv and
+  contains all fields: date, vendor, category, amount, book,
+  payment method, notes, image filename.
+
+───────────────────────────────────────
+⚙️  SETTINGS
+───────────────────────────────────────
+
+VENDORS
+  Add, rename, or delete vendor names.
+  For well-known chains, ReceiptKeeper automatically shows a
+  brand logo instead of a generic icon.
+  You can also upload a custom icon for any vendor.
+  Vendor names appear in the dropdown when adding or editing receipts.
+
+CATEGORIES
+  8 built-in categories cannot be deleted:
+    Food · Grocery · Hardware · Entertainment
+    Transportation · Utilities · Healthcare · Other
+  You can add custom categories with a custom name, color, and icon.
+  Colors appear throughout the app on charts and list items.
+
+ICON THEME
+  Toggle between colorful icons and monochrome icons.
+  The choice applies globally across all screens.
+
+PAYMENT METHODS
+  Create payment methods of type: Cash, Credit Card, Debit Card, Other.
+  For cards, you can store the last 4 digits.
+  The appropriate icon is shown automatically.
+
+SPENDING GOALS
+  Create one or more goals:
+    • Period — Daily, Weekly, Monthly, or Yearly
+    • Scope  — overall spending or a specific category
+    • Amount — your target limit
+  Progress appears on the Analytics screen in real time.
+
+BACKUP & RESTORE
+  (See full details in the Backup section below.)
+
+USER MANUAL
+  This document. Always up to date.
+
+ABOUT
+  Shows the app version and build number.
+
+───────────────────────────────────────
+💾  BACKUP & RESTORE
+───────────────────────────────────────
+
+All backup files are stored locally. No network is needed.
+Location: Downloads/雪松堡账本/
+
+AUTOMATIC DAILY BACKUP
+  Runs at 5:00 AM every day via WorkManager.
+  File: Downloads/雪松堡账本/DailyBackup/daily_backup.zip
+  Each run overwrites the previous daily backup file.
+  Contents of the zip:
+    • receipt_keeper_backup.db  (SQLite database export)
+    • images/                   (all receipt image files)
+    • backup_info.txt           (timestamp and metadata)
+
+  If the auto-backup is not running, check:
+    1. "Automatic Daily Backup" toggle is ON
+    2. Storage permission is granted
+    3. Battery optimization is not blocking the app
+       (tap "Battery Optimization" in the backup screen)
+  Use "Test WorkManager Backup" to trigger an immediate test run.
+
+MANUAL BACKUP
+  Tap "Create Backup Now" at any time.
+  File: Downloads/雪松堡账本/receipt_keeper_backup_YYYYMMDD_HHmmss.zip
+  Same contents as the daily backup.
+
+EMERGENCY BACKUP BEFORE RESTORE
+  Every time you restore a backup, the app automatically creates
+  a full backup of your current data first.
+  File: Downloads/雪松堡账本/receipt_keeper_backup_emergency_YYYYMMDD_HHmmss.zip
+  If the emergency backup fails, the restore is aborted — your
+  data is never overwritten unless the safety copy succeeded.
+
+RESTORING FROM A BACKUP
+  1. Tap any backup entry in the list to select it
+  2. Tap Restore in the confirmation dialog
+  3. The emergency backup is created automatically
+  4. The database and images are restored
+  5. Force-close the app and reopen it to complete the restore
+  ⚠ Restoring replaces ALL current data with the backup's data.
+
+DELETING A BACKUP
+  Swipe or tap the trash icon on any backup entry.
+  The daily_backup.zip entry is re-created by the next scheduled run.
+
+RECOMPRESS IMAGES TO WEBP
+  Found in the backup screen. Converts any legacy JPEG/PNG receipt
+  images in the database to WebP format to save storage space.
+  Rotation (EXIF orientation) is preserved during conversion.
+
+MIGRATING TO A NEW DEVICE
+  1. Create a manual backup on the old device
+  2. Copy the ZIP file to the new device (USB, email, cloud, etc.)
+  3. Install ReceiptKeeper on the new device
+  4. Open Settings → Backup & Restore and place the ZIP file in
+     Downloads/雪松堡账本/
+  5. Select it from the backup list and tap Restore
+  6. Restart the app
+
+───────────────────────────────────────
+🔒  PRIVACY
+───────────────────────────────────────
+
+  • All data is stored only on your device
+  • No accounts, no cloud sync, no external servers
+  • No network permission is required for any core feature
+  • Camera permission is needed for the Scan tab
+  • Storage permission is needed to write backup files
+  • You own your data — export or delete it at any time
+
+───────────────────────────────────────
+🔧  TROUBLESHOOTING
+───────────────────────────────────────
+
+OCR extracts wrong or missing data
+  → Check lighting and receipt flatness
+  → Zoom in — fill the frame with the receipt
+  → All OCR fields are editable before saving
+  → Use "Skip OCR" and enter manually if needed
+
+Backup not running automatically
+  → Verify the toggle is enabled in Backup & Restore
+  → Grant storage permission if prompted
+  → Tap "Test WorkManager Backup" to verify the scheduler
+  → Disable battery optimization for ReceiptKeeper
+
+Images appear rotated
+  → This was a known issue; it is fixed in v2.1
+  → Use "Recompress Images to WebP" to re-process old images
+
+Analytics shows no data
+  → Confirm the date range includes your receipts
+  → Check whether a book filter is hiding receipts
+  → Verify receipts have been saved successfully
+
+App is slow with many receipts
+  → Use books to split large collections
+  → Export older periods to CSV and delete them from the app
+  → Use "Recompress Images to WebP" to reduce image storage
+
+Database appears empty after restore
+  → Force-close the app completely and reopen it
+  → If still empty, the restore may have failed — check that the
+    emergency backup file exists in Downloads/雪松堡账本/
+
+───────────────────────────────────────
+❓  FREQUENTLY ASKED QUESTIONS
+───────────────────────────────────────
+
+Q: Is my data backed up automatically?
+A: Yes, once daily at 5 AM if the automatic backup toggle is on.
+
+Q: Can I use the app with no internet?
+A: Yes. All features are fully offline.
+
+Q: Can I accidentally lose data when restoring?
+A: No. An emergency backup is always created before any restore.
+   If the emergency backup fails, the restore is cancelled.
+
+Q: How do I move my data to a new phone?
+A: Create a manual backup → copy the ZIP to the new phone →
+   install the app → restore from the backup file.
+
+Q: Can I open the CSV export in Excel?
+A: Yes. The CSV uses standard comma-separated format with
+   quoted fields, compatible with Excel, Google Sheets, etc.
+
+Q: What happens if I delete the app?
+A: App data is deleted. Backup ZIP files in Downloads/雪松堡账本/
+   are NOT deleted (they are in external storage).
+   Reinstall the app and restore from a backup.
+
+Q: Can I zoom in on receipt images?
+A: Yes. Tap the image to open the full-screen viewer, then
+   pinch with two fingers to zoom up to 8× and drag to pan.
+
+Q: Can the OCR handle non-English receipts?
+A: The current OCR engine (ML Kit Latin) works best with
+   English and other Latin-alphabet languages.
+
+───────────────────────────────────────
+📋  VERSION HISTORY
+───────────────────────────────────────
+
+v2.1 — March 2026
+  ✅ Full-text search on Receipts screen (vendor, category,
+     book, payment, notes, OCR text, amount, date)
+  ✅ Pinch-to-zoom and pan in full-screen image viewer (up to 8×)
+  ✅ Emergency backup auto-created before every restore
+  ✅ EXIF orientation preserved when converting images to WebP
+  ✅ Emergency backup files labelled with "emergency" in filename
+
+v2.0 — February 2026
+  ✅ Automatic daily backup via WorkManager
+  ✅ Book-specific analytics filtering
+  ✅ Spending trend chart with goal projection line
+  ✅ Treemap chart view for categories and vendors
+  ✅ Icon theme toggle (colorful vs monochrome)
+  ✅ Recompress images to WebP
+
+───────────────────────────────────────
+📱  APP INFORMATION
+───────────────────────────────────────
+
+Minimum Android : 8.0 (API 26)
+Target Android  : 15 (API 35)
+Package         : com.receiptkeeper
+Support         : GitHub Issues
+
+Thank you for using ReceiptKeeper.
 """.trimIndent()
 
 /**
@@ -841,55 +634,42 @@ private fun AboutDialog(onDismiss: () -> Unit) {
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun UserManualDialog(onDismiss: () -> Unit) {
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)
     ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth(0.95f)
-                .fillMaxHeight(0.9f)
-        ) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("User Manual") },
+                    navigationIcon = {
+                        IconButton(onClick = onDismiss) {
+                            Icon(Icons.Default.Close, contentDescription = "Close")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                )
+            }
+        ) { innerPadding ->
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
-                // Top bar
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "User Manual",
-                        style = MaterialTheme.typography.headlineSmall
-                    )
-                    IconButton(onClick = onDismiss) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Close"
-                        )
-                    }
-                }
-
-                HorizontalDivider()
-
-                // Scrollable content
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp)
-                ) {
-                    Text(
-                        text = userManualContent,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
+                Text(
+                    text = userManualContent,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                )
             }
         }
     }
