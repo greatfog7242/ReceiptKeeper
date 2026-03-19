@@ -241,21 +241,35 @@ class ReceiptsViewModel @Inject constructor(
         _uiState.update { state -> applyFilters(state.copy(selectedBookFilter = bookId)) }
     }
 
+    fun setVendorFilter(vendorId: Long?) {
+        _uiState.update { state -> applyFilters(state.copy(selectedVendorFilter = vendorId)) }
+    }
+
+    fun setPaymentFilter(paymentMethodId: Long?) {
+        _uiState.update { state -> applyFilters(state.copy(selectedPaymentFilter = paymentMethodId)) }
+    }
+
     fun setSearchQuery(query: String) {
         _uiState.update { state -> applyFilters(state.copy(searchQuery = query)) }
     }
 
     private fun applyFilters(state: ReceiptsUiState): ReceiptsUiState {
-        val bookFiltered = if (state.selectedBookFilter != null) {
+        var filtered = if (state.selectedBookFilter != null) {
             state.allReceipts.filter { it.bookId == state.selectedBookFilter }
         } else {
             state.allReceipts
         }
+        if (state.selectedVendorFilter != null) {
+            filtered = filtered.filter { it.vendorId == state.selectedVendorFilter }
+        }
+        if (state.selectedPaymentFilter != null) {
+            filtered = filtered.filter { it.paymentMethodId == state.selectedPaymentFilter }
+        }
         val query = state.searchQuery.trim().lowercase()
         val result = if (query.isEmpty()) {
-            bookFiltered
+            filtered
         } else {
-            bookFiltered.filter { receipt ->
+            filtered.filter { receipt ->
                 val vendor = state.vendors.find { it.id == receipt.vendorId }
                 val category = state.categories.find { it.id == receipt.categoryId }
                 val book = state.books.find { it.id == receipt.bookId }
@@ -293,6 +307,8 @@ data class ReceiptsUiState(
     val showAddDialog: Boolean = false,
     val editingReceipt: Receipt? = null,
     val selectedBookFilter: Long? = null,
+    val selectedVendorFilter: Long? = null,
+    val selectedPaymentFilter: Long? = null,
     val searchQuery: String = ""
 )
 

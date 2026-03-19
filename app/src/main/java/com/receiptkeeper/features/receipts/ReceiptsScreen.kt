@@ -61,6 +61,8 @@ fun ReceiptsScreen(
     val uiState by viewModel.uiState.collectAsState()
     var receiptToDelete by remember { mutableStateOf<Receipt?>(null) }
     var showFilterMenu by remember { mutableStateOf(false) }
+    var showVendorMenu by remember { mutableStateOf(false) }
+    var showPaymentMenu by remember { mutableStateOf(false) }
     var fullScreenImageUri by remember { mutableStateOf<String?>(null) }
     var showSearch by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
@@ -154,6 +156,109 @@ fun ReceiptsScreen(
                                     },
                                     leadingIcon = {
                                         if (uiState.selectedBookFilter == book.id) {
+                                            Icon(Icons.Default.Check, contentDescription = null)
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    // Vendor filter dropdown
+                    if (uiState.vendors.isNotEmpty()) {
+                        IconButton(onClick = { showVendorMenu = true }) {
+                            Icon(
+                                imageVector = Icons.Default.Store,
+                                contentDescription = "Filter by vendor",
+                                tint = if (uiState.selectedVendorFilter != null) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.onPrimaryContainer
+                                }
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = showVendorMenu,
+                            onDismissRequest = { showVendorMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("All Vendors") },
+                                onClick = {
+                                    viewModel.setVendorFilter(null)
+                                    showVendorMenu = false
+                                },
+                                leadingIcon = {
+                                    if (uiState.selectedVendorFilter == null) {
+                                        Icon(Icons.Default.Check, contentDescription = null)
+                                    }
+                                }
+                            )
+                            HorizontalDivider()
+                            uiState.vendors.forEach { vendor ->
+                                DropdownMenuItem(
+                                    text = { Text(vendor.name) },
+                                    onClick = {
+                                        viewModel.setVendorFilter(vendor.id)
+                                        showVendorMenu = false
+                                    },
+                                    leadingIcon = {
+                                        if (uiState.selectedVendorFilter == vendor.id) {
+                                            Icon(Icons.Default.Check, contentDescription = null)
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    // Payment method filter dropdown
+                    if (uiState.paymentMethods.isNotEmpty()) {
+                        IconButton(onClick = { showPaymentMenu = true }) {
+                            Icon(
+                                imageVector = Icons.Default.CreditCard,
+                                contentDescription = "Filter by payment method",
+                                tint = if (uiState.selectedPaymentFilter != null) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.onPrimaryContainer
+                                }
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = showPaymentMenu,
+                            onDismissRequest = { showPaymentMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("All Payment Methods") },
+                                onClick = {
+                                    viewModel.setPaymentFilter(null)
+                                    showPaymentMenu = false
+                                },
+                                leadingIcon = {
+                                    if (uiState.selectedPaymentFilter == null) {
+                                        Icon(Icons.Default.Check, contentDescription = null)
+                                    }
+                                }
+                            )
+                            HorizontalDivider()
+                            uiState.paymentMethods.forEach { pm ->
+                                DropdownMenuItem(
+                                    text = {
+                                        val label = if (pm.lastFourDigits != null) {
+                                            "${pm.name} ••••${pm.lastFourDigits}"
+                                        } else {
+                                            pm.name
+                                        }
+                                        Text(label)
+                                    },
+                                    onClick = {
+                                        viewModel.setPaymentFilter(pm.id)
+                                        showPaymentMenu = false
+                                    },
+                                    leadingIcon = {
+                                        if (uiState.selectedPaymentFilter == pm.id) {
                                             Icon(Icons.Default.Check, contentDescription = null)
                                         }
                                     }
