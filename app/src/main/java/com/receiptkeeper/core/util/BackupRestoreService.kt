@@ -43,6 +43,7 @@ class BackupRestoreService @Inject constructor(
         private const val DAILY_BACKUP_FOLDER_NAME = "DailyBackup"
         private const val DATABASE_BACKUP_NAME = "receipt_keeper_backup.db"
         private const val IMAGES_SUBFOLDER = "images"
+        private const val CUSTOM_ICONS_SUBFOLDER = "custom_brand_logos"
         private const val BACKUP_ZIP_NAME = "receipt_keeper_backup.zip"
         private const val BACKUP_METADATA_FILE = "backup_info.txt"
         
@@ -89,12 +90,18 @@ class BackupRestoreService @Inject constructor(
             
             val imageCopySuccess = copyReceiptImages(imagesDir)
             println("Image copy success: $imageCopySuccess")
-            
+
             if (!imageCopySuccess) {
                 tempBackupDir.deleteRecursively()
                 return@withContext Pair(false, "Failed to copy images")
             }
-            
+
+            // Copy custom brand icons
+            val customIconsDir = File(tempBackupDir, CUSTOM_ICONS_SUBFOLDER)
+            customIconsDir.mkdirs()
+            copyCustomBrandIcons(customIconsDir)
+            println("Custom brand icons copied")
+
             // Create backup metadata file
             createBackupMetadata(tempBackupDir, timestamp)
             println("Created backup metadata")
@@ -166,11 +173,17 @@ class BackupRestoreService @Inject constructor(
             
             val imageCopySuccess = copyReceiptImages(imagesDir)
             println("Image copy success: $imageCopySuccess")
-            
+
             if (!imageCopySuccess) {
                 return@withContext Pair(false, "Failed to copy images")
             }
-            
+
+            // Copy custom brand icons
+            val customIconsDir = File(backupDir, CUSTOM_ICONS_SUBFOLDER)
+            customIconsDir.mkdirs()
+            copyCustomBrandIcons(customIconsDir)
+            println("Custom brand icons copied")
+
             // Create backup metadata file
             createBackupMetadata(backupDir, timestamp)
             println("Created backup metadata")
@@ -250,7 +263,13 @@ class BackupRestoreService @Inject constructor(
             if (imagesDir.exists()) {
                 copyImagesToAppDirectory(imagesDir)
             }
-            
+
+            // Restore custom brand icons
+            val customIconsDir = File(tempDir, CUSTOM_ICONS_SUBFOLDER)
+            if (customIconsDir.exists()) {
+                copyCustomIconsToAppDirectory(customIconsDir)
+            }
+
             // Clean up temp directory
             tempDir.deleteRecursively()
             
@@ -526,6 +545,40 @@ class BackupRestoreService @Inject constructor(
                 if (imageFile.isFile) {
                     val destFile = File(receiptsDir, imageFile.name)
                     imageFile.copyTo(destFile, overwrite = true)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    /**
+     * Copies custom brand icon images to backup directory
+     */
+    private fun copyCustomBrandIcons(destinationDir: File) {
+        try {
+            val customIconsDir = File(context.filesDir, com.receiptkeeper.core.util.IconHelper.CUSTOM_ICONS_DIR)
+            if (!customIconsDir.exists()) return
+            customIconsDir.listFiles()?.forEach { file ->
+                if (file.isFile) {
+                    file.copyTo(File(destinationDir, file.name), overwrite = true)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    /**
+     * Copies custom brand icons from backup to app's internal storage
+     */
+    private fun copyCustomIconsToAppDirectory(sourceDir: File) {
+        try {
+            val customIconsDir = File(context.filesDir, com.receiptkeeper.core.util.IconHelper.CUSTOM_ICONS_DIR)
+            customIconsDir.mkdirs()
+            sourceDir.listFiles()?.forEach { file ->
+                if (file.isFile) {
+                    file.copyTo(File(customIconsDir, file.name), overwrite = true)
                 }
             }
         } catch (e: Exception) {
