@@ -269,34 +269,86 @@ class ReceiptDetailViewModel @Inject constructor(
 RFC 3161 Evidence Package - Verification Guide
 ===============================================
 
-This package contains three verifiable components:
+This package contains four verifiable components:
   receipt_image.jpg    - The original receipt photo
-  manifest.json        - Metadata and hashes
-  timestamp_proof.tsr  - Binary RFC 3161 timestamp response from FreeTSA
+  manifest.json        - Receipt metadata and hashes
+  timestamp_query.tsq  - The exact query sent to the TSA (binary, RFC 3161)
+  timestamp_proof.tsr  - The signed timestamp response from FreeTSA (binary, RFC 3161)
 
 == Step 1: Verify Image Integrity ==
-sha256sum receipt_image.jpg
-  -> Must match 'hashes.image_sha256' in manifest.json
 
-== Step 2: Verify Timestamp Input ==
-The field 'hashes.canonical_string' in manifest.json is the exact string
-that was SHA-256 hashed and sent to FreeTSA. Verify it:
-  echo -n "<canonical_string>" | sha256sum
-  -> Must match 'hashes.manifest_data_sha256' in manifest.json
+  sha256sum receipt_image.jpg
+
+  -> Must match 'hashes.image_sha256' in manifest.json.
+     If the receipt has no image, the value will be the literal string "no-image".
+
+== Step 2: Independently Reconstruct the Canonical String ==
+
+The canonical string is the exact UTF-8 string that was SHA-256 hashed and
+submitted to the TSA. An auditor can rebuild it from scratch using the
+following rules, without trusting manifest.json at all.
+
+  FIELD ORDER (10 fields, zero-indexed):
+    0  Receipt ID          integer (as printed in the app)
+    1  Total Amount        Kotlin Double.toString() — e.g. "12.5", "100.0"
+                           (no rounding; trailing zero after decimal point kept)
+    2  Receipt Date        ISO-8601 local date: YYYY-MM-DD
+    3  Last-Updated UTC    ISO-8601 instant, e.g. "2026-03-22T00:02:10.123456789Z"
+    4  Vendor Name         raw string; literal "no-vendor" if none assigned
+    5  Category Name       raw string; literal "no-category" if none assigned
+    6  Payment Method      raw string; literal "no-payment" if none assigned
+    7  Book Name           raw string; literal "no-book" if none assigned
+    8  Notes               raw string; empty string "" if no notes
+    9  Image SHA-256       lowercase hex; literal "no-image" if no photo
+
+  SEPARATOR: pipe character "|" with no surrounding spaces
+  ENCODING:  UTF-8, no BOM
+  TEMPLATE:
+    {0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}
+
+  EXAMPLE:
+    42|18.5|2026-03-20|2026-03-22T00:02:10.123456789Z|Walmart|Food|Visa|Expenses||a3f1...
+
+  VERIFICATION:
+    echo -n "<reconstructed_string>" | sha256sum
+    -> Must match 'hashes.manifest_data_sha256' in manifest.json.
+    -> Must also match the digest embedded in timestamp_query.tsq (see Step 4).
 
 == Step 3: Verify the Timestamp Signature ==
-Download FreeTSA's CA cert: https://freetsa.org/files/tsa.crt
-Then run:
-  openssl ts -verify -in timestamp_proof.tsr \
-    -digest <manifest_data_sha256_hex> \
-    -CAfile tsa.crt
 
-A successful result prints: "Verification: OK"
+The .tsr file is the TSA's cryptographic proof. Verify it against the .tsq
+so you don't need to trust the manifest_data_sha256 value either:
+
+  Download FreeTSA's CA cert:
+    curl -O https://freetsa.org/files/tsa.crt
+
+  Verify:
+    openssl ts -verify -in timestamp_proof.tsr -queryfile timestamp_query.tsq -CAfile tsa.crt
+
+  A successful result prints: "Verification: OK"
+
+== Step 4: Inspect the TSQ Independently ==
+
+To confirm the query itself contains the expected digest:
+
+  openssl ts -query -in timestamp_query.tsq -text
+
+  -> "Message Imprint" must show SHA-256 and match 'hashes.manifest_data_sha256'.
+
+== Summary: Full Audit Chain ==
+
+  Receipt fields  ->  reconstruct canonical string  (Step 2)
+  canonical string  ->  SHA-256 digest              (Step 2)
+  digest  ->  embedded in timestamp_query.tsq       (Step 4)
+  timestamp_query.tsq + timestamp_proof.tsr  ->  TSA signature valid  (Step 3)
+
+If all four steps pass independently, the receipt data is proven to have
+existed in its current form at the time recorded in the TSR.
 
 == Notes ==
 - The timestamp certifies the state of the receipt at the moment it was saved.
-- If the receipt was edited after saving, the canonical_string will differ
-  from a fresh reconstruction, but the TSR proof is still valid for the
-  original save-time data.
+- If the receipt was edited after the initial save, the canonical string
+  reconstructed from the current UI values will differ from what was timestamped.
+  The TSR is still valid — it proves the original save-time data.
     """.trimIndent()
 }
