@@ -32,6 +32,8 @@ import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.security.MessageDigest
+import java.net.HttpURLConnection
+import java.net.URL
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.zip.ZipEntry
@@ -156,45 +158,23 @@ class ReceiptDetailViewModel @Inject constructor(
     fun exportProofPackage() {
         val state = _uiState.value
         val receipt = state.receipt ?: return
-        if (receipt.tsrToken == null) return
 
         viewModelScope.launch {
             _uiState.update { it.copy(isExporting = true, exportError = null) }
             try {
                 withContext(Dispatchers.IO) {
-                    // Hash image file if present
-                    val imageSha256 = receipt.imageUri?.let { uri ->
-                        runCatching {
-                            val bytes = File(uri).readBytes()
-                            MessageDigest.getInstance("SHA-256").digest(bytes)
-                                .joinToString("") { "%02x".format(it) }
-                        }.getOrNull()
+                    // Step 1: read image bytes (if present)
+                    val imageBytes = receipt.imageUri?.let { uri ->
+                        File(uri).takeIf { it.exists() }?.readBytes()
+                    }
+                    val imageSha256 = imageBytes?.let {
+                        MessageDigest.getInstance("SHA-256").digest(it)
+                            .joinToString("") { b -> "%02x".format(b) }
                     } ?: "no-image"
 
-                    // Reconstruct canonical string — same field order and fallbacks as RfcTimestampService
-                    val vendorName = state.vendor?.name ?: "no-vendor"
-                    val categoryName = state.category?.name ?: "no-category"
-                    val paymentMethodName = state.paymentMethod?.name ?: "no-payment"
-                    val bookName = state.book?.name ?: "no-book"
-                    val notes = receipt.notes ?: ""
-                    // Must truncate to millis: Room stores Instant as epoch millis, so the stamp
-                    // service hashed the truncated value. Export must use the same precision.
-                    val updatedAtMillis = receipt.updatedAt.truncatedTo(ChronoUnit.MILLIS)
-                    val canonicalString = "${receipt.id}|${receipt.totalAmount}|${receipt.transactionDate}" +
-                            "|${updatedAtMillis}|${vendorName}|${categoryName}" +
-                            "|${paymentMethodName}|${bookName}|${notes}|${imageSha256}"
-
-                    val canonicalDigest = MessageDigest.getInstance("SHA-256")
-                        .digest(canonicalString.toByteArray())
-                    val manifestDataSha256 = canonicalDigest.joinToString("") { "%02x".format(it) }
-
-                    // TSQ is generated from the same canonical digest that is in the manifest.
-                    // Verification reconstructs this same hash from canonical_string and checks
-                    // it against both the TSQ and the TSR directly.
-                    val tsqBytes = TimeStampRequestGenerator()
-                        .generate(TSPAlgorithms.SHA256, canonicalDigest).encoded
-
-                    // Build manifest.json
+                    // Step 2: build manifest data fields — these are the source of truth.
+                    // Storing them first ensures the canonical string is built from
+                    // exactly the same values that the verifier will read from manifest.json.
                     val dataObj = JSONObject().apply {
                         put("receipt_id", receipt.id.toString())
                         put("vendor", state.vendor?.name ?: "")
@@ -203,9 +183,46 @@ class ReceiptDetailViewModel @Inject constructor(
                         put("book", state.book?.name ?: "")
                         put("amount", receipt.totalAmount.toString())
                         put("date_on_receipt", receipt.transactionDate.toString())
-                        put("updated_at_utc", updatedAtMillis.toString())
+                        put("updated_at_utc", receipt.updatedAt.truncatedTo(ChronoUnit.MILLIS).toString())
                         put("notes", receipt.notes ?: "")
                     }
+
+                    // Step 3: construct canonical string by reading back from dataObj,
+                    // applying the same fallback rules as the verifier does.
+                    val vendorField  = dataObj.getString("vendor").ifEmpty { "no-vendor" }
+                    val catField     = dataObj.getString("category").ifEmpty { "no-category" }
+                    val payField     = dataObj.getString("payment_method").ifEmpty { "no-payment" }
+                    val bookField    = dataObj.getString("book").ifEmpty { "no-book" }
+                    val canonicalString =
+                        "${dataObj.getString("receipt_id")}|${dataObj.getString("amount")}" +
+                        "|${dataObj.getString("date_on_receipt")}|${dataObj.getString("updated_at_utc")}" +
+                        "|${vendorField}|${catField}|${payField}|${bookField}" +
+                        "|${dataObj.getString("notes")}|${imageSha256}"
+
+                    // Step 4: hash the canonical string
+                    val canonicalDigest = MessageDigest.getInstance("SHA-256")
+                        .digest(canonicalString.toByteArray())
+                    val manifestDataSha256 = canonicalDigest.joinToString("") { "%02x".format(it) }
+
+                    // Step 5: generate TSQ and get a fresh TSR from TSA
+                    val tsqBytes = TimeStampRequestGenerator()
+                        .generate(TSPAlgorithms.SHA256, canonicalDigest).encoded
+                    val conn = (URL("https://freetsa.org/tsr").openConnection() as HttpURLConnection).apply {
+                        connectTimeout = 15_000
+                        readTimeout = 15_000
+                        doOutput = true
+                        setRequestProperty("Content-Type", "application/timestamp-query")
+                    }
+                    conn.outputStream.write(tsqBytes)
+                    val responseCode = conn.responseCode
+                    if (responseCode != 200) {
+                        val err = conn.errorStream?.readBytes()?.toString(Charsets.UTF_8) ?: ""
+                        throw Exception("TSA returned HTTP $responseCode: $err")
+                    }
+                    val tsrBytes = conn.inputStream.readBytes()
+                    TimeStampResponse(tsrBytes) // validate parse
+
+                    // Step 6: assemble manifest.json with hashes
                     val hashesObj = JSONObject().apply {
                         put("image_sha256", imageSha256)
                         put("canonical_string", canonicalString)
@@ -217,9 +234,7 @@ class ReceiptDetailViewModel @Inject constructor(
                         put("hashes", hashesObj)
                     }.toString(2)
 
-                    val readme = buildReadme()
-
-                    // Write ZIP directly to Downloads/雪松堡收据/
+                    // Step 7: write ZIP
                     val destDir = File(
                         Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
                         "雪松堡收据"
@@ -231,7 +246,7 @@ class ReceiptDetailViewModel @Inject constructor(
                         zip.closeEntry()
 
                         zip.putNextEntry(ZipEntry("timestamp_proof.tsr"))
-                        zip.write(receipt.tsrToken)
+                        zip.write(tsrBytes)
                         zip.closeEntry()
 
                         zip.putNextEntry(ZipEntry("timestamp_query.tsq"))
@@ -239,16 +254,13 @@ class ReceiptDetailViewModel @Inject constructor(
                         zip.closeEntry()
 
                         zip.putNextEntry(ZipEntry("README.txt"))
-                        zip.write(readme.toByteArray())
+                        zip.write(buildReadme().toByteArray())
                         zip.closeEntry()
 
-                        receipt.imageUri?.let { uri ->
-                            val imageFile = File(uri)
-                            if (imageFile.exists()) {
-                                zip.putNextEntry(ZipEntry("receipt_image.jpg"))
-                                zip.write(imageFile.readBytes())
-                                zip.closeEntry()
-                            }
+                        imageBytes?.let {
+                            zip.putNextEntry(ZipEntry("receipt_image.jpg"))
+                            zip.write(it)
+                            zip.closeEntry()
                         }
                     }
 
