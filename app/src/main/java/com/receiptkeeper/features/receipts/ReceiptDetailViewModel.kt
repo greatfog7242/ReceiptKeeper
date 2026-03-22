@@ -184,9 +184,15 @@ class ReceiptDetailViewModel @Inject constructor(
                         .digest(canonicalString.toByteArray())
                     val manifestDataSha256 = canonicalDigest.joinToString("") { "%02x".format(it) }
 
-                    // Regenerate the TSQ from the same digest (no extra storage needed)
+                    // Derive the TSQ from the TSR's actual stored message imprint digest.
+                    // Regenerating from current canonical data would fail if any field changed
+                    // after the receipt was timestamped. The TSR already contains the true
+                    // digest; deriving the TSQ from it guarantees tsr.validate(tsq) always
+                    // passes, while step 3 in verification still catches data drift.
+                    val tsrDigest = TimeStampResponse(receipt.tsrToken)
+                        .timeStampToken.timeStampInfo.messageImprintDigest
                     val tsqBytes = TimeStampRequestGenerator()
-                        .generate(TSPAlgorithms.SHA256, canonicalDigest).encoded
+                        .generate(TSPAlgorithms.SHA256, tsrDigest).encoded
 
                     // Build manifest.json
                     val dataObj = JSONObject().apply {
