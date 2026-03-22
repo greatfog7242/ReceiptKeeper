@@ -181,7 +181,7 @@ class ReceiptDetailViewModel @Inject constructor(
                         put("category", state.category?.name ?: "")
                         put("payment_method", state.paymentMethod?.name ?: "")
                         put("book", state.book?.name ?: "")
-                        put("amount", receipt.totalAmount.toString())
+                        put("amount", "%.2f".format(receipt.totalAmount))
                         put("date_on_receipt", receipt.transactionDate.toString())
                         put("updated_at_utc", receipt.updatedAt.truncatedTo(ChronoUnit.MILLIS).toString())
                         put("notes", receipt.notes ?: "")
@@ -300,8 +300,8 @@ following rules, without trusting manifest.json at all.
 
   FIELD ORDER (10 fields, zero-indexed):
     0  Receipt ID          integer (as printed in the app)
-    1  Total Amount        Kotlin Double.toString() — e.g. "12.5", "100.0"
-                           (no rounding; trailing zero after decimal point kept)
+    1  Total Amount        Fixed two decimal places: String.format("%.2f", amount)
+                           e.g. "12.50", "100.00" — always two digits after the point
     2  Receipt Date        ISO-8601 local date: YYYY-MM-DD
     3  Last-Updated UTC    ISO-8601 instant, e.g. "2026-03-22T00:02:10.123456789Z"
     4  Vendor Name         raw string; literal "no-vendor" if none assigned
@@ -317,7 +317,7 @@ following rules, without trusting manifest.json at all.
     {0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}
 
   EXAMPLE:
-    42|18.5|2026-03-20|2026-03-22T00:02:10.123456789Z|Walmart|Food|Visa|Expenses||a3f1...
+    42|18.50|2026-03-20|2026-03-22T00:02:10.123Z|Walmart|Food|Visa|Expenses||a3f1...
 
   VERIFICATION:
     echo -n "<reconstructed_string>" | sha256sum
