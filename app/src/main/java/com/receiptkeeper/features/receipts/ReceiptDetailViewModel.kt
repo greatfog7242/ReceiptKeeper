@@ -222,6 +222,9 @@ class ReceiptDetailViewModel @Inject constructor(
                     val tsrBytes = conn.inputStream.readBytes()
                     TimeStampResponse(tsrBytes) // validate parse
 
+                    // Persist TSR to database so the receipt detail screen reflects certification
+                    receiptRepository.updateTsrToken(receipt.id, tsrBytes)
+
                     // Step 6: assemble manifest.json with hashes
                     val hashesObj = JSONObject().apply {
                         put("image_sha256", imageSha256)
