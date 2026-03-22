@@ -18,5 +18,6 @@ data class Receipt(
     val imageUri: String? = null,
     val extractedText: String? = null,
     val createdAt: Instant = Instant.now(),
-    val updatedAt: Instant = Instant.now()
+    val updatedAt: Instant = Instant.now(),
+    val tsrToken: ByteArray? = null
 )

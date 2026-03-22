@@ -20,6 +20,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.bouncycastle.tsp.TimeStampResponse
+import java.time.Instant
 import javax.inject.Inject
 
 data class ReceiptDetailUiState(
@@ -33,7 +35,8 @@ data class ReceiptDetailUiState(
     val allPaymentMethods: List<PaymentMethod> = emptyList(),
     val allBooks: List<Book> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val tsrCertifiedAt: Instant? = null
 )
 
 @HiltViewModel
@@ -79,6 +82,12 @@ class ReceiptDetailViewModel @Inject constructor(
                     val book = receipt?.bookId?.let { bookId ->
                         books.find { it.id == bookId }
                     }
+                    val tsrCertifiedAt = receipt?.tsrToken?.let { bytes ->
+                        runCatching {
+                            val resp = TimeStampResponse(bytes)
+                            resp.timeStampToken.timeStampInfo.genTime.toInstant()
+                        }.getOrNull()
+                    }
                     ReceiptDetailUiState(
                         receipt = receipt,
                         vendor = vendor,
@@ -90,7 +99,8 @@ class ReceiptDetailViewModel @Inject constructor(
                         allPaymentMethods = paymentMethods,
                         allBooks = books,
                         isLoading = false,
-                        error = null
+                        error = null,
+                        tsrCertifiedAt = tsrCertifiedAt
                     )
                 }.collect { state ->
                     _uiState.value = state

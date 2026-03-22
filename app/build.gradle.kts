@@ -63,6 +63,8 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "/META-INF/versions/9/OSGI-INF/MANIFEST.MF"
+            excludes += "/META-INF/INDEX.LIST"
         }
     }
 }
@@ -129,6 +131,10 @@ dependencies {
 
     // EXIF orientation handling for image compression
     implementation("androidx.exifinterface:exifinterface:1.3.7")
+
+    // Bouncy Castle — RFC 3161 TSP support
+    implementation("org.bouncycastle:bcpkix-jdk18on:1.79")
+    implementation("org.bouncycastle:bcprov-jdk18on:1.79")
 
     // Testing
     testImplementation("junit:junit:4.13.2")

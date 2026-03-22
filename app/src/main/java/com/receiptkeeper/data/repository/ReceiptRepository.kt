@@ -108,4 +108,7 @@ class ReceiptRepository @Inject constructor(
     suspend fun deleteReceiptsByBook(bookId: Long) {
         receiptDao.deleteReceiptsByBook(bookId)
     }
+
+    suspend fun updateTsrToken(receiptId: Long, token: ByteArray) =
+        receiptDao.updateTsrToken(receiptId, token)
 }

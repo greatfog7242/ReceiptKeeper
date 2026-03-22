@@ -182,4 +182,7 @@ interface ReceiptDao {
 
     @Query("SELECT COUNT(*) FROM receipts WHERE bookId = :bookId")
     fun getReceiptCountByBook(bookId: Long): Flow<Int>
+
+    @Query("UPDATE receipts SET tsrToken = :token WHERE id = :receiptId")
+    suspend fun updateTsrToken(receiptId: Long, token: ByteArray)
 }

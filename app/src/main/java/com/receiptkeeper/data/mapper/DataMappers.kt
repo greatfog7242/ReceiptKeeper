@@ -109,7 +109,8 @@ fun ReceiptEntity.toDomain(): Receipt = Receipt(
     imageUri = imageUri,
     extractedText = extractedText,
     createdAt = createdAt,
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
+    tsrToken = tsrToken
 )
 
 fun Receipt.toEntity(): ReceiptEntity = ReceiptEntity(
@@ -124,5 +125,6 @@ fun Receipt.toEntity(): ReceiptEntity = ReceiptEntity(
     imageUri = imageUri,
     extractedText = extractedText,
     createdAt = createdAt,
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
+    tsrToken = tsrToken
 )

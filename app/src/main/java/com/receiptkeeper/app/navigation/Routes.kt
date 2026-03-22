@@ -30,6 +30,8 @@ sealed class Routes(val route: String) {
     data object SpendingGoals : Routes("spending_goals")
     data object BackupRestore : Routes("backup_restore")
     
+    data object TimestampSettings : Routes("timestamp_settings")
+
     // Debug screen (hidden, accessible via Settings)
     data object Debug : Routes("debug")
 

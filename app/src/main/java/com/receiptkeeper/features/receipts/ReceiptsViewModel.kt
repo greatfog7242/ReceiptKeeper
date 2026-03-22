@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.receiptkeeper.core.util.ImageHandler
 import com.receiptkeeper.data.repository.BookRepository
 import com.receiptkeeper.data.repository.CategoryRepository
+import com.receiptkeeper.core.services.RfcTimestampService
 import com.receiptkeeper.data.repository.PaymentMethodRepository
 import com.receiptkeeper.data.repository.ReceiptRepository
 import com.receiptkeeper.data.repository.VendorRepository
@@ -33,7 +34,8 @@ class ReceiptsViewModel @Inject constructor(
     private val vendorRepository: VendorRepository,
     private val categoryRepository: CategoryRepository,
     private val paymentMethodRepository: PaymentMethodRepository,
-    private val imageHandler: ImageHandler
+    private val imageHandler: ImageHandler,
+    private val rfcTimestampService: RfcTimestampService
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ReceiptsUiState())
@@ -118,7 +120,8 @@ class ReceiptsViewModel @Inject constructor(
                     createdAt = Instant.now(),
                     updatedAt = Instant.now()
                 )
-                receiptRepository.insertReceipt(receipt)
+                val savedId = receiptRepository.insertReceipt(receipt)
+                viewModelScope.launch { rfcTimestampService.stampIfEnabled(receipt, savedId) }
                 _uiState.update { it.copy(showAddDialog = false) }
             } catch (e: Exception) {
                 _uiState.update {
@@ -196,6 +199,7 @@ class ReceiptsViewModel @Inject constructor(
                     updatedAt = Instant.now()
                 )
                 receiptRepository.updateReceipt(updated)
+                viewModelScope.launch { rfcTimestampService.stampIfEnabled(updated, updated.id) }
                 _uiState.update { it.copy(editingReceipt = null) }
             } catch (e: Exception) {
                 _uiState.update {

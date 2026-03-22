@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.doublePreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
@@ -22,6 +23,7 @@ class PreferencesManager @Inject constructor(
         val ICON_THEME_KEY = stringPreferencesKey("icon_theme")
         val TREEMAP_THRESHOLD_KEY = doublePreferencesKey("treemap_threshold")
         val TREEMAP_ASPECT_RATIO_KEY = doublePreferencesKey("treemap_aspect_ratio")
+        val TIMESTAMP_BOOK_ID_KEY = longPreferencesKey("timestamp_book_id")
     }
 
     /**
@@ -73,6 +75,16 @@ class PreferencesManager @Inject constructor(
     suspend fun updateTreemapAspectRatio(ratio: Double) {
         context.dataStore.edit { preferences ->
             preferences[TREEMAP_ASPECT_RATIO_KEY] = ratio
+        }
+    }
+
+    val timestampBookId: Flow<Long?> = context.dataStore.data
+        .map { preferences -> preferences[TIMESTAMP_BOOK_ID_KEY] }
+
+    suspend fun updateTimestampBookId(bookId: Long?) {
+        context.dataStore.edit { preferences ->
+            if (bookId == null) preferences.remove(TIMESTAMP_BOOK_ID_KEY)
+            else preferences[TIMESTAMP_BOOK_ID_KEY] = bookId
         }
     }
 }

@@ -14,6 +14,7 @@ import com.receiptkeeper.domain.model.Book
 import com.receiptkeeper.domain.model.Category
 import com.receiptkeeper.domain.model.PaymentMethod
 import com.receiptkeeper.features.scan.ocr.ExtractedReceiptData
+import com.receiptkeeper.core.services.RfcTimestampService
 import com.receiptkeeper.features.scan.ocr.OcrProcessor
 import com.receiptkeeper.features.scan.ocr.ReceiptParser
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,6 +36,7 @@ class ScanReceiptViewModel @Inject constructor(
     private val vendorRepository: VendorRepository,
     private val categoryRepository: CategoryRepository,
     private val paymentMethodRepository: PaymentMethodRepository,
+    private val rfcTimestampService: RfcTimestampService,
     private val application: Application
 ) : ViewModel() {
 
@@ -201,6 +203,7 @@ class ScanReceiptViewModel @Inject constructor(
                 )
 
                 val receiptId = receiptRepository.insertReceipt(receipt)
+                viewModelScope.launch { rfcTimestampService.stampIfEnabled(receipt, receiptId) }
 
                 _uiState.update { it.copy(isProcessing = false) }
                 onSuccess(receiptId)

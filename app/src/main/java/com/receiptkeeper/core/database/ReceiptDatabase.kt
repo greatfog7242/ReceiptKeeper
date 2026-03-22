@@ -15,7 +15,7 @@ import androidx.room.migration.Migration
 
 /**
  * Room Database for ReceiptKeeper
- * Version 3: Added displayOrder to books for custom ordering
+ * Version 4: Added tsrToken BLOB column to receipts for RFC 3161 timestamps
  */
 @Database(
     entities = [
@@ -26,7 +26,7 @@ import androidx.room.migration.Migration
         SpendingGoalEntity::class,
         ReceiptEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -66,9 +66,18 @@ abstract class ReceiptDatabase : RoomDatabase() {
         }
 
         /**
+         * Migration from version 3 to 4: Add tsrToken BLOB column to receipts table
+         */
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE receipts ADD COLUMN tsrToken BLOB DEFAULT NULL")
+            }
+        }
+
+        /**
          * Get all migrations
          */
-        val MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3)
+        val MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
 
         /**
          * Database callback to seed default categories on first creation

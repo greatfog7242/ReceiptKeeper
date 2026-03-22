@@ -71,5 +71,7 @@ data class ReceiptEntity(
 
     val createdAt: Instant = Instant.now(),
 
-    val updatedAt: Instant = Instant.now()
+    val updatedAt: Instant = Instant.now(),
+
+    val tsrToken: ByteArray? = null  // RFC 3161 timestamp response bytes
 )

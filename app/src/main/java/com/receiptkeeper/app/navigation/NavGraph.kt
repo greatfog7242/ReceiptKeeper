@@ -11,9 +11,10 @@ import com.receiptkeeper.features.analytics.AnalyticsScreen
 import com.receiptkeeper.features.books.BooksScreen
 import com.receiptkeeper.features.receipts.ReceiptsScreen
 import com.receiptkeeper.features.scan.ScanScreen
-import com.receiptkeeper.features.settings.SettingsScreen
 import com.receiptkeeper.features.settings.BackupRestoreScreen
 import com.receiptkeeper.features.settings.IconThemeScreen
+import com.receiptkeeper.features.settings.SettingsScreen
+import com.receiptkeeper.features.settings.TimestampSettingsScreen
 import com.receiptkeeper.features.debug.DebugScreen
 
 /**
@@ -82,6 +83,9 @@ fun NavGraph(
                 onNavigateToBackupRestore = {
                     navController.navigate(Routes.BackupRestore.route)
                 },
+                onNavigateToTimestamp = {
+                    navController.navigate(Routes.TimestampSettings.route)
+                },
                 onNavigateToDebug = {
                     navController.navigate(Routes.Debug.route)
                 }
@@ -149,6 +153,10 @@ fun NavGraph(
             BackupRestoreScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
+        }
+
+        composable(route = Routes.TimestampSettings.route) {
+            TimestampSettingsScreen(onNavigateBack = { navController.popBackStack() })
         }
 
         // Debug screen (hidden)

@@ -464,6 +464,7 @@ fun SettingsScreen(
     onNavigateToPaymentMethods: () -> Unit = {},
     onNavigateToSpendingGoals: () -> Unit = {},
     onNavigateToBackupRestore: () -> Unit = {},
+    onNavigateToTimestamp: () -> Unit = {},
     onNavigateToDebug: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -545,6 +546,15 @@ fun SettingsScreen(
                 title = "Backup & Restore",
                 subtitle = "Backup database and restore from backup",
                 onClick = onNavigateToBackupRestore
+            )
+
+            HorizontalDivider()
+
+            SettingsItem(
+                icon = Icons.Default.VerifiedUser,
+                title = "RFC 3161 Timestamps",
+                subtitle = "Auto-timestamp receipts in a selected book",
+                onClick = onNavigateToTimestamp
             )
 
             HorizontalDivider()
