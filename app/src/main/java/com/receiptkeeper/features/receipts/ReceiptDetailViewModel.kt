@@ -33,6 +33,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.security.MessageDigest
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import javax.inject.Inject
@@ -176,8 +177,11 @@ class ReceiptDetailViewModel @Inject constructor(
                     val paymentMethodName = state.paymentMethod?.name ?: "no-payment"
                     val bookName = state.book?.name ?: "no-book"
                     val notes = receipt.notes ?: ""
+                    // Must truncate to millis: Room stores Instant as epoch millis, so the stamp
+                    // service hashed the truncated value. Export must use the same precision.
+                    val updatedAtMillis = receipt.updatedAt.truncatedTo(ChronoUnit.MILLIS)
                     val canonicalString = "${receipt.id}|${receipt.totalAmount}|${receipt.transactionDate}" +
-                            "|${receipt.updatedAt}|${vendorName}|${categoryName}" +
+                            "|${updatedAtMillis}|${vendorName}|${categoryName}" +
                             "|${paymentMethodName}|${bookName}|${notes}|${imageSha256}"
 
                     val canonicalDigest = MessageDigest.getInstance("SHA-256")
@@ -199,7 +203,7 @@ class ReceiptDetailViewModel @Inject constructor(
                         put("book", state.book?.name ?: "")
                         put("amount", receipt.totalAmount.toString())
                         put("date_on_receipt", receipt.transactionDate.toString())
-                        put("updated_at_utc", receipt.updatedAt.toString())
+                        put("updated_at_utc", updatedAtMillis.toString())
                         put("notes", receipt.notes ?: "")
                     }
                     val hashesObj = JSONObject().apply {
