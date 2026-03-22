@@ -445,6 +445,7 @@ fun ReceiptsScreen(
                                             categoryColor = category?.colorHex ?: "#95A5A6",
                                             categoryIconName = category?.iconName ?: "Category",
                                             bookName = book?.name ?: "Unknown",
+                                            isTimestampBook = receipt.bookId == uiState.timestampBookId,
                                             onItemClick = { onNavigateToReceiptDetail(it.id) },
                                             onEditClick = { viewModel.showEditDialog(it) },
                                             onDeleteClick = { receiptToDelete = it },

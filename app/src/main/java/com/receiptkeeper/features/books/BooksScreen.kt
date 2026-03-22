@@ -121,6 +121,7 @@ fun BooksScreen(
                                     BookCard(
                                         book = bookWithCount.book,
                                         receiptCount = bookWithCount.receiptCount,
+                                        isTimestampBook = bookWithCount.book.id == uiState.timestampBookId,
                                         onBookClick = { onNavigateToBookDetail(it.id) },
                                         onEditClick = { viewModel.showEditDialog(it) },
                                         onDeleteClick = { bookToDelete = it }
@@ -181,6 +182,7 @@ fun BooksScreen(
                                 BookCard(
                                     book = bookWithCount.book,
                                     receiptCount = bookWithCount.receiptCount,
+                                    isTimestampBook = bookWithCount.book.id == uiState.timestampBookId,
                                     onBookClick = { onNavigateToBookDetail(it.id) },
                                     onEditClick = { viewModel.showEditDialog(it) },
                                     onDeleteClick = { bookToDelete = it }

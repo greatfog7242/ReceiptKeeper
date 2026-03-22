@@ -1,5 +1,6 @@
 package com.receiptkeeper.features.receipts.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,9 +18,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.receiptkeeper.R
 import coil.compose.AsyncImage
 import com.receiptkeeper.core.util.IconHelper
 import com.receiptkeeper.domain.model.Receipt
@@ -36,6 +39,7 @@ fun ReceiptListItem(
     categoryColor: String,
     categoryIconName: String,
     bookName: String,
+    isTimestampBook: Boolean = false,
     onItemClick: (Receipt) -> Unit,
     onEditClick: (Receipt) -> Unit,
     onDeleteClick: (Receipt) -> Unit,
@@ -192,6 +196,14 @@ fun ReceiptListItem(
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
+                if (isTimestampBook) {
+                    Image(
+                        painter = painterResource(R.drawable.ic_timestamp),
+                        contentDescription = "RFC 3161 timestamped",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
                 IconButton(
                     onClick = { onEditClick(receipt) },
                     modifier = Modifier.size(36.dp)

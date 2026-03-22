@@ -3,6 +3,7 @@ package com.receiptkeeper.features.receipts
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.receiptkeeper.core.preferences.PreferencesManager
 import com.receiptkeeper.core.util.ImageHandler
 import com.receiptkeeper.data.repository.BookRepository
 import com.receiptkeeper.data.repository.CategoryRepository
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -35,7 +37,8 @@ class ReceiptsViewModel @Inject constructor(
     private val categoryRepository: CategoryRepository,
     private val paymentMethodRepository: PaymentMethodRepository,
     private val imageHandler: ImageHandler,
-    private val rfcTimestampService: RfcTimestampService
+    private val rfcTimestampService: RfcTimestampService,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ReceiptsUiState())
@@ -43,6 +46,15 @@ class ReceiptsViewModel @Inject constructor(
 
     init {
         loadData()
+        loadTimestampBookId()
+    }
+
+    private fun loadTimestampBookId() {
+        viewModelScope.launch {
+            preferencesManager.timestampBookId.collect { bookId ->
+                _uiState.update { it.copy(timestampBookId = bookId) }
+            }
+        }
     }
 
     private fun loadData() {
@@ -313,7 +325,8 @@ data class ReceiptsUiState(
     val selectedBookFilter: Long? = null,
     val selectedVendorFilter: Long? = null,
     val selectedPaymentFilter: Long? = null,
-    val searchQuery: String = ""
+    val searchQuery: String = "",
+    val timestampBookId: Long? = null
 )
 
 private data class ReceiptsData(

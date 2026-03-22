@@ -2,6 +2,7 @@ package com.receiptkeeper.features.receipts
 
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.rememberTransformableState
@@ -17,8 +18,9 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.*
+import androidx.compose.ui.res.painterResource
+import com.receiptkeeper.R
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -257,11 +259,10 @@ fun ReceiptDetailScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.VerifiedUser,
-                                    contentDescription = "Timestamped",
-                                    tint = MaterialTheme.colorScheme.secondary,
-                                    modifier = Modifier.size(28.dp)
+                                Image(
+                                    painter = painterResource(R.drawable.ic_timestamp),
+                                    contentDescription = "RFC 3161 Timestamped",
+                                    modifier = Modifier.size(32.dp)
                                 )
                                 Column {
                                     Text(

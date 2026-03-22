@@ -2,6 +2,7 @@ package com.receiptkeeper.features.books
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.receiptkeeper.core.preferences.PreferencesManager
 import com.receiptkeeper.data.repository.BookRepository
 import com.receiptkeeper.domain.model.Book
 import com.receiptkeeper.domain.model.BookWithReceiptCount
@@ -20,7 +21,8 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class BooksViewModel @Inject constructor(
-    private val bookRepository: BookRepository
+    private val bookRepository: BookRepository,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BooksUiState())
@@ -28,6 +30,15 @@ class BooksViewModel @Inject constructor(
 
     init {
         loadBooks()
+        loadTimestampBookId()
+    }
+
+    private fun loadTimestampBookId() {
+        viewModelScope.launch {
+            preferencesManager.timestampBookId.collect { bookId ->
+                _uiState.update { it.copy(timestampBookId = bookId) }
+            }
+        }
     }
 
     private fun loadBooks() {
@@ -173,5 +184,6 @@ data class BooksUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val showAddDialog: Boolean = false,
-    val editingBook: Book? = null
+    val editingBook: Book? = null,
+    val timestampBookId: Long? = null
 )

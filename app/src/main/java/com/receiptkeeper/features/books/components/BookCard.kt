@@ -1,5 +1,6 @@
 package com.receiptkeeper.features.books.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -11,8 +12,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.receiptkeeper.R
 import com.receiptkeeper.domain.model.Book
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -24,6 +27,7 @@ import java.time.format.DateTimeFormatter
 fun BookCard(
     book: Book,
     receiptCount: Int = 0,
+    isTimestampBook: Boolean = false,
     onBookClick: (Book) -> Unit,
     onEditClick: (Book) -> Unit,
     onDeleteClick: (Book) -> Unit,
@@ -61,6 +65,14 @@ fun BookCard(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
                 )
+
+                if (isTimestampBook) {
+                    Image(
+                        painter = painterResource(R.drawable.ic_timestamp),
+                        contentDescription = "RFC 3161 timestamping enabled",
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
             }
 
             // Description
