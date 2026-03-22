@@ -168,12 +168,25 @@ fun ReceiptDetailScreen(
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = formatCurrency(receipt.totalAmount),
-                            style = MaterialTheme.typography.displayMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = formatCurrency(receipt.totalAmount),
+                                style = MaterialTheme.typography.displayMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            if (uiState.tsrCertifiedAt != null) {
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Image(
+                                    painter = painterResource(R.drawable.ic_timestamp),
+                                    contentDescription = "RFC 3161 Timestamped",
+                                    modifier = Modifier.size(45.dp)
+                                )
+                            }
+                        }
                     }
                 }
 
@@ -259,11 +272,6 @@ fun ReceiptDetailScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                Image(
-                                    painter = painterResource(R.drawable.ic_timestamp),
-                                    contentDescription = "RFC 3161 Timestamped",
-                                    modifier = Modifier.size(32.dp)
-                                )
                                 Column {
                                     Text(
                                         text = "RFC 3161 Trusted Timestamp",
