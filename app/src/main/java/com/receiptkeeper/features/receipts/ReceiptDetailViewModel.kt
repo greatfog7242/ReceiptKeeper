@@ -237,7 +237,7 @@ class ReceiptDetailViewModel @Inject constructor(
                     // Step 7: write ZIP
                     val destDir = File(
                         Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                        "雪松堡收据"
+                        "雪松堡账本"
                     ).also { it.mkdirs() }
                     val zipFile = File(destDir, "Receipt_Evidence_${receipt.id}.zip")
                     ZipOutputStream(FileOutputStream(zipFile)).use { zip ->
@@ -262,7 +262,7 @@ class ReceiptDetailViewModel @Inject constructor(
 
                     zipFile.absolutePath
                 }
-                _uiState.update { it.copy(exportSuccess = "Saved to Downloads/雪松堡收据/${receipt.id}") }
+                _uiState.update { it.copy(exportSuccess = "Saved to Downloads/雪松堡账本/${receipt.id}") }
             } catch (e: Exception) {
                 _uiState.update { it.copy(exportError = e.message ?: "Export failed") }
             } finally {

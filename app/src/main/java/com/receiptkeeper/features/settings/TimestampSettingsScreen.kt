@@ -213,7 +213,7 @@ fun TimestampSettingsScreen(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Packages in Downloads/雪松堡收据/",
+                        text = "Packages in Downloads/雪松堡账本/",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

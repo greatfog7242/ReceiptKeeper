@@ -80,7 +80,7 @@ class TimestampSettingsViewModel @Inject constructor(
             withContext(Dispatchers.IO) {
                 val dir = File(
                     Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                    "雪松堡收据"
+                    "雪松堡账本"
                 )
                 val packages = if (dir.exists()) {
                     dir.listFiles { f -> f.isFile && f.name.endsWith(".zip") }
