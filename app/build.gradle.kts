@@ -6,11 +6,20 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-// Get git commit hash using Gradle provider (runs at execution time)
-val gitCommitHash = providers.exec {
-    workingDir = rootProject.projectDir
-    commandLine("git", "rev-parse", "--short=7", "HEAD")
-}.standardOutput.asText.get().trim()
+// ValueSource reads .git/refs/heads/master directly.
+// Gradle tracks the file as a parameter input, so the configuration cache is
+// automatically invalidated on every new commit — no subprocess needed.
+abstract class GitHeadHashSource : ValueSource<String, GitHeadHashSource.Params> {
+    interface Params : ValueSourceParameters {
+        val headRefFile: RegularFileProperty
+    }
+    override fun obtain(): String =
+        try { parameters.headRefFile.asFile.get().readText().trim().take(7) }
+        catch (_: Exception) { "unknown" }
+}
+val gitCommitHash: String = providers.of(GitHeadHashSource::class) {
+    parameters.headRefFile.set(file("$rootDir/.git/refs/heads/master"))
+}.get()
 
 android {
     namespace = "com.receiptkeeper"

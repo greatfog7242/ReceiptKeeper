@@ -29,6 +29,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.bouncycastle.tsp.TSPAlgorithms
+import org.bouncycastle.tsp.TimeStampRequestGenerator
 import org.bouncycastle.tsp.TimeStampResponse
 import org.json.JSONObject
 import java.io.File
@@ -180,9 +182,13 @@ class ReceiptDetailViewModel @Inject constructor(
                             "|${receipt.updatedAt}|${vendorName}|${categoryName}" +
                             "|${paymentMethodName}|${bookName}|${notes}|${imageSha256}"
 
-                    val manifestDataSha256 = MessageDigest.getInstance("SHA-256")
+                    val canonicalDigest = MessageDigest.getInstance("SHA-256")
                         .digest(canonicalString.toByteArray())
-                        .joinToString("") { "%02x".format(it) }
+                    val manifestDataSha256 = canonicalDigest.joinToString("") { "%02x".format(it) }
+
+                    // Regenerate the TSQ from the same digest (no extra storage needed)
+                    val tsqBytes = TimeStampRequestGenerator()
+                        .generate(TSPAlgorithms.SHA256, canonicalDigest).encoded
 
                     // Build manifest.json
                     val dataObj = JSONObject().apply {
@@ -218,6 +224,10 @@ class ReceiptDetailViewModel @Inject constructor(
 
                         zip.putNextEntry(ZipEntry("timestamp_proof.tsr"))
                         zip.write(receipt.tsrToken)
+                        zip.closeEntry()
+
+                        zip.putNextEntry(ZipEntry("timestamp_query.tsq"))
+                        zip.write(tsqBytes)
                         zip.closeEntry()
 
                         zip.putNextEntry(ZipEntry("README.txt"))
