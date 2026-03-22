@@ -204,7 +204,7 @@ class ReceiptDetailViewModel @Inject constructor(
                         .digest(canonicalString.toByteArray())
                     val manifestDataSha256 = canonicalDigest.joinToString("") { "%02x".format(it) }
 
-                    // Step 5: generate TSQ and get a fresh TSR from TSA
+                    // Step 5: get a fresh TSR from TSA
                     val tsqBytes = TimeStampRequestGenerator()
                         .generate(TSPAlgorithms.SHA256, canonicalDigest).encoded
                     val conn = (URL("https://freetsa.org/tsr").openConnection() as HttpURLConnection).apply {
@@ -249,10 +249,6 @@ class ReceiptDetailViewModel @Inject constructor(
                         zip.write(tsrBytes)
                         zip.closeEntry()
 
-                        zip.putNextEntry(ZipEntry("timestamp_query.tsq"))
-                        zip.write(tsqBytes)
-                        zip.closeEntry()
-
                         zip.putNextEntry(ZipEntry("README.txt"))
                         zip.write(buildReadme().toByteArray())
                         zip.closeEntry()
@@ -279,10 +275,9 @@ class ReceiptDetailViewModel @Inject constructor(
 RFC 3161 Evidence Package - Verification Guide
 ===============================================
 
-This package contains four verifiable components:
+This package contains three verifiable components:
   receipt_image.jpg    - The original receipt photo
   manifest.json        - Receipt metadata and hashes
-  timestamp_query.tsq  - The exact query sent to the TSA (binary, RFC 3161)
   timestamp_proof.tsr  - The signed timestamp response from FreeTSA (binary, RFC 3161)
 
 == Step 1: Verify Image Integrity ==
@@ -303,7 +298,7 @@ following rules, without trusting manifest.json at all.
     1  Total Amount        Fixed two decimal places: String.format("%.2f", amount)
                            e.g. "12.50", "100.00" — always two digits after the point
     2  Receipt Date        ISO-8601 local date: YYYY-MM-DD
-    3  Last-Updated UTC    ISO-8601 instant, e.g. "2026-03-22T00:02:10.123456789Z"
+    3  Last-Updated UTC    ISO-8601 instant truncated to ms, e.g. "2026-03-22T00:02:10.123Z"
     4  Vendor Name         raw string; literal "no-vendor" if none assigned
     5  Category Name       raw string; literal "no-category" if none assigned
     6  Payment Method      raw string; literal "no-payment" if none assigned
@@ -322,37 +317,33 @@ following rules, without trusting manifest.json at all.
   VERIFICATION:
     echo -n "<reconstructed_string>" | sha256sum
     -> Must match 'hashes.manifest_data_sha256' in manifest.json.
-    -> Must also match the digest embedded in timestamp_query.tsq (see Step 4).
 
 == Step 3: Verify the Timestamp Signature ==
 
-The .tsr file is the TSA's cryptographic proof. Verify it against the .tsq
-so you don't need to trust the manifest_data_sha256 value either:
+The .tsr file embeds the certified digest in its message imprint. Inspect it:
+
+  openssl ts -reply -in timestamp_proof.tsr -text
+
+  -> "Message Imprint" must show SHA-256 and match 'hashes.manifest_data_sha256'.
+
+  To also verify the TSA's certificate chain:
 
   Download FreeTSA's CA cert:
     curl -O https://freetsa.org/files/tsa.crt
 
-  Verify:
-    openssl ts -verify -in timestamp_proof.tsr -queryfile timestamp_query.tsq -CAfile tsa.crt
+  Verify using the digest from Step 2:
+    openssl ts -verify -in timestamp_proof.tsr -digest <manifest_data_sha256> -CAfile tsa.crt
 
   A successful result prints: "Verification: OK"
 
-== Step 4: Inspect the TSQ Independently ==
-
-To confirm the query itself contains the expected digest:
-
-  openssl ts -query -in timestamp_query.tsq -text
-
-  -> "Message Imprint" must show SHA-256 and match 'hashes.manifest_data_sha256'.
-
 == Summary: Full Audit Chain ==
 
-  Receipt fields  ->  reconstruct canonical string  (Step 2)
-  canonical string  ->  SHA-256 digest              (Step 2)
-  digest  ->  embedded in timestamp_query.tsq       (Step 4)
-  timestamp_query.tsq + timestamp_proof.tsr  ->  TSA signature valid  (Step 3)
+  receipt_image.jpg  ->  SHA-256  ->  image_sha256         (Step 1)
+  manifest fields + image_sha256  ->  canonical string     (Step 2)
+  canonical string  ->  SHA-256  ->  manifest_data_sha256  (Step 2)
+  manifest_data_sha256  ==  TSR message imprint            (Step 3)
 
-If all four steps pass independently, the receipt data is proven to have
+If all three steps pass independently, the receipt data is proven to have
 existed in its current form at the time recorded in the TSR.
 
 == Notes ==
