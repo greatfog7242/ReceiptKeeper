@@ -1,6 +1,5 @@
 package com.receiptkeeper.features.receipts
 
-import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -17,7 +16,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Receipt
-import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.ui.res.painterResource
 import com.receiptkeeper.R
@@ -53,15 +52,25 @@ fun ReceiptDetailScreen(
     val uiState by viewModel.uiState.collectAsState()
     val receipt = uiState.receipt
     var showFullScreenImage by remember { mutableStateOf(false) }
-    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
-        viewModel.shareEvent.collect { intent ->
-            context.startActivity(Intent.createChooser(intent, "Share Evidence Package"))
+    LaunchedEffect(uiState.exportSuccess) {
+        uiState.exportSuccess?.let { msg ->
+            coroutineScope.launch { snackbarHostState.showSnackbar(msg) }
+            viewModel.clearExportSuccess()
+        }
+    }
+
+    LaunchedEffect(uiState.exportError) {
+        uiState.exportError?.let { err ->
+            coroutineScope.launch { snackbarHostState.showSnackbar("Export failed: $err") }
+            viewModel.clearExportError()
         }
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Receipt Details") },
@@ -305,12 +314,12 @@ fun ReceiptDetailScreen(
                                         Text("Exporting…")
                                     } else {
                                         Icon(
-                                            imageVector = Icons.Default.Share,
+                                            imageVector = Icons.Default.Save,
                                             contentDescription = null,
                                             modifier = Modifier.size(16.dp)
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Export Proof Package")
+                                        Text("Save Proof Package")
                                     }
                                 }
                             }

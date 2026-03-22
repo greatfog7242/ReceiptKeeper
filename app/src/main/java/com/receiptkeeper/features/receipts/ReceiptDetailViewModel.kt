@@ -1,8 +1,7 @@
 package com.receiptkeeper.features.receipts
 
 import android.content.Context
-import android.content.Intent
-import androidx.core.content.FileProvider
+import android.os.Environment
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -19,11 +18,8 @@ import com.receiptkeeper.domain.model.Vendor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
@@ -55,7 +51,8 @@ data class ReceiptDetailUiState(
     val error: String? = null,
     val tsrCertifiedAt: Instant? = null,
     val isExporting: Boolean = false,
-    val exportError: String? = null
+    val exportError: String? = null,
+    val exportSuccess: String? = null
 )
 
 @HiltViewModel
@@ -74,8 +71,6 @@ class ReceiptDetailViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ReceiptDetailUiState())
     val uiState: StateFlow<ReceiptDetailUiState> = _uiState.asStateFlow()
 
-    private val _shareEvent = MutableSharedFlow<Intent>()
-    val shareEvent: SharedFlow<Intent> = _shareEvent.asSharedFlow()
 
     init {
         loadReceipt()
@@ -154,6 +149,9 @@ class ReceiptDetailViewModel @Inject constructor(
         }
     }
 
+    fun clearExportSuccess() { _uiState.update { it.copy(exportSuccess = null) } }
+    fun clearExportError() { _uiState.update { it.copy(exportError = null) } }
+
     fun exportProofPackage() {
         val state = _uiState.value
         val receipt = state.receipt ?: return
@@ -162,7 +160,7 @@ class ReceiptDetailViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isExporting = true, exportError = null) }
             try {
-                val intent = withContext(Dispatchers.IO) {
+                withContext(Dispatchers.IO) {
                     // Hash image file if present
                     val imageSha256 = receipt.imageUri?.let { uri ->
                         runCatching {
@@ -215,8 +213,12 @@ class ReceiptDetailViewModel @Inject constructor(
 
                     val readme = buildReadme()
 
-                    // Write ZIP to cache dir
-                    val zipFile = File(context.cacheDir, "Receipt_Evidence_${receipt.id}.zip")
+                    // Write ZIP directly to Downloads/雪松堡收据/
+                    val destDir = File(
+                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                        "雪松堡收据"
+                    ).also { it.mkdirs() }
+                    val zipFile = File(destDir, "Receipt_Evidence_${receipt.id}.zip")
                     ZipOutputStream(FileOutputStream(zipFile)).use { zip ->
                         zip.putNextEntry(ZipEntry("manifest.json"))
                         zip.write(manifestJson.toByteArray())
@@ -244,19 +246,9 @@ class ReceiptDetailViewModel @Inject constructor(
                         }
                     }
 
-                    val zipUri = FileProvider.getUriForFile(
-                        context,
-                        "${context.packageName}.fileprovider",
-                        zipFile
-                    )
-
-                    Intent(Intent.ACTION_SEND).apply {
-                        type = "application/zip"
-                        putExtra(Intent.EXTRA_STREAM, zipUri)
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }
+                    zipFile.absolutePath
                 }
-                _shareEvent.emit(intent)
+                _uiState.update { it.copy(exportSuccess = "Saved to Downloads/雪松堡收据/${receipt.id}") }
             } catch (e: Exception) {
                 _uiState.update { it.copy(exportError = e.message ?: "Export failed") }
             } finally {
