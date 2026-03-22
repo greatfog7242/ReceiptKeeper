@@ -77,8 +77,7 @@ fun TimestampSettingsScreen(
                     Spacer(modifier = Modifier.height(4.dp))
                     VerifyRow("Image file integrity", result.imageHashOk, skipLabel = "No image")
                     VerifyRow("Reconstructed canonical hash matches manifest", result.canonicalHashOk)
-                    VerifyRow("TSQ contains reconstructed hash", result.tsqMatchesHash)
-                    VerifyRow("TSR was issued for this data", result.tsrMatchesTsq)
+                    VerifyRow("TSR timestamp covers this exact data", result.tsrMatchesHash)
                     result.certifiedAt?.let {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(

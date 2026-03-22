@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.bouncycastle.tsp.TimeStampRequest
 import org.bouncycastle.tsp.TimeStampResponse
 import org.json.JSONObject
 import java.io.File
@@ -38,14 +37,13 @@ data class VerificationResult(
     val packageName: String,
     val imageHashOk: Boolean?,   // null = no image in package
     val canonicalHashOk: Boolean,
-    val tsqMatchesHash: Boolean,
-    val tsrMatchesTsq: Boolean,
+    val tsrMatchesHash: Boolean,
     val certifiedAt: String?,
     val error: String?
 ) {
     val allPassed: Boolean get() =
         (imageHashOk == null || imageHashOk) &&
-        canonicalHashOk && tsqMatchesHash && tsrMatchesTsq
+        canonicalHashOk && tsrMatchesHash
 }
 
 @HiltViewModel
@@ -136,23 +134,20 @@ class TimestampSettingsViewModel @Inject constructor(
         return try {
             ZipFile(pkg.path).use { zip ->
                 val manifestBytes = zip.getInputStream(zip.getEntry("manifest.json")).readBytes()
-                val tsqEntry = zip.getEntry("timestamp_query.tsq")
                 val tsrEntry = zip.getEntry("timestamp_proof.tsr")
                 val imageEntry = zip.getEntry("receipt_image.jpg")
 
-                if (tsqEntry == null || tsrEntry == null) {
+                if (tsrEntry == null) {
                     return VerificationResult(
                         packageName = pkg.fileName,
                         imageHashOk = null,
                         canonicalHashOk = false,
-                        tsqMatchesHash = false,
-                        tsrMatchesTsq = false,
+                        tsrMatchesHash = false,
                         certifiedAt = null,
-                        error = "Missing timestamp_query.tsq or timestamp_proof.tsr in package"
+                        error = "Missing timestamp_proof.tsr in package"
                     )
                 }
 
-                val tsqBytes = zip.getInputStream(tsqEntry).readBytes()
                 val tsrBytes = zip.getInputStream(tsrEntry).readBytes()
                 val imageBytes = imageEntry?.let { zip.getInputStream(it).readBytes() }
 
@@ -175,7 +170,7 @@ class TimestampSettingsViewModel @Inject constructor(
                 } else null
 
                 // 2. Reconstruct the canonical string from raw data fields in manifest.json,
-                //    applying the same fallback rules used at export time.
+                //    applying the same fallback rules used at stamp time.
                 //    Use the independently computed image hash (or "no-image").
                 val imageHashForCanonical = computedImageHash ?: "no-image"
                 val vendorField   = data.getString("vendor")  .ifEmpty { "no-vendor" }
@@ -189,29 +184,24 @@ class TimestampSettingsViewModel @Inject constructor(
                     "|${vendorField}|${categoryField}|${paymentField}|${bookField}" +
                     "|${notesField}|${imageHashForCanonical}"
 
-                val reconstructedDigest = MessageDigest.getInstance("SHA-256")
+                val reconstructedHash = MessageDigest.getInstance("SHA-256")
                     .digest(reconstructedCanonical.toByteArray())
-                val reconstructedHash = reconstructedDigest.joinToString("") { "%02x".format(it) }
+                    .joinToString("") { "%02x".format(it) }
 
                 // canonicalHashOk: reconstructed hash matches what the manifest recorded
                 val canonicalHashOk = reconstructedHash == hashes.getString("manifest_data_sha256")
 
-                // 3. TSQ message imprint must equal the reconstructed hash
-                val tsq = TimeStampRequest(tsqBytes)
-                val tsqHash = tsq.messageImprintDigest.joinToString("") { "%02x".format(it) }
-                val tsqMatchesHash = tsqHash == reconstructedHash
-
-                // 4. TSR validates against a fresh TSQ built from the reconstructed hash
-                val freshTsq = org.bouncycastle.tsp.TimeStampRequestGenerator()
-                    .generate(org.bouncycastle.tsp.TSPAlgorithms.SHA256, reconstructedDigest)
+                // 3. Extract TSR's message imprint and compare directly to reconstructed hash.
+                //    No TSQ needed — we computed the hash independently as a 3rd party.
                 val tsr = TimeStampResponse(tsrBytes)
                 var certifiedAt: String? = null
                 var tsrError: String? = null
-                val tsrMatchesTsq = try {
-                    tsr.validate(freshTsq)
+                val tsrMatchesHash = try {
+                    val tsrImprint = tsr.timeStampToken.timeStampInfo.messageImprintDigest
+                        .joinToString("") { "%02x".format(it) }
                     val genTime = tsr.timeStampToken.timeStampInfo.genTime
                     certifiedAt = SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", Locale.US).format(genTime)
-                    true
+                    tsrImprint == reconstructedHash
                 } catch (e: Exception) {
                     tsrError = e.message
                     false
@@ -221,8 +211,7 @@ class TimestampSettingsViewModel @Inject constructor(
                     packageName = pkg.fileName,
                     imageHashOk = imageHashOk,
                     canonicalHashOk = canonicalHashOk,
-                    tsqMatchesHash = tsqMatchesHash,
-                    tsrMatchesTsq = tsrMatchesTsq,
+                    tsrMatchesHash = tsrMatchesHash,
                     certifiedAt = certifiedAt,
                     error = tsrError
                 )
@@ -232,8 +221,7 @@ class TimestampSettingsViewModel @Inject constructor(
                 packageName = pkg.fileName,
                 imageHashOk = null,
                 canonicalHashOk = false,
-                tsqMatchesHash = false,
-                tsrMatchesTsq = false,
+                tsrMatchesHash = false,
                 certifiedAt = null,
                 error = e.message ?: "Verification failed"
             )
