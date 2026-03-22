@@ -19,6 +19,7 @@ import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
+import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -61,13 +62,18 @@ class RfcTimestampService @Inject constructor(
                     }.getOrNull()
                 } ?: "no-image"
 
-                // Canonical hash input — all fields, UTC timestamps
+                // Canonical hash input — all fields, UTC timestamps.
+                // Truncate updatedAt to milliseconds: Room stores Instant as epoch millis,
+                // so the DB round-trip loses sub-ms precision. The export and verification
+                // both read updatedAt from Room, so we must hash the same truncated value.
+                val updatedAtMillis = receipt.updatedAt.truncatedTo(ChronoUnit.MILLIS)
                 val input = "${receiptId}|${receipt.totalAmount}|${receipt.transactionDate}" +
-                        "|${receipt.updatedAt}|${vendorName}|${categoryName}" +
+                        "|${updatedAtMillis}|${vendorName}|${categoryName}" +
                         "|${paymentMethodName}|${bookName}|${notes}|${imageSha256}"
                 Log.d("RfcTimestamp", "Hash input: $input")
 
                 val digest = MessageDigest.getInstance("SHA-256").digest(input.toByteArray())
+                Log.d("RfcTimestamp", "Stamp digest: ${digest.joinToString("") { "%02x".format(it) }}")
                 val gen = TimeStampRequestGenerator()
                 val request = gen.generate(TSPAlgorithms.SHA256, digest)
                 val url = URL("https://freetsa.org/tsr")

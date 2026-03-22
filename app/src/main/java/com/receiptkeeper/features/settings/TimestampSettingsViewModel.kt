@@ -1,6 +1,7 @@
 package com.receiptkeeper.features.settings
 
 import android.os.Environment
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.receiptkeeper.core.preferences.PreferencesManager
@@ -193,12 +194,16 @@ class TimestampSettingsViewModel @Inject constructor(
 
                 // 3. Extract TSR's message imprint and compare directly to reconstructed hash.
                 //    No TSQ needed — we computed the hash independently as a 3rd party.
+                Log.d("TsrVerify", "canonical: $reconstructedCanonical")
+                Log.d("TsrVerify", "reconstructedHash: $reconstructedHash")
+                Log.d("TsrVerify", "manifest_data_sha256: ${hashes.getString("manifest_data_sha256")}")
                 val tsr = TimeStampResponse(tsrBytes)
                 var certifiedAt: String? = null
                 var tsrError: String? = null
                 val tsrMatchesHash = try {
                     val tsrImprint = tsr.timeStampToken.timeStampInfo.messageImprintDigest
                         .joinToString("") { "%02x".format(it) }
+                    Log.d("TsrVerify", "tsrImprint:         $tsrImprint")
                     val genTime = tsr.timeStampToken.timeStampInfo.genTime
                     certifiedAt = SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", Locale.US).format(genTime)
                     tsrImprint == reconstructedHash

@@ -94,7 +94,7 @@ class ReceiptRepository @Inject constructor(
     }
 
     suspend fun updateReceipt(receipt: Receipt) {
-        receiptDao.updateReceipt(receipt.copy(updatedAt = Instant.now()).toEntity())
+        receiptDao.updateReceipt(receipt.toEntity())
     }
 
     suspend fun deleteReceipt(receipt: Receipt) {
