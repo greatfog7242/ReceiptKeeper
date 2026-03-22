@@ -83,7 +83,7 @@ class TimestampSettingsViewModel @Inject constructor(
                     "雪松堡账本"
                 )
                 val packages = if (dir.exists()) {
-                    dir.listFiles { f -> f.isFile && f.name.endsWith(".zip") }
+                    dir.listFiles { f -> f.isFile && f.name.startsWith("Receipt_Evidence_") && f.name.endsWith(".zip") }
                         ?.map { f ->
                             EvidencePackage(
                                 path = f.absolutePath,
