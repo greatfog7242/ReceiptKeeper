@@ -47,6 +47,14 @@ class ScanReceiptViewModel @Inject constructor(
     val books: StateFlow<List<Book>> = bookRepository.getAllBooks()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    // Default book = the book with the most receipts
+    val defaultBookId: StateFlow<Long> = bookRepository.getAllBooksSortedByReceiptCount()
+        .map { it.firstOrNull()?.book?.id ?: 0L }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0L)
+
+    private val _suggestedCategoryId = MutableStateFlow<Long?>(null)
+    val suggestedCategoryId: StateFlow<Long?> = _suggestedCategoryId.asStateFlow()
+
     val categories: StateFlow<List<Category>> = categoryRepository.getAllCategories()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -131,6 +139,15 @@ class ScanReceiptViewModel @Inject constructor(
             state.copy(
                 extractedData = state.extractedData?.copy(vendor = value)
             )
+        }
+    }
+
+    fun onVendorSelected(vendorName: String) {
+        viewModelScope.launch {
+            val vendor = vendorRepository.getVendorByName(vendorName)
+            _suggestedCategoryId.value = vendor?.let {
+                receiptRepository.getMostPopularCategoryForVendor(it.id)
+            }
         }
     }
 

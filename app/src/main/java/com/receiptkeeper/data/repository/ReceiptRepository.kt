@@ -111,4 +111,10 @@ class ReceiptRepository @Inject constructor(
 
     suspend fun updateTsrToken(receiptId: Long, token: ByteArray) =
         receiptDao.updateTsrToken(receiptId, token)
+
+    suspend fun getMostPopularCategoryForVendor(vendorId: Long): Long? {
+        return if (receiptDao.getReceiptCountForVendor(vendorId) >= 3)
+            receiptDao.getMostPopularCategoryForVendor(vendorId)
+        else null
+    }
 }

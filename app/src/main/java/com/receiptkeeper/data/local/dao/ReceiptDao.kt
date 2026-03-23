@@ -185,4 +185,16 @@ interface ReceiptDao {
 
     @Query("UPDATE receipts SET tsrToken = :token WHERE id = :receiptId")
     suspend fun updateTsrToken(receiptId: Long, token: ByteArray)
+
+    @Query("SELECT COUNT(*) FROM receipts WHERE vendorId = :vendorId")
+    suspend fun getReceiptCountForVendor(vendorId: Long): Int
+
+    @Query("""
+        SELECT categoryId FROM receipts
+        WHERE vendorId = :vendorId AND categoryId IS NOT NULL
+        GROUP BY categoryId
+        ORDER BY COUNT(*) DESC
+        LIMIT 1
+    """)
+    suspend fun getMostPopularCategoryForVendor(vendorId: Long): Long?
 }

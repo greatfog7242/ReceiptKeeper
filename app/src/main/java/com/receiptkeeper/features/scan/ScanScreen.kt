@@ -46,6 +46,8 @@ fun ScanScreen(
     val categories by viewModel.categories.collectAsState()
     val paymentMethods by viewModel.paymentMethods.collectAsState()
     val vendors by viewModel.vendors.collectAsState()
+    val defaultBookId by viewModel.defaultBookId.collectAsState()
+    val suggestedCategoryId by viewModel.suggestedCategoryId.collectAsState()
 
     Scaffold(
         topBar = {
@@ -96,7 +98,10 @@ fun ScanScreen(
                         categories = categories,
                         paymentMethods = paymentMethods,
                         vendors = vendors,
+                        defaultBookId = defaultBookId,
+                        suggestedCategoryId = suggestedCategoryId,
                         onVendorChange = { viewModel.updateVendor(it) },
+                        onVendorSelected = { viewModel.onVendorSelected(it) },
                         onAmountChange = { viewModel.updateAmount(it) },
                         onDateChange = { viewModel.updateDate(it) },
                         onSaveClick = { bookId, categoryId, paymentMethodId, notes ->
@@ -240,15 +245,35 @@ private fun ExtractedDataForm(
     categories: List<Category>,
     paymentMethods: List<PaymentMethod>,
     vendors: List<Vendor>,
+    defaultBookId: Long,
+    suggestedCategoryId: Long?,
     onVendorChange: (String) -> Unit,
+    onVendorSelected: (String) -> Unit,
     onAmountChange: (String) -> Unit,
     onDateChange: (LocalDate?) -> Unit,
     onSaveClick: (Long, Long, Long?, String) -> Unit,
     isProcessing: Boolean,
     modifier: Modifier = Modifier
 ) {
-    var selectedBookId by remember { mutableStateOf(books.firstOrNull()?.id ?: 0L) }
+    var selectedBookId by remember(defaultBookId) {
+        mutableStateOf(if (defaultBookId != 0L) defaultBookId else books.firstOrNull()?.id ?: 0L)
+    }
     var selectedCategoryId by remember { mutableStateOf(categories.firstOrNull()?.id ?: 0L) }
+
+    // When defaultBookId loads after initial composition, apply it if nothing was manually chosen
+    LaunchedEffect(defaultBookId) {
+        if (defaultBookId != 0L && selectedBookId == 0L) selectedBookId = defaultBookId
+    }
+
+    // Apply vendor's most popular category when suggested
+    LaunchedEffect(suggestedCategoryId) {
+        suggestedCategoryId?.let { selectedCategoryId = it }
+    }
+
+    // Trigger category suggestion when OCR pre-fills a vendor
+    LaunchedEffect(extractedData.vendor) {
+        extractedData.vendor?.takeIf { it.isNotBlank() }?.let { onVendorSelected(it) }
+    }
 
     // Auto-select payment method based on extracted card last 4 digits
     var selectedPaymentMethodId by remember(extractedData.cardLast4, paymentMethods) {
@@ -350,6 +375,7 @@ private fun ExtractedDataForm(
                             onClick = {
                                 vendorSearchText = vendor.name
                                 onVendorChange(vendor.name)
+                                onVendorSelected(vendor.name)
                                 vendorExpanded = false
                             }
                         )
