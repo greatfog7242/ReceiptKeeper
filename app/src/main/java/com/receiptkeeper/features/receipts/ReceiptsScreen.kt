@@ -59,6 +59,8 @@ fun ReceiptsScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val defaultBookId by viewModel.defaultBookId.collectAsState()
+    val suggestedCategoryId by viewModel.suggestedCategoryId.collectAsState()
     var receiptToDelete by remember { mutableStateOf<Receipt?>(null) }
     var showFilterMenu by remember { mutableStateOf(false) }
     var showVendorMenu by remember { mutableStateOf(false) }
@@ -484,8 +486,12 @@ fun ReceiptsScreen(
             vendors = uiState.vendors,
             categories = uiState.categories,
             paymentMethods = uiState.paymentMethods,
+            defaultBookId = defaultBookId,
+            suggestedCategoryId = suggestedCategoryId,
+            onVendorSelected = { viewModel.onVendorSelected(it) },
             onImageClick = { imageUri -> fullScreenImageUri = imageUri },
             onDismiss = {
+                viewModel.clearSuggestedCategory()
                 if (uiState.editingReceipt != null) viewModel.hideEditDialog()
                 else viewModel.hideAddDialog()
             },
@@ -574,6 +580,9 @@ private fun ReceiptDialog(
     vendors: List<com.receiptkeeper.domain.model.Vendor>,
     categories: List<com.receiptkeeper.domain.model.Category>,
     paymentMethods: List<com.receiptkeeper.domain.model.PaymentMethod>,
+    defaultBookId: Long,
+    suggestedCategoryId: Long?,
+    onVendorSelected: (String) -> Unit,
     onImageClick: (String) -> Unit,
     onDismiss: () -> Unit,
     onConfirm: (Long, String, Long, Long?, Double, LocalDate, String?, Uri?, String?) -> Unit
@@ -607,8 +616,19 @@ private fun ReceiptDialog(
     ) { uri ->
         selectedImageUri = uri
     }
-    var selectedBookId by remember { mutableStateOf(receipt?.bookId ?: books.firstOrNull()?.id ?: 0L) }
+    var selectedBookId by remember { mutableStateOf(receipt?.bookId ?: defaultBookId.takeIf { it != 0L } ?: books.firstOrNull()?.id ?: 0L) }
     var selectedCategoryId by remember { mutableStateOf(receipt?.categoryId ?: categories.firstOrNull()?.id ?: 0L) }
+
+    // Apply vendor's most popular category when suggested (only for new receipts)
+    LaunchedEffect(suggestedCategoryId) {
+        if (receipt == null) suggestedCategoryId?.let { selectedCategoryId = it }
+    }
+
+    // Trigger category suggestion for the initial vendor when editing
+    LaunchedEffect(Unit) {
+        if (initialVendorName.isNotBlank()) onVendorSelected(initialVendorName)
+    }
+
     var amount by remember { mutableStateOf(receipt?.totalAmount?.toString() ?: "") }
     var date by remember { mutableStateOf(receipt?.transactionDate?.toString() ?: LocalDate.now().toString()) }
     var notes by remember { mutableStateOf(receipt?.notes ?: "") }
@@ -664,6 +684,7 @@ private fun ReceiptDialog(
                                     vendorName = vendor.name
                                     vendorError = false
                                     showVendorDropdown = false
+                                    onVendorSelected(vendor.name)
                                 }
                             )
                         }
