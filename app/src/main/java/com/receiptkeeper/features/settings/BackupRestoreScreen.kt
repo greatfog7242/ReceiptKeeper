@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.os.Process
 import android.provider.Settings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -163,6 +164,40 @@ fun BackupRestoreScreen(
                     Text("Cancel")
                 }
             }
+        )
+    }
+
+    // Restore success — force restart dialog (non-dismissible)
+    if (uiState.showRestoreSuccessRestart) {
+        AlertDialog(
+            onDismissRequest = { /* non-dismissible */ },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            },
+            title = { Text("Restore Complete") },
+            text = {
+                Text(
+                    "Backup restored successfully. The app must restart now to load the restored data."
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val intent = context.packageManager
+                            .getLaunchIntentForPackage(context.packageName)
+                            ?.apply { addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK) }
+                        context.startActivity(intent)
+                        Process.killProcess(Process.myPid())
+                    }
+                ) {
+                    Text("Restart Now")
+                }
+            },
+            dismissButton = null
         )
     }
 

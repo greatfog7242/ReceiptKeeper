@@ -214,8 +214,7 @@ class BackupRestoreViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             isRestoringBackup = false,
-                            showSuccessMessage = true,
-                            successMessage = "Restore completed successfully. Please restart the app."
+                            showRestoreSuccessRestart = true
                         )
                     }
                 } else {
@@ -411,6 +410,7 @@ data class BackupRestoreUiState(
     val successMessage: String? = null,
     val backupToRestore: String? = null,
     val backupToDelete: String? = null,
+    val showRestoreSuccessRestart: Boolean = false,
     val showRestoreConfirmation: Boolean = false,
     val showDeleteConfirmation: Boolean = false,
     val showRecompressConfirmation: Boolean = false,

@@ -32,7 +32,7 @@ object DatabaseModule {
         )
             .addCallback(ReceiptDatabase.createCallback(categoryDaoProvider))
             .addMigrations(*ReceiptDatabase.MIGRATIONS)
-            .fallbackToDestructiveMigration() // For development only - remove in production
+            // No fallbackToDestructiveMigration — explicit migrations only, to prevent silent data loss
             .build()
     }
 
