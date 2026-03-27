@@ -55,7 +55,10 @@ data class ReceiptDetailUiState(
     val tsrCertifiedAt: Instant? = null,
     val isExporting: Boolean = false,
     val exportError: String? = null,
-    val exportSuccess: String? = null
+    val exportSuccess: String? = null,
+    val isExportingOcr: Boolean = false,
+    val exportOcrSuccess: String? = null,
+    val exportOcrError: String? = null
 )
 
 @HiltViewModel
@@ -154,6 +157,51 @@ class ReceiptDetailViewModel @Inject constructor(
 
     fun clearExportSuccess() { _uiState.update { it.copy(exportSuccess = null) } }
     fun clearExportError() { _uiState.update { it.copy(exportError = null) } }
+    fun clearExportOcrSuccess() { _uiState.update { it.copy(exportOcrSuccess = null) } }
+    fun clearExportOcrError() { _uiState.update { it.copy(exportOcrError = null) } }
+
+    fun exportOcrText() {
+        val state = _uiState.value
+        val receipt = state.receipt ?: return
+        if (receipt.extractedText.isNullOrBlank()) {
+            _uiState.update { it.copy(exportOcrError = "No OCR text available for this receipt") }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isExportingOcr = true, exportOcrError = null) }
+            try {
+                withContext(Dispatchers.IO) {
+                    val destDir = File(
+                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                        "雪松堡账本"
+                    ).also { it.mkdirs() }
+                    val file = File(destDir, "OCR_Receipt_${receipt.id}_${receipt.transactionDate}.txt")
+                    file.writeText(buildOcrExportContent(receipt, state))
+                }
+                _uiState.update { it.copy(exportOcrSuccess = "OCR saved to Downloads/雪松堡账本") }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(exportOcrError = e.message ?: "Export failed") }
+            } finally {
+                _uiState.update { it.copy(isExportingOcr = false) }
+            }
+        }
+    }
+
+    private fun buildOcrExportContent(receipt: Receipt, state: ReceiptDetailUiState): String =
+        buildString {
+            appendLine("Receipt OCR Export")
+            appendLine("==================")
+            appendLine("Receipt ID : ${receipt.id}")
+            appendLine("Vendor     : ${state.vendor?.name ?: "Unknown"}")
+            appendLine("Date       : ${receipt.transactionDate}")
+            appendLine("Amount     : ${"%.2f".format(receipt.totalAmount)}")
+            appendLine("Category   : ${state.category?.name ?: "Unknown"}")
+            appendLine("Book       : ${state.book?.name ?: "Unknown"}")
+            appendLine("Payment    : ${state.paymentMethod?.name ?: "Unknown"}")
+            appendLine()
+            appendLine("--- Extracted OCR Text ---")
+            append(receipt.extractedText ?: "")
+        }
 
     fun exportProofPackage() {
         val state = _uiState.value

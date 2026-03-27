@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.TextSnippet
 import androidx.compose.material3.*
 import androidx.compose.ui.res.painterResource
 import com.receiptkeeper.R
@@ -66,6 +67,20 @@ fun ReceiptDetailScreen(
         uiState.exportError?.let { err ->
             coroutineScope.launch { snackbarHostState.showSnackbar("Export failed: $err") }
             viewModel.clearExportError()
+        }
+    }
+
+    LaunchedEffect(uiState.exportOcrSuccess) {
+        uiState.exportOcrSuccess?.let { msg ->
+            coroutineScope.launch { snackbarHostState.showSnackbar(msg) }
+            viewModel.clearExportOcrSuccess()
+        }
+    }
+
+    LaunchedEffect(uiState.exportOcrError) {
+        uiState.exportOcrError?.let { err ->
+            coroutineScope.launch { snackbarHostState.showSnackbar("OCR export failed: $err") }
+            viewModel.clearExportOcrError()
         }
     }
 
@@ -247,11 +262,39 @@ fun ReceiptDetailScreen(
                         if (!receipt.extractedText.isNullOrBlank()) {
                             Divider(modifier = Modifier.padding(vertical = 4.dp))
                             Column {
-                                Text(
-                                    text = "Extracted Text (OCR)",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Extracted Text (OCR)",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    OutlinedButton(
+                                        onClick = { viewModel.exportOcrText() },
+                                        enabled = !uiState.isExportingOcr,
+                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                                    ) {
+                                        if (uiState.isExportingOcr) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(14.dp),
+                                                strokeWidth = 2.dp
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text("Saving…", style = MaterialTheme.typography.labelSmall)
+                                        } else {
+                                            Icon(
+                                                imageVector = Icons.Default.TextSnippet,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(14.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text("Export OCR", style = MaterialTheme.typography.labelSmall)
+                                        }
+                                    }
+                                }
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     text = receipt.extractedText,
