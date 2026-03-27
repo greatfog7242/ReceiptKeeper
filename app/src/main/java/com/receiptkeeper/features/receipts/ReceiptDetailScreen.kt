@@ -29,6 +29,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -296,10 +297,12 @@ fun ReceiptDetailScreen(
                                     }
                                 }
                                 Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = receipt.extractedText,
-                                    style = MaterialTheme.typography.bodySmall
-                                )
+                                SelectionContainer {
+                                    Text(
+                                        text = receipt.extractedText,
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
                             }
                         }
                     }
