@@ -42,49 +42,34 @@ class AnalyticsViewModel @Inject constructor(
     val endDate: StateFlow<LocalDate> = _endDate.asStateFlow()
     val selectedBookId: StateFlow<Long?> = _selectedBookId.asStateFlow()
 
-    // Receipts for selected date range and book
-    val receipts: StateFlow<List<Receipt>> = combine(
-        _startDate,
-        _endDate,
-        _selectedBookId
-    ) { start, end, bookId ->
+    // Shared params flow — avoids repeating combine(_startDate, _endDate, _selectedBookId) for each derived flow
+    private val dateRangeParams = combine(_startDate, _endDate, _selectedBookId) { start, end, bookId ->
         Triple(start, end, bookId)
-    }.flatMapLatest { (start, end, bookId) ->
-        analyticsRepository.getReceiptsByDateRange(start, end, bookId)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }
+
+    // Receipts for selected date range and book
+    val receipts: StateFlow<List<Receipt>> = dateRangeParams
+        .flatMapLatest { (start, end, bookId) ->
+            analyticsRepository.getReceiptsByDateRange(start, end, bookId)
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // Total spending for selected date range and book
-    val totalSpending: StateFlow<Double> = combine(
-        _startDate,
-        _endDate,
-        _selectedBookId
-    ) { start, end, bookId ->
-        Triple(start, end, bookId)
-    }.flatMapLatest { (start, end, bookId) ->
-        analyticsRepository.getTotalSpendingByDateRange(start, end, bookId)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+    val totalSpending: StateFlow<Double> = dateRangeParams
+        .flatMapLatest { (start, end, bookId) ->
+            analyticsRepository.getTotalSpendingByDateRange(start, end, bookId)
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     // Category spending breakdown for selected date range and book
-    val categoryBreakdown: StateFlow<List<CategorySpending>> = combine(
-        _startDate,
-        _endDate,
-        _selectedBookId
-    ) { start, end, bookId ->
-        Triple(start, end, bookId)
-    }.flatMapLatest { (start, end, bookId) ->
-        analyticsRepository.getCategorySpendingBreakdown(start, end, bookId)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val categoryBreakdown: StateFlow<List<CategorySpending>> = dateRangeParams
+        .flatMapLatest { (start, end, bookId) ->
+            analyticsRepository.getCategorySpendingBreakdown(start, end, bookId)
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // Vendor spending breakdown for selected date range and book
-    val vendorBreakdown: StateFlow<List<VendorSpending>> = combine(
-        _startDate,
-        _endDate,
-        _selectedBookId
-    ) { start, end, bookId ->
-        Triple(start, end, bookId)
-    }.flatMapLatest { (start, end, bookId) ->
-        analyticsRepository.getVendorSpendingBreakdown(start, end, bookId)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val vendorBreakdown: StateFlow<List<VendorSpending>> = dateRangeParams
+        .flatMapLatest { (start, end, bookId) ->
+            analyticsRepository.getVendorSpendingBreakdown(start, end, bookId)
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // All categories for reference
     val categories: StateFlow<List<Category>> = analyticsRepository.getAllCategories()
@@ -113,15 +98,10 @@ class AnalyticsViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 1.0)
 
     // Daily accumulated spending for trend chart
-    val dailyAccumulatedSpending: StateFlow<List<DailySpending>> = combine(
-        _startDate,
-        _endDate,
-        _selectedBookId
-    ) { start, end, bookId ->
-        Triple(start, end, bookId)
-    }.flatMapLatest { (start, end, bookId) ->
-        analyticsRepository.getDailyAccumulatedSpending(start, end, bookId)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val dailyAccumulatedSpending: StateFlow<List<DailySpending>> = dateRangeParams
+        .flatMapLatest { (start, end, bookId) ->
+            analyticsRepository.getDailyAccumulatedSpending(start, end, bookId)
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     /**
      * Update date range

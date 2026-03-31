@@ -57,7 +57,6 @@ class BooksViewModel @Inject constructor(
                 .collect { booksWithCount ->
                     _uiState.update {
                         it.copy(
-                            books = booksWithCount.map { it.book },
                             booksWithReceiptCount = booksWithCount,
                             isLoading = false,
                             error = null
@@ -155,14 +154,10 @@ class BooksViewModel @Inject constructor(
                 // Update UI state
                 _uiState.update { state ->
                     state.copy(
-                        books = booksWithNewOrder,
                         booksWithReceiptCount = state.booksWithReceiptCount.map { bookWithCount ->
                             val updatedBook = booksWithNewOrder.find { it.id == bookWithCount.book.id }
-                            if (updatedBook != null) {
-                                bookWithCount.copy(book = updatedBook)
-                            } else {
-                                bookWithCount
-                            }
+                            if (updatedBook != null) bookWithCount.copy(book = updatedBook)
+                            else bookWithCount
                         }
                     )
                 }
@@ -179,11 +174,12 @@ class BooksViewModel @Inject constructor(
  * UI state for Books screen
  */
 data class BooksUiState(
-    val books: List<Book> = emptyList(),
     val booksWithReceiptCount: List<BookWithReceiptCount> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
     val showAddDialog: Boolean = false,
     val editingBook: Book? = null,
     val timestampBookId: Long? = null
-)
+) {
+    val books: List<Book> get() = booksWithReceiptCount.map { it.book }
+}

@@ -22,11 +22,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.receiptkeeper.core.util.IconHelper
 import com.receiptkeeper.domain.model.Category
+import com.receiptkeeper.ui.components.DeleteConfirmationDialog
 
 // Predefined colors for categories
 private val categoryColors = listOf(
     "#FF6B6B" to "Red",
-    "#FF6B6B" to "Coral",
+    "#FF7F50" to "Coral",
     "#4ECB71" to "Green",
     "#2ECC71" to "Lime",
     "#FFA500" to "Orange",
@@ -34,7 +35,7 @@ private val categoryColors = listOf(
     "#E91E63" to "Pink",
     "#E74C3C" to "Crimson",
     "#3498DB" to "Blue",
-    "#3498DB" to "Sky Blue",
+    "#87CEEB" to "Sky Blue",
     "#9B59B6" to "Purple",
     "#1ABC9C" to "Teal",
     "#16A085" to "Sea Green",
@@ -390,42 +391,6 @@ private fun ColorOption(
             )
         }
     }
-}
-
-@Composable
-private fun DeleteConfirmationDialog(
-    title: String,
-    message: String,
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        icon = {
-            Icon(
-                imageVector = Icons.Filled.Warning,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.error
-            )
-        },
-        title = { Text(title) },
-        text = { Text(message) },
-        confirmButton = {
-            TextButton(
-                onClick = onConfirm,
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                )
-            ) {
-                Text("Delete")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
 }
 
 @Composable

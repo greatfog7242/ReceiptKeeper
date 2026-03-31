@@ -219,6 +219,7 @@ class ReceiptsViewModel @Inject constructor(
                     }
                 }
 
+                val original = _uiState.value.editingReceipt
                 val updated = Receipt(
                     id = receiptId,
                     bookId = bookId,
@@ -229,8 +230,8 @@ class ReceiptsViewModel @Inject constructor(
                     transactionDate = transactionDate,
                     notes = notes,
                     imageUri = finalImageUri,
-                    extractedText = null,
-                    createdAt = Instant.now(), // Will be ignored by update
+                    extractedText = original?.extractedText,
+                    createdAt = original?.createdAt ?: Instant.now(),
                     updatedAt = Instant.now()
                 )
                 receiptRepository.updateReceipt(updated)

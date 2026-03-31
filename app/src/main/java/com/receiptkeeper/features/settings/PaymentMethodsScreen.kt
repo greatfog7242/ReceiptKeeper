@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.receiptkeeper.data.local.entity.PaymentType
 import com.receiptkeeper.domain.model.PaymentMethod
+import com.receiptkeeper.ui.components.DeleteConfirmationDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -334,38 +335,3 @@ private fun PaymentMethodDialog(
     )
 }
 
-@Composable
-private fun DeleteConfirmationDialog(
-    title: String,
-    message: String,
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        icon = {
-            Icon(
-                imageVector = Icons.Filled.Warning,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.error
-            )
-        },
-        title = { Text(title) },
-        text = { Text(message) },
-        confirmButton = {
-            TextButton(
-                onClick = onConfirm,
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                )
-            ) {
-                Text("Delete")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
-}
