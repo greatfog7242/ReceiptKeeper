@@ -48,7 +48,9 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.text.NumberFormat
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -79,15 +81,21 @@ fun ReceiptsScreen(
         }
     }
 
-    // Group receipts by date and track expanded/collapsed state
+    // Build year > month > date tree
+    val receiptsByYear = uiState.receipts
+        .groupBy { it.transactionDate.year }
+        .toSortedMap(compareByDescending { it })
+    val receiptsByYearMonth = uiState.receipts
+        .groupBy { YearMonth.from(it.transactionDate) }
     val receiptsByDate = uiState.receipts
         .groupBy { it.transactionDate }
-        .toSortedMap(compareByDescending<LocalDate> { it })
 
-    // Initially collapse all dates
-    var expandedDates by remember(receiptsByDate.keys) {
-        mutableStateOf<Set<LocalDate>>(emptySet())
-    }
+    // Reset expansion/selection when the set of receipts changes
+    val receiptIds = uiState.receipts.map { it.id }.toSet()
+    var expandedYears by remember(receiptIds) { mutableStateOf<Set<Int>>(emptySet()) }
+    var expandedMonths by remember(receiptIds) { mutableStateOf<Set<YearMonth>>(emptySet()) }
+    var expandedDates by remember(receiptIds) { mutableStateOf<Set<LocalDate>>(emptySet()) }
+    var selectedNode by remember(receiptIds) { mutableStateOf<TreeSelection>(TreeSelection.None) }
 
     Scaffold(
         topBar = {
@@ -347,8 +355,22 @@ fun ReceiptsScreen(
                 }
 
                 else -> {
+                    // Compute spending and label for the selected tree node
+                    val displayedSpending = when (val sel = selectedNode) {
+                        is TreeSelection.None -> uiState.totalSpending
+                        is TreeSelection.Year -> receiptsByYear[sel.year]?.sumOf { it.totalAmount } ?: 0.0
+                        is TreeSelection.Month -> receiptsByYearMonth[sel.yearMonth]?.sumOf { it.totalAmount } ?: 0.0
+                        is TreeSelection.Day -> receiptsByDate[sel.date]?.sumOf { it.totalAmount } ?: 0.0
+                    }
+                    val spendingLabel = when (val sel = selectedNode) {
+                        is TreeSelection.None -> "Total Spending"
+                        is TreeSelection.Year -> "${sel.year} Spending"
+                        is TreeSelection.Month -> "${sel.yearMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault())} ${sel.yearMonth.year} Spending"
+                        is TreeSelection.Day -> sel.date.format(DateTimeFormatter.ofPattern("MMM d, yyyy")) + " Spending"
+                    }
+
                     Column(modifier = Modifier.fillMaxSize()) {
-                        // Total spending card
+                        // Spending card — updates based on selected tree node
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -365,41 +387,41 @@ fun ReceiptsScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Total Spending",
+                                    text = spendingLabel,
                                     style = MaterialTheme.typography.titleMedium,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
                                 Text(
-                                    text = formatCurrency(uiState.totalSpending),
+                                    text = formatCurrency(displayedSpending),
                                     style = MaterialTheme.typography.headlineSmall,
                                     color = MaterialTheme.colorScheme.primary
                                 )
                             }
                         }
 
-                        // Receipts list grouped by date
+                        // Year > Month > Date tree
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = PaddingValues(vertical = 8.dp)
                         ) {
-                            receiptsByDate.forEach { (date, receiptsForDate) ->
-                                val isExpanded = expandedDates.contains(date)
-                                val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy")
-                                val dateTotal = receiptsForDate.sumOf { it.totalAmount }
+                            receiptsByYear.forEach { (year, receiptsForYear) ->
+                                val isYearExpanded = expandedYears.contains(year)
+                                val yearTotal = receiptsForYear.sumOf { it.totalAmount }
+                                val isYearSelected = selectedNode == TreeSelection.Year(year)
 
-                                // Date header
-                                item(key = "header_$date") {
+                                // Year header
+                                item(key = "year_$year") {
                                     Surface(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .clickable {
-                                                expandedDates = if (isExpanded) {
-                                                    expandedDates - date
-                                                } else {
-                                                    expandedDates + date
-                                                }
+                                                expandedYears = if (isYearExpanded) expandedYears - year else expandedYears + year
+                                                selectedNode = if (isYearSelected) TreeSelection.None else TreeSelection.Year(year)
                                             },
-                                        color = MaterialTheme.colorScheme.surfaceVariant
+                                        color = if (isYearSelected)
+                                            MaterialTheme.colorScheme.primaryContainer
+                                        else
+                                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
                                     ) {
                                         Row(
                                             modifier = Modifier
@@ -410,21 +432,21 @@ fun ReceiptsScreen(
                                         ) {
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                                             ) {
                                                 Icon(
-                                                    imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                                    contentDescription = if (isExpanded) "Collapse" else "Expand",
-                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    imageVector = if (isYearExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                                    contentDescription = if (isYearExpanded) "Collapse" else "Expand",
+                                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
                                                 )
                                                 Text(
-                                                    text = date.format(dateFormatter),
-                                                    style = MaterialTheme.typography.titleMedium,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    text = year.toString(),
+                                                    style = MaterialTheme.typography.titleLarge,
+                                                    color = MaterialTheme.colorScheme.onPrimaryContainer
                                                 )
                                             }
                                             Text(
-                                                text = formatCurrency(dateTotal),
+                                                text = formatCurrency(yearTotal),
                                                 style = MaterialTheme.typography.titleMedium,
                                                 color = MaterialTheme.colorScheme.primary
                                             )
@@ -432,27 +454,144 @@ fun ReceiptsScreen(
                                     }
                                 }
 
-                                // Receipts for this date
-                                if (isExpanded) {
-                                    items(receiptsForDate, key = { it.id }) { receipt ->
-                                        val vendor = uiState.vendors.find { it.id == receipt.vendorId }
-                                        val category = uiState.categories.find { it.id == receipt.categoryId }
-                                        val book = uiState.books.find { it.id == receipt.bookId }
+                                if (isYearExpanded) {
+                                    val byMonth = receiptsForYear
+                                        .groupBy { YearMonth.from(it.transactionDate) }
+                                        .toSortedMap(compareByDescending { it })
 
-                                        ReceiptListItem(
-                                            receipt = receipt,
-                                            vendorName = vendor?.name ?: "Unknown",
-                                            vendorIconName = vendor?.iconName ?: "Store",
-                                            categoryName = category?.name ?: "Unknown",
-                                            categoryColor = category?.colorHex ?: "#95A5A6",
-                                            categoryIconName = category?.iconName ?: "Category",
-                                            bookName = book?.name ?: "Unknown",
-                                            isTimestampBook = receipt.bookId == uiState.timestampBookId,
-                                            onItemClick = { onNavigateToReceiptDetail(it.id) },
-                                            onEditClick = { viewModel.showEditDialog(it) },
-                                            onDeleteClick = { receiptToDelete = it },
-                                            onImageClick = { imageUri -> fullScreenImageUri = imageUri }
-                                        )
+                                    byMonth.forEach { (yearMonth, receiptsForMonth) ->
+                                        val isMonthExpanded = expandedMonths.contains(yearMonth)
+                                        val monthTotal = receiptsForMonth.sumOf { it.totalAmount }
+                                        val isMonthSelected = selectedNode == TreeSelection.Month(yearMonth)
+                                        val monthName = yearMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault())
+
+                                        // Month header
+                                        item(key = "month_$yearMonth") {
+                                            Surface(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .clickable {
+                                                        expandedMonths = if (isMonthExpanded) expandedMonths - yearMonth else expandedMonths + yearMonth
+                                                        selectedNode = if (isMonthSelected) TreeSelection.None else TreeSelection.Month(yearMonth)
+                                                    },
+                                                color = if (isMonthSelected)
+                                                    MaterialTheme.colorScheme.surfaceVariant
+                                                else
+                                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(start = 32.dp, end = 16.dp, top = 10.dp, bottom = 10.dp),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                    ) {
+                                                        Icon(
+                                                            imageVector = if (isMonthExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                                            contentDescription = if (isMonthExpanded) "Collapse" else "Expand",
+                                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                                        )
+                                                        Text(
+                                                            text = monthName,
+                                                            style = MaterialTheme.typography.titleMedium,
+                                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                        )
+                                                    }
+                                                    Text(
+                                                        text = formatCurrency(monthTotal),
+                                                        style = MaterialTheme.typography.titleSmall,
+                                                        color = MaterialTheme.colorScheme.primary
+                                                    )
+                                                }
+                                            }
+                                        }
+
+                                        if (isMonthExpanded) {
+                                            val byDate = receiptsForMonth
+                                                .groupBy { it.transactionDate }
+                                                .toSortedMap(compareByDescending { it })
+
+                                            byDate.forEach { (date, receiptsForDate) ->
+                                                val isDateExpanded = expandedDates.contains(date)
+                                                val dateTotal = receiptsForDate.sumOf { it.totalAmount }
+                                                val isDateSelected = selectedNode == TreeSelection.Day(date)
+                                                val dayFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d")
+
+                                                // Date header
+                                                item(key = "date_$date") {
+                                                    Surface(
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .clickable {
+                                                                expandedDates = if (isDateExpanded) expandedDates - date else expandedDates + date
+                                                                selectedNode = if (isDateSelected) TreeSelection.None else TreeSelection.Day(date)
+                                                            },
+                                                        color = if (isDateSelected)
+                                                            MaterialTheme.colorScheme.surface
+                                                        else
+                                                            MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
+                                                    ) {
+                                                        Row(
+                                                            modifier = Modifier
+                                                                .fillMaxWidth()
+                                                                .padding(start = 48.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+                                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                                            verticalAlignment = Alignment.CenterVertically
+                                                        ) {
+                                                            Row(
+                                                                verticalAlignment = Alignment.CenterVertically,
+                                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                            ) {
+                                                                Icon(
+                                                                    imageVector = if (isDateExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                                                    contentDescription = if (isDateExpanded) "Collapse" else "Expand",
+                                                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                                                )
+                                                                Text(
+                                                                    text = date.format(dayFormatter),
+                                                                    style = MaterialTheme.typography.bodyLarge,
+                                                                    color = MaterialTheme.colorScheme.onSurface
+                                                                )
+                                                            }
+                                                            Text(
+                                                                text = formatCurrency(dateTotal),
+                                                                style = MaterialTheme.typography.bodyMedium,
+                                                                color = MaterialTheme.colorScheme.primary
+                                                            )
+                                                        }
+                                                    }
+                                                }
+
+                                                // Receipt items
+                                                if (isDateExpanded) {
+                                                    items(receiptsForDate, key = { it.id }) { receipt ->
+                                                        val vendor = uiState.vendors.find { it.id == receipt.vendorId }
+                                                        val category = uiState.categories.find { it.id == receipt.categoryId }
+                                                        val book = uiState.books.find { it.id == receipt.bookId }
+                                                        Box(modifier = Modifier.padding(start = 16.dp)) {
+                                                            ReceiptListItem(
+                                                                receipt = receipt,
+                                                                vendorName = vendor?.name ?: "Unknown",
+                                                                vendorIconName = vendor?.iconName ?: "Store",
+                                                                categoryName = category?.name ?: "Unknown",
+                                                                categoryColor = category?.colorHex ?: "#95A5A6",
+                                                                categoryIconName = category?.iconName ?: "Category",
+                                                                bookName = book?.name ?: "Unknown",
+                                                                isTimestampBook = receipt.bookId == uiState.timestampBookId,
+                                                                onItemClick = { onNavigateToReceiptDetail(it.id) },
+                                                                onEditClick = { viewModel.showEditDialog(it) },
+                                                                onDeleteClick = { receiptToDelete = it },
+                                                                onImageClick = { imageUri -> fullScreenImageUri = imageUri }
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -1085,6 +1224,13 @@ private fun ReceiptDialog(
             }
         }
     )
+}
+
+private sealed class TreeSelection {
+    object None : TreeSelection()
+    data class Year(val year: Int) : TreeSelection()
+    data class Month(val yearMonth: YearMonth) : TreeSelection()
+    data class Day(val date: LocalDate) : TreeSelection()
 }
 
 private fun formatCurrency(amount: Double): String {
