@@ -126,6 +126,7 @@ dependencies {
 
     // ML Kit Text Recognition (OCR)
     implementation("com.google.mlkit:text-recognition:16.0.1")
+    implementation("com.google.mlkit:text-recognition-chinese:16.0.1")
 
     // CameraX
     val cameraxVersion = "1.4.1"
