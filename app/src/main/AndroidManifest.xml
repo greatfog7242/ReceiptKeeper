@@ -57,6 +57,11 @@
             </intent-filter>
         </activity>
 
+        <!-- ML Kit: bundle Latin + Chinese OCR models into APK -->
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="ocr,ocr_zh" />
+
         <!-- FileProvider for sharing receipt images -->
         <provider
             android:name="androidx.core.content.FileProvider"
