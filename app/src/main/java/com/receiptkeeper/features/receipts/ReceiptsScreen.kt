@@ -36,7 +36,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions
 import com.receiptkeeper.core.util.ImageHandler
 import com.receiptkeeper.domain.model.Receipt
 import com.receiptkeeper.features.receipts.components.ReceiptListItem
@@ -932,7 +932,7 @@ private fun ReceiptDialog(
 
                                                 if (bitmap != null) {
                                                     val inputImage = InputImage.fromBitmap(bitmap, 0)
-                                                    val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+                                                    val recognizer = TextRecognition.getClient(ChineseTextRecognizerOptions.Builder().build())
                                                     val result = recognizer.process(inputImage).await()
                                                     bitmap.recycle()
 
