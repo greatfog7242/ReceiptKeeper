@@ -496,6 +496,7 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
         ) {
             SettingsItem(
                 icon = Icons.Default.Store,
@@ -597,7 +598,7 @@ fun SettingsScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Simple version footer
             Text(
