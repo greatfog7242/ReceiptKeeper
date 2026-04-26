@@ -61,6 +61,12 @@ data class ReceiptEntity(
 
     val totalAmount: Double,
 
+    @androidx.room.ColumnInfo(defaultValue = "USD")
+    val currency: String = "USD",
+
+    @androidx.room.ColumnInfo(defaultValue = "0.0")
+    val originalAmount: Double = totalAmount,
+
     val transactionDate: LocalDate,
 
     val notes: String? = null,

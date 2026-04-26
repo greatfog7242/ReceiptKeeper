@@ -634,7 +634,7 @@ fun ReceiptsScreen(
                 if (uiState.editingReceipt != null) viewModel.hideEditDialog()
                 else viewModel.hideAddDialog()
             },
-            onConfirm = { bookId, vendorName, categoryId, paymentMethodId, amount, date, notes, imageUri, extractedText ->
+            onConfirm = { bookId, vendorName, categoryId, paymentMethodId, amount, currency, date, notes, imageUri, extractedText ->
                 if (uiState.editingReceipt != null) {
                     viewModel.updateReceiptFromDialog(
                         receiptId = uiState.editingReceipt!!.id,
@@ -642,7 +642,8 @@ fun ReceiptsScreen(
                         vendorName = vendorName,
                         categoryId = categoryId,
                         paymentMethodId = paymentMethodId,
-                        totalAmount = amount,
+                        originalAmount = amount,
+                        currency = currency,
                         transactionDate = date,
                         notes = notes,
                         oldImageUri = uiState.editingReceipt!!.imageUri,
@@ -654,7 +655,8 @@ fun ReceiptsScreen(
                         vendorName = vendorName,
                         categoryId = categoryId,
                         paymentMethodId = paymentMethodId,
-                        totalAmount = amount,
+                        originalAmount = amount,
+                        currency = currency,
                         transactionDate = date,
                         notes = notes,
                         imageUri = imageUri,
@@ -724,7 +726,7 @@ private fun ReceiptDialog(
     onVendorSelected: (String) -> Unit,
     onImageClick: (String) -> Unit,
     onDismiss: () -> Unit,
-    onConfirm: (Long, String, Long, Long?, Double, LocalDate, String?, Uri?, String?) -> Unit
+    onConfirm: (Long, String, Long, Long?, Double, String, LocalDate, String?, Uri?, String?) -> Unit
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -768,13 +770,15 @@ private fun ReceiptDialog(
         if (initialVendorName.isNotBlank()) onVendorSelected(initialVendorName)
     }
 
-    var amount by remember { mutableStateOf(receipt?.totalAmount?.toString() ?: "") }
+    var amount by remember { mutableStateOf(receipt?.originalAmount?.toString() ?: "") }
+    var selectedCurrency by remember { mutableStateOf(receipt?.currency ?: "USD") }
     var date by remember { mutableStateOf(receipt?.transactionDate?.toString() ?: LocalDate.now().toString()) }
     var notes by remember { mutableStateOf(receipt?.notes ?: "") }
     var showBookDropdown by remember { mutableStateOf(false) }
     var showCategoryDropdown by remember { mutableStateOf(false) }
     var showPaymentDropdown by remember { mutableStateOf(false) }
     var showVendorDropdown by remember { mutableStateOf(false) }
+    var showCurrencyDropdown by remember { mutableStateOf(false) }
     var vendorError by remember { mutableStateOf(false) }
     var amountError by remember { mutableStateOf(false) }
 
@@ -1101,7 +1105,44 @@ private fun ReceiptDialog(
                     }
                 }
 
+                // Currency dropdown
+                ExposedDropdownMenuBox(
+                    expanded = showCurrencyDropdown,
+                    onExpandedChange = { showCurrencyDropdown = !showCurrencyDropdown }
+                ) {
+                    OutlinedTextField(
+                        value = selectedCurrency,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Currency") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showCurrencyDropdown) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = showCurrencyDropdown,
+                        onDismissRequest = { showCurrencyDropdown = false }
+                    ) {
+                        com.receiptkeeper.core.preferences.PreferencesManager.SUPPORTED_CURRENCIES.forEach { code ->
+                            DropdownMenuItem(
+                                text = { Text(code) },
+                                onClick = {
+                                    selectedCurrency = code
+                                    showCurrencyDropdown = false
+                                },
+                                leadingIcon = {
+                                    if (selectedCurrency == code) {
+                                        Icon(Icons.Default.Check, contentDescription = null)
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+
                 // Amount
+                val currencySymbol = if (selectedCurrency == "CNY") "¥" else "$"
                 OutlinedTextField(
                     value = amount,
                     onValueChange = {
@@ -1110,9 +1151,9 @@ private fun ReceiptDialog(
                             amountError = it.isEmpty()
                         }
                     },
-                    label = { Text("Amount *") },
+                    label = { Text("Amount * ($selectedCurrency)") },
                     placeholder = { Text("0.00") },
-                    leadingIcon = { Text("$") },
+                    leadingIcon = { Text(currencySymbol) },
                     isError = amountError,
                     supportingText = if (amountError) {{ Text("Amount is required") }} else null,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -1204,6 +1245,7 @@ private fun ReceiptDialog(
                             selectedCategoryId,
                             selectedPaymentMethodId,
                             amountValue,
+                            selectedCurrency,
                             dateValue,
                             notes.takeIf { it.isNotBlank() },
                             selectedImageUri,

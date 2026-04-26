@@ -12,6 +12,7 @@ import com.receiptkeeper.features.books.BooksScreen
 import com.receiptkeeper.features.receipts.ReceiptsScreen
 import com.receiptkeeper.features.scan.ScanScreen
 import com.receiptkeeper.features.settings.BackupRestoreScreen
+import com.receiptkeeper.features.settings.CurrencyRatesScreen
 import com.receiptkeeper.features.settings.IconThemeScreen
 import com.receiptkeeper.features.settings.SettingsScreen
 import com.receiptkeeper.features.settings.TimestampSettingsScreen
@@ -86,6 +87,9 @@ fun NavGraph(
                 onNavigateToTimestamp = {
                     navController.navigate(Routes.TimestampSettings.route)
                 },
+                onNavigateToCurrencyRates = {
+                    navController.navigate(Routes.CurrencyRates.route)
+                },
                 onNavigateToDebug = {
                     navController.navigate(Routes.Debug.route)
                 }
@@ -157,6 +161,10 @@ fun NavGraph(
 
         composable(route = Routes.TimestampSettings.route) {
             TimestampSettingsScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
+        composable(route = Routes.CurrencyRates.route) {
+            CurrencyRatesScreen(onNavigateBack = { navController.popBackStack() })
         }
 
         // Debug screen (hidden)

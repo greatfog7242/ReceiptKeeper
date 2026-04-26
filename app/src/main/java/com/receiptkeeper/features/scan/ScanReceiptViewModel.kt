@@ -14,6 +14,7 @@ import com.receiptkeeper.domain.model.Book
 import com.receiptkeeper.domain.model.Category
 import com.receiptkeeper.domain.model.PaymentMethod
 import com.receiptkeeper.features.scan.ocr.ExtractedReceiptData
+import com.receiptkeeper.core.preferences.PreferencesManager
 import com.receiptkeeper.core.services.RfcTimestampService
 import com.receiptkeeper.features.scan.ocr.OcrProcessor
 import com.receiptkeeper.features.scan.ocr.ReceiptParser
@@ -37,6 +38,7 @@ class ScanReceiptViewModel @Inject constructor(
     private val categoryRepository: CategoryRepository,
     private val paymentMethodRepository: PaymentMethodRepository,
     private val rfcTimestampService: RfcTimestampService,
+    private val preferencesManager: PreferencesManager,
     private val application: Application
 ) : ViewModel() {
 
@@ -184,6 +186,7 @@ class ScanReceiptViewModel @Inject constructor(
         categoryId: Long,
         paymentMethodId: Long?,
         notes: String,
+        currency: String = "USD",
         onSuccess: (Long) -> Unit
     ) {
         val state = _uiState.value
@@ -199,20 +202,26 @@ class ScanReceiptViewModel @Inject constructor(
             try {
                 _uiState.update { it.copy(isProcessing = true, error = null) }
 
-                // Get or create vendor
                 val vendorId = if (!extracted.vendor.isNullOrBlank()) {
                     vendorRepository.getOrCreateVendor(extracted.vendor)
                 } else {
                     null
                 }
 
-                // Create receipt
+                val originalAmount = extracted.amount ?: 0.0
+                val totalAmount = when (currency) {
+                    "CNY" -> originalAmount * preferencesManager.cnyToUsdRate.first()
+                    else -> originalAmount
+                }
+
                 val receipt = com.receiptkeeper.domain.model.Receipt(
                     bookId = bookId,
                     vendorId = vendorId,
                     categoryId = categoryId,
                     paymentMethodId = paymentMethodId,
-                    totalAmount = extracted.amount ?: 0.0,
+                    totalAmount = totalAmount,
+                    currency = currency,
+                    originalAmount = originalAmount,
                     transactionDate = extracted.date ?: LocalDate.now(),
                     notes = notes.ifBlank { null },
                     imageUri = imageUri.toString(),

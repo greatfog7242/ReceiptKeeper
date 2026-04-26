@@ -465,6 +465,7 @@ fun SettingsScreen(
     onNavigateToSpendingGoals: () -> Unit = {},
     onNavigateToBackupRestore: () -> Unit = {},
     onNavigateToTimestamp: () -> Unit = {},
+    onNavigateToCurrencyRates: () -> Unit = {},
     onNavigateToDebug: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -555,6 +556,15 @@ fun SettingsScreen(
                 title = "RFC 3161 Timestamps",
                 subtitle = "Auto-timestamp receipts in a selected book",
                 onClick = onNavigateToTimestamp
+            )
+
+            HorizontalDivider()
+
+            SettingsItem(
+                icon = Icons.Default.CurrencyExchange,
+                title = "Currency Exchange Rates",
+                subtitle = "Set CNY → USD rate for automatic conversion",
+                onClick = onNavigateToCurrencyRates
             )
 
             HorizontalDivider()

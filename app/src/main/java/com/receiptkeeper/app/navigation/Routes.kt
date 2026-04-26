@@ -31,6 +31,7 @@ sealed class Routes(val route: String) {
     data object BackupRestore : Routes("backup_restore")
     
     data object TimestampSettings : Routes("timestamp_settings")
+    data object CurrencyRates : Routes("currency_rates")
 
     // Debug screen (hidden, accessible via Settings)
     data object Debug : Routes("debug")

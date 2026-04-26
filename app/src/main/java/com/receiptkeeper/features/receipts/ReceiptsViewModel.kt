@@ -124,7 +124,8 @@ class ReceiptsViewModel @Inject constructor(
         vendorName: String,
         categoryId: Long,
         paymentMethodId: Long?,
-        totalAmount: Double,
+        originalAmount: Double,
+        currency: String,
         transactionDate: LocalDate,
         notes: String?,
         imageUri: Uri?,
@@ -132,15 +133,15 @@ class ReceiptsViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             try {
-                // Get or create vendor (returns vendor ID)
                 val vendorId = vendorRepository.getOrCreateVendor(vendorName)
 
-                // Save image to app storage if provided (Uri.EMPTY means no image)
                 val savedImagePath = if (imageUri != null && imageUri != Uri.EMPTY) {
                     imageHandler.saveImage(imageUri)
                 } else {
                     null
                 }
+
+                val totalAmount = convertToUsd(originalAmount, currency)
 
                 val receipt = Receipt(
                     bookId = bookId,
@@ -148,6 +149,8 @@ class ReceiptsViewModel @Inject constructor(
                     categoryId = categoryId,
                     paymentMethodId = paymentMethodId,
                     totalAmount = totalAmount,
+                    currency = currency,
+                    originalAmount = originalAmount,
                     transactionDate = transactionDate,
                     notes = notes,
                     imageUri = savedImagePath,
@@ -186,7 +189,8 @@ class ReceiptsViewModel @Inject constructor(
         vendorName: String,
         categoryId: Long,
         paymentMethodId: Long?,
-        totalAmount: Double,
+        originalAmount: Double,
+        currency: String,
         transactionDate: LocalDate,
         notes: String?,
         oldImageUri: String?,
@@ -194,31 +198,21 @@ class ReceiptsViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             try {
-                // Get or create vendor (returns vendor ID)
                 val vendorId = vendorRepository.getOrCreateVendor(vendorName)
 
-                // Handle image update (Uri.EMPTY means user clicked remove)
                 val finalImageUri = when {
                     newImageUri == Uri.EMPTY -> {
-                        // User wants to remove image
-                        if (oldImageUri != null) {
-                            imageHandler.deleteImage(oldImageUri)
-                        }
+                        if (oldImageUri != null) imageHandler.deleteImage(oldImageUri)
                         null
                     }
                     newImageUri != null -> {
-                        // User selected new image
-                        if (oldImageUri != null) {
-                            imageHandler.deleteImage(oldImageUri)
-                        }
+                        if (oldImageUri != null) imageHandler.deleteImage(oldImageUri)
                         imageHandler.saveImage(newImageUri)
                     }
-                    else -> {
-                        // Keep existing image
-                        oldImageUri
-                    }
+                    else -> oldImageUri
                 }
 
+                val totalAmount = convertToUsd(originalAmount, currency)
                 val original = _uiState.value.editingReceipt
                 val updated = Receipt(
                     id = receiptId,
@@ -227,6 +221,8 @@ class ReceiptsViewModel @Inject constructor(
                     categoryId = categoryId,
                     paymentMethodId = paymentMethodId,
                     totalAmount = totalAmount,
+                    currency = currency,
+                    originalAmount = originalAmount,
                     transactionDate = transactionDate,
                     notes = notes,
                     imageUri = finalImageUri,
@@ -331,6 +327,12 @@ class ReceiptsViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.update { it.copy(error = null) }
+    }
+
+    private suspend fun convertToUsd(amount: Double, currency: String): Double = when (currency) {
+        "USD" -> amount
+        "CNY" -> amount * preferencesManager.cnyToUsdRate.first()
+        else -> amount
     }
 }
 

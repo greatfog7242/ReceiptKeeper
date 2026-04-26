@@ -19,11 +19,16 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 class PreferencesManager @Inject constructor(
     private val context: Context
 ) {
-    private companion object {
-        val ICON_THEME_KEY = stringPreferencesKey("icon_theme")
-        val TREEMAP_THRESHOLD_KEY = doublePreferencesKey("treemap_threshold")
-        val TREEMAP_ASPECT_RATIO_KEY = doublePreferencesKey("treemap_aspect_ratio")
-        val TIMESTAMP_BOOK_ID_KEY = longPreferencesKey("timestamp_book_id")
+    companion object {
+        private val ICON_THEME_KEY = stringPreferencesKey("icon_theme")
+        private val TREEMAP_THRESHOLD_KEY = doublePreferencesKey("treemap_threshold")
+        private val TREEMAP_ASPECT_RATIO_KEY = doublePreferencesKey("treemap_aspect_ratio")
+        private val TIMESTAMP_BOOK_ID_KEY = longPreferencesKey("timestamp_book_id")
+        private val CNY_TO_USD_RATE_KEY = doublePreferencesKey("cny_to_usd_rate")
+
+        /** Default CNY → USD rate (approximate; user can override in Settings). */
+        const val DEFAULT_CNY_TO_USD_RATE = 0.1374
+        val SUPPORTED_CURRENCIES = listOf("USD", "CNY")
     }
 
     /**
@@ -87,4 +92,15 @@ class PreferencesManager @Inject constructor(
             else preferences[TIMESTAMP_BOOK_ID_KEY] = bookId
         }
     }
+
+    /** CNY → USD exchange rate. Defaults to [DEFAULT_CNY_TO_USD_RATE]. */
+    val cnyToUsdRate: Flow<Double> = context.dataStore.data
+        .map { preferences -> preferences[CNY_TO_USD_RATE_KEY] ?: DEFAULT_CNY_TO_USD_RATE }
+
+    suspend fun updateCnyToUsdRate(rate: Double) {
+        context.dataStore.edit { preferences ->
+            preferences[CNY_TO_USD_RATE_KEY] = rate
+        }
+    }
+
 }

@@ -104,12 +104,13 @@ fun ScanScreen(
                         onVendorSelected = { viewModel.onVendorSelected(it) },
                         onAmountChange = { viewModel.updateAmount(it) },
                         onDateChange = { viewModel.updateDate(it) },
-                        onSaveClick = { bookId, categoryId, paymentMethodId, notes ->
+                        onSaveClick = { bookId, categoryId, paymentMethodId, notes, currency ->
                             viewModel.saveReceipt(
                                 bookId = bookId,
                                 categoryId = categoryId,
                                 paymentMethodId = paymentMethodId,
                                 notes = notes,
+                                currency = currency,
                                 onSuccess = onReceiptScanned
                             )
                         },
@@ -251,7 +252,7 @@ private fun ExtractedDataForm(
     onVendorSelected: (String) -> Unit,
     onAmountChange: (String) -> Unit,
     onDateChange: (LocalDate?) -> Unit,
-    onSaveClick: (Long, Long, Long?, String) -> Unit,
+    onSaveClick: (Long, Long, Long?, String, String) -> Unit,
     isProcessing: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -285,6 +286,8 @@ private fun ExtractedDataForm(
     }
 
     var notes by remember { mutableStateOf("") }
+    var selectedCurrency by remember { mutableStateOf("USD") }
+    var showCurrencyDropdown by remember { mutableStateOf(false) }
     var showFullImage by remember { mutableStateOf(false) }
 
     Column(
@@ -384,14 +387,52 @@ private fun ExtractedDataForm(
             }
         }
 
+        // Currency dropdown
+        ExposedDropdownMenuBox(
+            expanded = showCurrencyDropdown,
+            onExpandedChange = { showCurrencyDropdown = it }
+        ) {
+            OutlinedTextField(
+                value = selectedCurrency,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Currency") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showCurrencyDropdown) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(),
+                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+            )
+            ExposedDropdownMenu(
+                expanded = showCurrencyDropdown,
+                onDismissRequest = { showCurrencyDropdown = false }
+            ) {
+                com.receiptkeeper.core.preferences.PreferencesManager.SUPPORTED_CURRENCIES.forEach { code ->
+                    DropdownMenuItem(
+                        text = { Text(code) },
+                        onClick = {
+                            selectedCurrency = code
+                            showCurrencyDropdown = false
+                        },
+                        leadingIcon = {
+                            if (selectedCurrency == code) {
+                                Icon(Icons.Default.Check, contentDescription = null)
+                            }
+                        }
+                    )
+                }
+            }
+        }
+
         // Amount field
+        val currencySymbol = if (selectedCurrency == "CNY") "¥" else "$"
         OutlinedTextField(
             value = extractedData.amount?.toString() ?: "",
             onValueChange = onAmountChange,
-            label = { Text("Amount *") },
+            label = { Text("Amount * ($selectedCurrency)") },
             placeholder = { Text("0.00") },
             modifier = Modifier.fillMaxWidth(),
-            leadingIcon = { Text("$") },
+            leadingIcon = { Text(currencySymbol) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
         )
 
@@ -653,7 +694,8 @@ private fun ExtractedDataForm(
                     selectedBookId,
                     selectedCategoryId,
                     selectedPaymentMethodId,
-                    notes
+                    notes,
+                    selectedCurrency
                 )
             },
             modifier = Modifier.fillMaxWidth(),

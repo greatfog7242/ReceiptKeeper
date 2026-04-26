@@ -197,8 +197,13 @@ fun ReceiptDetailScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
+                            val displayAmount = if (receipt.currency == "USD") {
+                                formatCurrency(receipt.totalAmount)
+                            } else {
+                                formatOriginalAmount(receipt.originalAmount, receipt.currency)
+                            }
                             Text(
-                                text = formatCurrency(receipt.totalAmount),
+                                text = displayAmount,
                                 style = MaterialTheme.typography.displayMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
@@ -211,6 +216,14 @@ fun ReceiptDetailScreen(
                                     modifier = Modifier.size(45.dp)
                                 )
                             }
+                        }
+                        if (receipt.currency != "USD") {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "≈ ${formatCurrency(receipt.totalAmount)} USD",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                            )
                         }
                     }
                 }
@@ -243,6 +256,9 @@ fun ReceiptDetailScreen(
                             label = "Date",
                             value = formatDate(receipt.transactionDate.toString())
                         )
+                        if (receipt.currency != "USD") {
+                            DetailRow(label = "Currency", value = receipt.currency)
+                        }
 
                         if (!receipt.notes.isNullOrBlank()) {
                             Divider(modifier = Modifier.padding(vertical = 4.dp))
@@ -626,6 +642,14 @@ private fun FullScreenImageDialog(
 private fun formatCurrency(amount: Double): String {
     val formatter = NumberFormat.getCurrencyInstance(Locale.US)
     return formatter.format(amount)
+}
+
+private fun formatOriginalAmount(amount: Double, currency: String): String {
+    val symbol = when (currency) {
+        "CNY" -> "¥"
+        else -> currency + " "
+    }
+    return "$symbol${"%.2f".format(amount)}"
 }
 
 private fun formatDate(dateString: String): String {

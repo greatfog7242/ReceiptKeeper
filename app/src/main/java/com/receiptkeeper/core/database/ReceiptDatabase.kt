@@ -15,7 +15,7 @@ import androidx.room.migration.Migration
 
 /**
  * Room Database for ReceiptKeeper
- * Version 4: Added tsrToken BLOB column to receipts for RFC 3161 timestamps
+ * Version 5: Added currency (TEXT) and originalAmount (REAL) columns to receipts
  */
 @Database(
     entities = [
@@ -26,7 +26,7 @@ import androidx.room.migration.Migration
         SpendingGoalEntity::class,
         ReceiptEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -75,9 +75,21 @@ abstract class ReceiptDatabase : RoomDatabase() {
         }
 
         /**
+         * Migration from version 4 to 5: Add currency (TEXT) and originalAmount (REAL) to receipts.
+         * Existing rows get currency='USD' and originalAmount=totalAmount.
+         */
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE receipts ADD COLUMN currency TEXT NOT NULL DEFAULT 'USD'")
+                db.execSQL("ALTER TABLE receipts ADD COLUMN originalAmount REAL NOT NULL DEFAULT 0.0")
+                db.execSQL("UPDATE receipts SET originalAmount = totalAmount")
+            }
+        }
+
+        /**
          * Get all migrations
          */
-        val MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+        val MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
 
         /**
          * Database callback to seed default categories on first creation
