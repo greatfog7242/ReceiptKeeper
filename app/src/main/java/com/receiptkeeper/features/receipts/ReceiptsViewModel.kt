@@ -318,6 +318,8 @@ class ReceiptsViewModel @Inject constructor(
                     receipt.notes,
                     receipt.extractedText,
                     receipt.totalAmount.toString(),
+                    receipt.originalAmount.toString(),
+                    receipt.currency,
                     receipt.transactionDate.toString()
                 ).any { it.lowercase().contains(query) }
             }
