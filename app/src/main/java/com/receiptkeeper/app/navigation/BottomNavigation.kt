@@ -53,12 +53,7 @@ fun BottomNavigationBar(
             val isSelected = selectedRoute == item.route.route
             NavigationBarItem(
                 icon = {
-                    // Scan icon is always 48dp, other selected icons are 48dp, unselected icons are 24dp
-                    val iconSize = when {
-                        item.route == Routes.Scan -> 48.dp
-                        isSelected -> 48.dp
-                        else -> 24.dp
-                    }
+                    val iconSize = if (isSelected) 48.dp else 24.dp
                     if (item.iconResId != null) {
                         // Colorful theme: WebP images
                         Icon(

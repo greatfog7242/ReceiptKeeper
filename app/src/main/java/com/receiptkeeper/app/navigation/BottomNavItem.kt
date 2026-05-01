@@ -30,14 +30,14 @@ val bottomNavItemsColorful = listOf(
         label = "Books"
     ),
     BottomNavItem(
-        route = Routes.Receipts,
-        iconResId = com.receiptkeeper.R.drawable.ic_bottom_receipts,
-        label = "Receipts"
-    ),
-    BottomNavItem(
         route = Routes.Scan,
         iconResId = com.receiptkeeper.R.drawable.ic_bottom_scan,
         label = "Scan"
+    ),
+    BottomNavItem(
+        route = Routes.Receipts,
+        iconResId = com.receiptkeeper.R.drawable.ic_bottom_receipts,
+        label = "Receipts"
     ),
     BottomNavItem(
         route = Routes.Analytics,
@@ -61,14 +61,14 @@ val bottomNavItemsMonochrome = listOf(
         label = "Books"
     ),
     BottomNavItem(
-        route = Routes.Receipts,
-        iconVector = Icons.Filled.Receipt,
-        label = "Receipts"
-    ),
-    BottomNavItem(
         route = Routes.Scan,
         iconVector = Icons.Filled.CameraAlt,
         label = "Scan"
+    ),
+    BottomNavItem(
+        route = Routes.Receipts,
+        iconVector = Icons.Filled.Receipt,
+        label = "Receipts"
     ),
     BottomNavItem(
         route = Routes.Analytics,

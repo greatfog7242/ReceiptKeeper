@@ -40,8 +40,8 @@ sealed class Routes(val route: String) {
         // List of bottom navigation destinations
         val bottomNavRoutes = listOf(
             Books,
-            Receipts,
             Scan,
+            Receipts,
             Analytics,
             Settings
         )
