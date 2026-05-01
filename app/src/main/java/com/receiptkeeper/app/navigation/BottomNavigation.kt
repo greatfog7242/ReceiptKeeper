@@ -34,7 +34,7 @@ fun BottomNavigationBar(
         val currentDestination = navBackStackEntry?.destination
         val iconTheme = LocalIconTheme.current
         val bottomRoutes = Routes.bottomNavRoutes.map { it.route }
-        var selectedRoute by rememberSaveable { mutableStateOf(Routes.Books.route) }
+        var selectedRoute by rememberSaveable { mutableStateOf(Routes.Receipts.route) }
 
         LaunchedEffect(currentDestination?.route) {
             val currentRoute = currentDestination?.route

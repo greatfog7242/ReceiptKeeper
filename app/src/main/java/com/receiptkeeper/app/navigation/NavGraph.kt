@@ -28,7 +28,7 @@ fun NavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Routes.Books.route,
+        startDestination = Routes.Receipts.route,
         modifier = modifier
     ) {
         // Bottom navigation screens
